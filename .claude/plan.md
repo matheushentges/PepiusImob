@@ -330,63 +330,148 @@ Cada imobiliária pode:
 - Escolher quando bot deve escalar para humano
 - Horário de atendimento (bot sempre/humano em horário comercial)
 
-## Fases de Implementação
+## ✅ PROGRESSO DO DESENVOLVIMENTO
 
-### Fase 1: Estrutura Base (Setup)
-1. Inicializar projeto Next.js com TypeScript
-2. Configurar TailwindCSS e Shadcn/ui
-3. Configurar Supabase (projeto + client)
-4. Criar estrutura de pastas:
-   ```
-   /src
-     /app
-       /(public)         # Portal público
-       /(dashboard)      # Portal imobiliária
-       /(admin)          # Portal admin
-       /api
-     /components
-       /ui               # Shadcn components
-       /shared           # Componentes compartilhados
-     /lib
-       /supabase
-       /utils
-     /types
-   ```
-5. Configurar variáveis de ambiente
+### ✅ Fase 1: Estrutura Base (Setup) - COMPLETO
+**Status**: 100% ✅ | **Data**: 06/10/2024
 
-### Fase 2: Database & Auth
-1. Criar schema do banco de dados no Supabase
-2. Implementar migrations
-3. Configurar Row Level Security (RLS) policies
-4. Configurar Supabase Auth
-5. Criar hooks de autenticação customizados
-6. Implementar middleware de proteção de rotas
+#### Realizações:
+- ✅ Projeto Next.js 14+ inicializado com TypeScript
+- ✅ TailwindCSS configurado
+- ✅ Shadcn/ui configurado (components.json)
+- ✅ Supabase client, server e middleware criados
+- ✅ Estrutura completa de pastas criada
+- ✅ Variáveis de ambiente (.env.local, .env.example)
+- ✅ Utilidades (cn helper)
+- ✅ Tipos TypeScript base
+- ✅ Git inicializado e configurado
+- ✅ README.md criado
 
-### Fase 3: Portal Admin
-1. Layout admin com sidebar
-2. Dashboard administrativo
-3. CRUD de imobiliárias (tenants)
-4. Sistema de licenças
-5. Gestão de usuários
-6. Ativar/desativar imobiliárias
+**Arquivos Criados**:
+- `src/lib/supabase/client.ts`
+- `src/lib/supabase/server.ts`
+- `src/lib/supabase/middleware.ts`
+- `src/lib/utils.ts`
+- `src/middleware.ts`
+- `src/types/database.types.ts`
+- `.env.local`, `.env.example`
+- `components.json`
 
-### Fase 4: Portal da Imobiliária
-1. Layout dashboard com sidebar
-2. Dashboard da imobiliária
-3. CRUD de imóveis
-4. Upload de imagens (Supabase Storage)
-5. Gestão de leads
-6. Configurações da conta
+---
 
-### Fase 5: Portal do Cliente (Público)
-1. Landing page
-2. Listagem de imóveis com filtros
-3. Busca avançada
-4. Página de detalhes do imóvel
-5. Formulário de contato/interesse
-6. Galeria de imagens
+### ✅ Fase 2: Database & Auth - COMPLETO
+**Status**: 100% ✅ | **Data**: 06/10/2024
 
-### Fase 6: Sistema Omnichannel com IA
+#### Realizações:
+- ✅ Schema completo do banco de dados (11 tabelas)
+- ✅ 4 migrations SQL criadas e documentadas
+- ✅ Row Level Security (RLS) policies completas
+- ✅ Funções de autenticação e triggers
+- ✅ Seed data para testes
+- ✅ Hook `useAuth` customizado
+- ✅ Providers (QueryClient + AuthProvider)
+- ✅ Middleware de proteção de rotas implementado
+- ✅ Layout root com Providers
+- ✅ Páginas base criadas (landing, login, dashboard, admin)
+- ✅ Layouts com sidebar para admin e dashboard
+
+**Arquivos Criados**:
+- `supabase/migrations/20241006000001_initial_schema.sql`
+- `supabase/migrations/20241006000002_rls_policies.sql`
+- `supabase/migrations/20241006000003_auth_functions.sql`
+- `supabase/migrations/20241006000004_seed_data.sql`
+- `supabase/SETUP.md` (documentação completa)
+- `src/hooks/use-auth.tsx`
+- `src/components/providers.tsx`
+- `src/app/layout.tsx` (atualizado)
+- `src/app/(public)/page.tsx` (landing page)
+- `src/app/(public)/login/page.tsx`
+- `src/app/(dashboard)/dashboard/page.tsx`
+- `src/app/(dashboard)/layout.tsx`
+- `src/app/(admin)/admin/page.tsx`
+- `src/app/(admin)/layout.tsx`
+
+**Tabelas Criadas**:
+1. tenants (imobiliárias)
+2. profiles (usuários)
+3. properties (imóveis)
+4. property_images (fotos)
+5. leads (contatos)
+6. licenses (licenças)
+7. channels (canais omnichannel)
+8. conversations (conversas)
+9. messages (mensagens)
+10. ai_training_data (dados treino IA)
+
+---
+
+### 🚧 Fase 3: Portal Admin - EM PROGRESSO
+**Status**: 60% 🚧 | **Data Início**: 06/10/2024
+
+#### ✅ Completo:
+- ✅ Layout admin com sidebar
+- ✅ Dashboard administrativo (cards de estatísticas)
+- ✅ Componentes UI do Shadcn (Button, Input, Label, Card, Table)
+- ✅ Listagem de imobiliárias (tabela completa)
+- ✅ Criação de nova imobiliária (formulário + validação)
+- ✅ API route `/api/admin/tenants` (POST, GET)
+- ✅ Validação de permissões (apenas admin)
+- ✅ Auto-criação de licença básica
+
+**Arquivos Criados**:
+- `src/components/ui/button.tsx`
+- `src/components/ui/input.tsx`
+- `src/components/ui/label.tsx`
+- `src/components/ui/card.tsx`
+- `src/components/ui/table.tsx`
+- `src/app/(admin)/admin/imobiliarias/page.tsx`
+- `src/app/(admin)/admin/imobiliarias/nova/page.tsx`
+- `src/app/api/admin/tenants/route.ts`
+
+#### ⏳ Pendente:
+- [ ] Página de edição de imobiliária (`/admin/imobiliarias/[id]`)
+- [ ] API route PUT/DELETE para tenants
+- [ ] Toggle ativar/desativar imobiliária
+- [ ] Gestão de licenças (CRUD completo)
+- [ ] Gestão de usuários (listar, criar, editar)
+- [ ] Dashboard com métricas reais (queries ao banco)
+
+---
+
+### ⏳ Fase 4: Portal da Imobiliária - PENDENTE
+**Status**: 0% ⏳
+
+#### Tarefas:
+- [ ] CRUD completo de imóveis
+  - [ ] Listagem com filtros
+  - [ ] Formulário de criação
+  - [ ] Formulário de edição
+  - [ ] Exclusão
+- [ ] Upload múltiplo de imagens (Supabase Storage)
+- [ ] Gestão de leads (visualizar, atualizar status)
+- [ ] Configurações da conta
+- [ ] Dashboard com métricas reais (total imóveis, leads, etc)
+
+---
+
+### ⏳ Fase 5: Portal do Cliente (Público) - PENDENTE
+**Status**: 0% ⏳
+
+#### Tarefas:
+- [ ] Listagem de imóveis com paginação
+- [ ] Filtros avançados (tipo, cidade, preço, quartos, etc)
+- [ ] Busca por texto
+- [ ] Página de detalhes do imóvel
+- [ ] Galeria de imagens (carousel)
+- [ ] Formulário de contato/interesse
+- [ ] Integração com leads (criar lead ao enviar formulário)
+
+---
+
+### ⏳ Fase 6: Sistema Omnichannel com IA - PENDENTE
+**Status**: 0% ⏳
+
+#### Tarefas:
 1. **Database & Models**
    - Criar tabelas: channels, conversations, messages, ai_training_data
    - RLS policies para isolamento por tenant
@@ -444,21 +529,108 @@ Cada imobiliária pode:
    - Funciona sem login
    - Histórico por session
 
-### Fase 7: Refinamentos
-1. SEO otimizado
-2. Responsividade completa
-3. Loading states e error handling
-4. Validações robustas
-5. Testes básicos
-6. Analytics e métricas
+---
 
-### Fase 8: Deploy
-1. Deploy no Vercel
-2. Configurar domínio (se houver)
-3. Configurar variáveis de ambiente em produção
-4. Configurar webhooks em produção (URLs públicas)
-5. Testar integrações em produção
-6. Documentação de setup para clientes
+### ⏳ Fase 7: Refinamentos - PENDENTE
+**Status**: 0% ⏳
+
+#### Tarefas:
+- [ ] SEO (meta tags, sitemap, robots.txt)
+- [ ] Responsividade completa mobile/tablet
+- [ ] Loading states e skeleton screens
+- [ ] Error handling robusto
+- [ ] Validações com Zod em todos os formulários
+- [ ] Testes unitários básicos
+- [ ] Analytics (Google Analytics ou similar)
+- [ ] Performance optimization
+
+---
+
+### ⏳ Fase 8: Deploy - PENDENTE
+**Status**: 0% ⏳
+
+#### Tarefas:
+- [ ] Deploy no Vercel
+- [ ] Configurar domínio
+- [ ] Variáveis de ambiente em produção
+- [ ] Configurar webhooks URLs públicas
+- [ ] Testar integrações em produção
+- [ ] Documentação final para clientes
+- [ ] Setup CI/CD (GitHub Actions)
+
+---
+
+## 📊 RESUMO DO PROGRESSO
+
+| Fase | Status | Progresso | Data |
+|------|--------|-----------|------|
+| 1. Setup | ✅ Completo | 100% | 06/10/2024 |
+| 2. Database & Auth | ✅ Completo | 100% | 06/10/2024 |
+| 3. Portal Admin | 🚧 Em progresso | 60% | 06/10/2024 |
+| 4. Portal Imobiliária | ⏳ Pendente | 0% | - |
+| 5. Portal Público | ⏳ Pendente | 0% | - |
+| 6. Omnichannel + IA | ⏳ Pendente | 0% | - |
+| 7. Refinamentos | ⏳ Pendente | 0% | - |
+| 8. Deploy | ⏳ Pendente | 0% | - |
+
+**Progresso Geral**: ~25% (2.5 de 8 fases)
+
+---
+
+## 🚀 PRÓXIMOS PASSOS IMEDIATOS
+
+### Para Continuar o Desenvolvimento:
+
+1. **Configurar Supabase** (se ainda não foi feito)
+   - Criar projeto em [supabase.com](https://supabase.com)
+   - Aplicar as 4 migrations em `supabase/migrations/`
+   - Seguir guia em `supabase/SETUP.md`
+   - Adicionar credenciais no `.env.local`
+
+2. **Completar Fase 3 - Portal Admin**
+   - Editar imobiliária existente
+   - CRUD de licenças
+   - Gestão de usuários
+
+3. **Iniciar Fase 4 - Portal Imobiliária**
+   - CRUD de imóveis
+   - Upload de fotos
+
+---
+
+## 📝 COMANDOS ÚTEIS
+
+```bash
+# Rodar em desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+
+# Rodar em produção
+npm start
+
+# Adicionar componentes Shadcn
+npx shadcn@latest add [component]
+
+# Git
+git add -A
+git commit -m "mensagem"
+git push origin main
+```
+
+---
+
+## 🔗 LINKS IMPORTANTES
+
+- **Repositório Local**: `C:\Users\Matheus\Documents\pepius-imob`
+- **GitHub**: `https://github.com/matheushentges/PepiusImob`
+- **Documentação Completa**: `docs/RESUMO.md`
+- **Setup Supabase**: `supabase/SETUP.md`
+- **Progresso Detalhado**: `.claude/PROGRESS.md`
+- **Notas Obsidian**: `docs/OBSIDIAN.md`
+
+---
 
 ## Pontos de Atenção para Migração Futura
 
