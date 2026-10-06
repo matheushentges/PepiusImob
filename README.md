@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pepius Imob
 
-## Getting Started
+Sistema SaaS para imobiliárias com integração omnichannel e IA.
 
-First, run the development server:
+## 🏗️ Arquitetura
+
+- **Frontend**: Next.js 14+ (App Router) + TypeScript
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **Omnichannel**: WhatsApp, Instagram, Messenger, Webchat
+- **IA**: Anthropic Claude API para atendimento automatizado
+- **Deploy**: Vercel + Supabase Cloud
+
+## 🎯 Três Interfaces
+
+### 1. Portal do Cliente (Público)
+- Visualizar imóveis disponíveis
+- Busca avançada com filtros
+- Chat com atendimento IA
+
+### 2. Portal da Imobiliária
+- Gestão completa de imóveis
+- Inbox unificado omnichannel
+- Dashboard de leads e métricas
+- Configuração de canais de atendimento
+
+### 3. Portal Admin
+- Gerenciamento de imobiliárias (tenants)
+- Sistema de licenças SaaS
+- Gestão de usuários
+- Métricas globais
+
+## 🚀 Setup
 
 ```bash
+# Instalar dependências
+npm install
+
+# Configurar variáveis de ambiente
+cp .env.example .env.local
+
+# Rodar em desenvolvimento
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📦 Stack Tecnológica
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js 14+
+- TypeScript
+- Supabase
+- TailwindCSS + Shadcn/ui
+- React Hook Form + Zod
+- Tanstack Query
+- Lucide Icons
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔐 Multi-Tenancy
 
-## Learn More
+Sistema multi-tenant com isolamento via Row Level Security (RLS) do PostgreSQL.
 
-To learn more about Next.js, take a look at the following resources:
+## 📝 Documentação
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Veja o plano completo de implementação em `.claude/plan.md`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📄 Licença
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Proprietário - Pepius
