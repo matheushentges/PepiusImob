@@ -1,98 +1,108 @@
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
 
-// GET /api/admin/tenants/[id] - Buscar imobiliária por ID
+// GET - Buscar uma imobiliária específica
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
 
-    // Verificar autenticação
+    // Verificar se o usuário é admin
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    // Verificar se é admin
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    // Buscar tenant
+    // Buscar a imobiliária
     const { data: tenant, error } = await supabase
       .from('tenants')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
-      return NextResponse.json({ error: 'Imobiliária não encontrada' }, { status: 404 })
+      return NextResponse.json({ message: error.message }, { status: 400 })
+    }
+
+    if (!tenant) {
+      return NextResponse.json({ message: 'Imobiliária não encontrada' }, { status: 404 })
     }
 
     return NextResponse.json(tenant)
   } catch (error) {
-    console.error('Erro ao buscar tenant:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    console.error('Erro ao buscar imobiliária:', error)
+    return NextResponse.json(
+      { message: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }
 
-// PUT /api/admin/tenants/[id] - Atualizar imobiliária
+// PUT - Atualizar uma imobiliária
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
+    const body = await request.json()
 
-    // Verificar autenticação
+    // Verificar se o usuário é admin
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    // Verificar se é admin
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    const body = await request.json()
-    const { nome, slug, email, telefone, logo_url, active } = body
+    // Validar dados
+    const { nome, slug, email, telefone, active } = body
 
-    // Validações básicas
-    if (!nome || !slug || !email || !telefone) {
+    if (!nome || !slug || !email) {
       return NextResponse.json(
-        { error: 'Campos obrigatórios: nome, slug, email, telefone' },
+        { message: 'Nome, slug e email são obrigatórios' },
         { status: 400 }
       )
     }
 
-    // Verificar se slug já existe (exceto para o próprio tenant)
+    // Verificar se o slug já existe em outra imobiliária
     const { data: existingSlug } = await supabase
       .from('tenants')
       .select('id')
       .eq('slug', slug)
-      .neq('id', params.id)
+      .neq('id', id)
       .single()
 
     if (existingSlug) {
-      return NextResponse.json({ error: 'Slug já está em uso' }, { status: 400 })
+      return NextResponse.json(
+        { message: 'Este slug já está em uso' },
+        { status: 400 }
+      )
     }
 
-    // Atualizar tenant
+    // Atualizar a imobiliária
     const { data: tenant, error } = await supabase
       .from('tenants')
       .update({
@@ -100,89 +110,82 @@ export async function PUT(
         slug,
         email,
         telefone,
-        logo_url: logo_url || null,
-        active: active ?? true,
+        active: active !== undefined ? active : true,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
     if (error) {
-      console.error('Erro ao atualizar tenant:', error)
-      return NextResponse.json({ error: 'Erro ao atualizar imobiliária' }, { status: 500 })
+      return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
     return NextResponse.json(tenant)
   } catch (error) {
-    console.error('Erro ao atualizar tenant:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    console.error('Erro ao atualizar imobiliária:', error)
+    return NextResponse.json(
+      { message: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }
 
-// DELETE /api/admin/tenants/[id] - Excluir imobiliária
+// DELETE - Deletar uma imobiliária
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
 
-    // Verificar autenticação
+    // Verificar se o usuário é admin
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    // Verificar se é admin
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    // Verificar se há dados relacionados (imóveis, usuários, etc)
-    const { count: propertiesCount } = await supabase
+    // Verificar se existem dados relacionados
+    const { data: properties } = await supabase
       .from('properties')
-      .select('*', { count: 'exact', head: true })
-      .eq('tenant_id', params.id)
+      .select('id')
+      .eq('tenant_id', id)
+      .limit(1)
 
-    const { count: usersCount } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('tenant_id', params.id)
-
-    if ((propertiesCount ?? 0) > 0 || (usersCount ?? 0) > 0) {
+    if (properties && properties.length > 0) {
       return NextResponse.json(
-        { error: 'Não é possível excluir imobiliária com imóveis ou usuários cadastrados' },
+        { message: 'Não é possível deletar. Existem imóveis cadastrados.' },
         { status: 400 }
       )
     }
 
-    // Excluir licenças primeiro (FK constraint)
-    await supabase
-      .from('licenses')
-      .delete()
-      .eq('tenant_id', params.id)
-
-    // Excluir tenant
+    // Deletar a imobiliária
     const { error } = await supabase
       .from('tenants')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) {
-      console.error('Erro ao excluir tenant:', error)
-      return NextResponse.json({ error: 'Erro ao excluir imobiliária' }, { status: 500 })
+      return NextResponse.json({ message: error.message }, { status: 400 })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ message: 'Imobiliária deletada com sucesso' })
   } catch (error) {
-    console.error('Erro ao excluir tenant:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    console.error('Erro ao deletar imobiliária:', error)
+    return NextResponse.json(
+      { message: 'Erro interno do servidor' },
+      { status: 500 }
+    )
   }
 }

@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/admin/users/[id] - Buscar usuário por ID
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
 
     // Verificar autenticação
     const { data: { user } } = await supabase.auth.getUser()
@@ -30,7 +31,7 @@ export async function GET(
     const { data: userProfile, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
@@ -46,11 +47,12 @@ export async function GET(
 
 // PUT /api/admin/users/[id] - Atualizar usuário
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
 
     // Verificar autenticação
     const { data: { user } } = await supabase.auth.getUser()
@@ -98,7 +100,7 @@ export async function PUT(
         telefone: telefone || null,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -109,7 +111,7 @@ export async function PUT(
 
     // Atualizar email no Auth (se mudou)
     try {
-      await supabase.auth.admin.updateUserById(params.id, { email })
+      await supabase.auth.admin.updateUserById(id, { email })
     } catch (authError) {
       console.error('Erro ao atualizar email no auth:', authError)
       // Não bloqueia a operação se falhar
@@ -124,11 +126,12 @@ export async function PUT(
 
 // DELETE /api/admin/users/[id] - Excluir usuário
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
 
     // Verificar autenticação
     const { data: { user } } = await supabase.auth.getUser()
@@ -148,7 +151,7 @@ export async function DELETE(
     }
 
     // Não permitir que admin delete a si mesmo
-    if (params.id === user.id) {
+    if (id === user.id) {
       return NextResponse.json(
         { error: 'Você não pode excluir sua própria conta' },
         { status: 400 }
@@ -159,7 +162,7 @@ export async function DELETE(
     const { error: profileError } = await supabase
       .from('profiles')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (profileError) {
       console.error('Erro ao excluir profile:', profileError)
@@ -168,7 +171,7 @@ export async function DELETE(
 
     // Excluir usuário do Auth
     try {
-      await supabase.auth.admin.deleteUser(params.id)
+      await supabase.auth.admin.deleteUser(id)
     } catch (authError) {
       console.error('Erro ao excluir usuário do auth:', authError)
       // Profile já foi deletado, continua mesmo se auth falhar

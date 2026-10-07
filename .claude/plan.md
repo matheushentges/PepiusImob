@@ -406,7 +406,7 @@ Cada imobiliária pode:
 ---
 
 ### 🚧 Fase 3: Portal Admin - EM PROGRESSO
-**Status**: 60% 🚧 | **Data Início**: 06/10/2024
+**Status**: 80% 🚧 | **Data Início**: 06/10/2024
 
 #### ✅ Completo:
 - ✅ Layout admin com sidebar
@@ -414,9 +414,13 @@ Cada imobiliária pode:
 - ✅ Componentes UI do Shadcn (Button, Input, Label, Card, Table)
 - ✅ Listagem de imobiliárias (tabela completa)
 - ✅ Criação de nova imobiliária (formulário + validação)
-- ✅ API route `/api/admin/tenants` (POST, GET)
+- ✅ Edição de imobiliária (formulário completo)
+- ✅ API routes completas (GET, POST, PUT, DELETE)
 - ✅ Validação de permissões (apenas admin)
 - ✅ Auto-criação de licença básica
+- ✅ Toggle ativar/desativar imobiliária
+- ✅ Botão de deletar com confirmação
+- ✅ Validação de slug único
 
 **Arquivos Criados**:
 - `src/components/ui/button.tsx`
@@ -426,12 +430,11 @@ Cada imobiliária pode:
 - `src/components/ui/table.tsx`
 - `src/app/(admin)/admin/imobiliarias/page.tsx`
 - `src/app/(admin)/admin/imobiliarias/nova/page.tsx`
+- `src/app/(admin)/admin/imobiliarias/[id]/page.tsx` ✨ NOVO
 - `src/app/api/admin/tenants/route.ts`
+- `src/app/api/admin/tenants/[id]/route.ts` ✨ NOVO
 
 #### ⏳ Pendente:
-- [ ] Página de edição de imobiliária (`/admin/imobiliarias/[id]`)
-- [ ] API route PUT/DELETE para tenants
-- [ ] Toggle ativar/desativar imobiliária
 - [ ] Gestão de licenças (CRUD completo)
 - [ ] Gestão de usuários (listar, criar, editar)
 - [ ] Dashboard com métricas reais (queries ao banco)
@@ -546,17 +549,36 @@ Cada imobiliária pode:
 
 ---
 
-### ⏳ Fase 8: Deploy - PENDENTE
-**Status**: 0% ⏳
+### ⏳ Fase 8: Deploy - EM PROGRESSO
+**Status**: 60% 🚧 | **Data Início**: 07/10/2026
 
-#### Tarefas:
-- [ ] Deploy no Vercel
-- [ ] Configurar domínio
-- [ ] Variáveis de ambiente em produção
-- [ ] Configurar webhooks URLs públicas
-- [ ] Testar integrações em produção
+#### ✅ Completo:
+- ✅ Configuração do Next.js para produção
+- ✅ Otimizações de build
+- ✅ Configuração de imagens remotas (Supabase)
+- ✅ `vercel.json` criado
+- ✅ `.vercelignore` configurado
+- ✅ Scripts npm atualizados
+- ✅ Guia completo de deploy (DEPLOY.md)
+- ✅ Checklist de deploy detalhado
+- ✅ README atualizado com instruções
+
+**Arquivos Criados**:
+- `vercel.json` ✨ NOVO
+- `.vercelignore` ✨ NOVO
+- `DEPLOY.md` ✨ NOVO
+- `.claude/DEPLOY_CHECKLIST.md` ✨ NOVO
+- `next.config.ts` (atualizado)
+- `package.json` (scripts adicionados)
+- `README.md` (atualizado)
+
+#### ⏳ Pendente:
+- [ ] Deploy efetivo na Vercel
+- [ ] Configurar variáveis de ambiente em produção
+- [ ] Testar em produção
+- [ ] Configurar domínio customizado (opcional)
+- [ ] Setup CI/CD com GitHub Actions
 - [ ] Documentação final para clientes
-- [ ] Setup CI/CD (GitHub Actions)
 
 ---
 
@@ -566,14 +588,14 @@ Cada imobiliária pode:
 |------|--------|-----------|------|
 | 1. Setup | ✅ Completo | 100% | 06/10/2024 |
 | 2. Database & Auth | ✅ Completo | 100% | 06/10/2024 |
-| 3. Portal Admin | 🚧 Em progresso | 60% | 06/10/2024 |
+| 3. Portal Admin | 🚧 Em progresso | 80% | 06/10/2024 |
 | 4. Portal Imobiliária | ⏳ Pendente | 0% | - |
 | 5. Portal Público | ⏳ Pendente | 0% | - |
 | 6. Omnichannel + IA | ⏳ Pendente | 0% | - |
 | 7. Refinamentos | ⏳ Pendente | 0% | - |
-| 8. Deploy | ⏳ Pendente | 0% | - |
+| 8. Deploy | 🚧 Em progresso | 60% | 07/10/2026 |
 
-**Progresso Geral**: ~25% (2.5 de 8 fases)
+**Progresso Geral**: ~35% (2.8 de 8 fases)
 
 ---
 

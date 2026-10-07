@@ -1,99 +1,98 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, Loader2 } from 'lucide-react'
-import Link from 'next/link'
+import { Card } from '@/components/ui/card'
 
 interface Tenant {
   id: string
   nome: string
   slug: string
   email: string
-  telefone: string
-  logo_url?: string
+  telefone: string | null
   active: boolean
-  license_expires_at?: string
+  created_at: string
 }
 
 export default function EditarImobiliariaPage() {
   const router = useRouter()
   const params = useParams()
-  const id = params.id as string
+  const id = params?.id as string
 
+  const [tenant, setTenant] = useState<Tenant | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [tenant, setTenant] = useState<Tenant | null>(null)
-  const [formData, setFormData] = useState({
-    nome: '',
-    slug: '',
-    email: '',
-    telefone: '',
-    logo_url: '',
-    active: true,
-  })
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchTenant()
+    if (id) {
+      fetchTenant()
+    }
   }, [id])
 
   async function fetchTenant() {
     try {
       const response = await fetch(`/api/admin/tenants/${id}`)
-      if (!response.ok) throw new Error('Erro ao buscar imobiliária')
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar imobiliária')
+      }
 
       const data = await response.json()
       setTenant(data)
-      setFormData({
-        nome: data.nome || '',
-        slug: data.slug || '',
-        email: data.email || '',
-        telefone: data.telefone || '',
-        logo_url: data.logo_url || '',
-        active: data.active ?? true,
-      })
-    } catch (error) {
-      console.error('Erro:', error)
-      alert('Erro ao carregar imobiliária')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
     } finally {
       setLoading(false)
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSaving(true)
+    setError(null)
+
+    const formData = new FormData(e.currentTarget)
+    const data = {
+      nome: formData.get('nome') as string,
+      slug: formData.get('slug') as string,
+      email: formData.get('email') as string,
+      telefone: formData.get('telefone') as string,
+      active: tenant?.active ?? true,
+    }
 
     try {
       const response = await fetch(`/api/admin/tenants/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Erro ao atualizar')
+        throw new Error(error.message || 'Erro ao atualizar imobiliária')
       }
 
-      alert('Imobiliária atualizada com sucesso!')
       router.push('/admin/imobiliarias')
-    } catch (error: any) {
-      console.error('Erro:', error)
-      alert(error.message || 'Erro ao atualizar imobiliária')
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete() {
-    if (!confirm('Tem certeza que deseja excluir esta imobiliária? Esta ação não pode ser desfeita.')) {
+    if (!confirm('Tem certeza que deseja deletar esta imobiliária? Esta ação não pode ser desfeita.')) {
       return
     }
+
+    setDeleting(true)
+    setError(null)
 
     try {
       const response = await fetch(`/api/admin/tenants/${id}`, {
@@ -102,147 +101,200 @@ export default function EditarImobiliariaPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Erro ao excluir')
+        throw new Error(error.message || 'Erro ao deletar imobiliária')
       }
 
-      alert('Imobiliária excluída com sucesso!')
       router.push('/admin/imobiliarias')
-    } catch (error: any) {
-      console.error('Erro:', error)
-      alert(error.message || 'Erro ao excluir imobiliária')
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  async function handleToggleActive() {
+    if (!tenant) return
+
+    setSaving(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/admin/tenants/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...tenant,
+          active: !tenant.active,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Erro ao atualizar status')
+      }
+
+      const updatedTenant = await response.json()
+      setTenant(updatedTenant)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
+    } finally {
+      setSaving(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="mx-auto max-w-2xl space-y-6">
+        <div className="h-8 w-64 animate-pulse rounded bg-muted" />
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+            <div className="h-10 w-full animate-pulse rounded bg-muted" />
+            <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+            <div className="h-10 w-full animate-pulse rounded bg-muted" />
+          </div>
+        </Card>
       </div>
     )
   }
 
   if (!tenant) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Imobiliária não encontrada</p>
-        <Link href="/admin/imobiliarias">
-          <Button variant="link">Voltar para listagem</Button>
-        </Link>
+      <div className="mx-auto max-w-2xl">
+        <Card className="p-6 text-center">
+          <p className="text-muted-foreground">Imobiliária não encontrada</p>
+          <Button
+            className="mt-4"
+            onClick={() => router.push('/admin/imobiliarias')}
+          >
+            Voltar
+          </Button>
+        </Card>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/admin/imobiliarias">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+    <div className="mx-auto max-w-2xl space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Editar Imobiliária</h1>
-          <p className="text-muted-foreground">Atualize as informações da imobiliária</p>
+          <p className="text-muted-foreground">
+            Atualize as informações da imobiliária
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Status:
+          </span>
+          <Button
+            size="sm"
+            variant={tenant.active ? 'default' : 'outline'}
+            onClick={handleToggleActive}
+            disabled={saving}
+          >
+            {tenant.active ? 'Ativa' : 'Inativa'}
+          </Button>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações da Imobiliária</CardTitle>
-          <CardDescription>Preencha os dados abaixo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome *</Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="slug">Slug (URL amigável) *</Label>
-                <Input
-                  id="slug"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                  required
-                  pattern="[a-z0-9-]+"
-                  title="Apenas letras minúsculas, números e hífens"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="telefone">Telefone *</Label>
-                <Input
-                  id="telefone"
-                  value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="logo_url">URL do Logo (opcional)</Label>
-                <Input
-                  id="logo_url"
-                  type="url"
-                  value={formData.logo_url}
-                  onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                  placeholder="https://exemplo.com/logo.png"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="active">Status</Label>
-                <select
-                  id="active"
-                  value={formData.active ? 'true' : 'false'}
-                  onChange={(e) => setFormData({ ...formData, active: e.target.value === 'true' })}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="true">Ativo</option>
-                  <option value="false">Inativo</option>
-                </select>
-              </div>
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+              {error}
             </div>
+          )}
 
-            <div className="flex gap-4 pt-4">
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar Alterações
-              </Button>
-              <Link href="/admin/imobiliarias">
-                <Button type="button" variant="outline">
-                  Cancelar
-                </Button>
-              </Link>
+          <div className="space-y-2">
+            <Label htmlFor="nome">Nome da Imobiliária *</Label>
+            <Input
+              id="nome"
+              name="nome"
+              required
+              defaultValue={tenant.nome}
+              placeholder="Ex: Imobiliária Exemplo"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="slug">Slug (URL) *</Label>
+            <Input
+              id="slug"
+              name="slug"
+              required
+              defaultValue={tenant.slug}
+              placeholder="imobiliaria-exemplo"
+              pattern="[a-z0-9-]+"
+            />
+            <p className="text-xs text-muted-foreground">
+              Apenas letras minúsculas, números e hífens
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail *</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              defaultValue={tenant.email}
+              placeholder="contato@exemplo.com"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="telefone">Telefone</Label>
+            <Input
+              id="telefone"
+              name="telefone"
+              type="tel"
+              defaultValue={tenant.telefone || ''}
+              placeholder="(11) 99999-9999"
+            />
+          </div>
+
+          <div className="flex items-center justify-between border-t pt-6">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting || saving}
+            >
+              {deleting ? 'Deletando...' : 'Deletar Imobiliária'}
+            </Button>
+
+            <div className="flex gap-4">
               <Button
                 type="button"
-                variant="destructive"
-                onClick={handleDelete}
-                className="ml-auto"
+                variant="outline"
+                onClick={() => router.back()}
+                disabled={saving || deleting}
               >
-                Excluir Imobiliária
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saving || deleting}>
+                {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </div>
-          </form>
-        </CardContent>
+          </div>
+        </form>
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="mb-4 text-lg font-semibold">Informações do Sistema</h2>
+        <dl className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">ID:</dt>
+            <dd className="font-mono">{tenant.id}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Criada em:</dt>
+            <dd>{new Date(tenant.created_at).toLocaleString('pt-BR')}</dd>
+          </div>
+        </dl>
       </Card>
     </div>
   )

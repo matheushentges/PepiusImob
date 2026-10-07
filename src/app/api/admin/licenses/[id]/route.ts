@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 // GET /api/admin/licenses/[id] - Buscar licença por ID
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
 
     // Verificar autenticação
     const { data: { user } } = await supabase.auth.getUser()
@@ -30,7 +31,7 @@ export async function GET(
     const { data: license, error } = await supabase
       .from('licenses')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
@@ -46,11 +47,12 @@ export async function GET(
 
 // PUT /api/admin/licenses/[id] - Atualizar licença
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
 
     // Verificar autenticação
     const { data: { user } } = await supabase.auth.getUser()
@@ -91,7 +93,7 @@ export async function PUT(
         fim,
         active: active ?? true,
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -115,11 +117,12 @@ export async function PUT(
 
 // DELETE /api/admin/licenses/[id] - Excluir licença
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
+    const { id } = await params
 
     // Verificar autenticação
     const { data: { user } } = await supabase.auth.getUser()
@@ -142,7 +145,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('licenses')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (error) {
       console.error('Erro ao excluir licença:', error)
