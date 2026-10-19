@@ -15,10 +15,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Permitir falhas no prerendering
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
-};
+  };
 
 export default nextConfig;
