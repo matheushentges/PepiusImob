@@ -12,6 +12,8 @@ export interface Listing {
   area: number // m²
   parking: number
   image: string
+  images?: string[]
+  description?: string
   featured?: boolean
   createdAt: string
 }
@@ -31,6 +33,13 @@ export const MOCK_LISTINGS: Listing[] = [
     area: 120,
     parking: 2,
     image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80',
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80',
+      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80',
+      'https://images.unsplash.com/photo-1484154218962-a1c00207099b?w=800&q=80',
+    ],
+    description: 'Apartamento luminoso com vista definitiva para o Parque Ibirapuera. Reformado com materiais de alto padrão, piso em madeira maciça e cozinha integrada à sala de estar. Condomínio com piscina, academia e portaria 24h.',
     featured: true,
     createdAt: '2026-10-15',
   },
@@ -48,6 +57,12 @@ export const MOCK_LISTINGS: Listing[] = [
     area: 280,
     parking: 3,
     image: 'https://images.unsplash.com/photo-1600596542815-27b88e38e4d4?w=800&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1600596542815-27b88e38e4d4?w=800&q=80',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+    ],
+    description: 'Residência contemporânea em condomínio fechado com segurança 24h. Amplo jardim privativo, piscina aquecida, área gourmet com churrasqueira e forno de pizza. Suíte master com closet e hidromassagem.',
     featured: true,
     createdAt: '2026-10-14',
   },
@@ -81,6 +96,14 @@ export const MOCK_LISTINGS: Listing[] = [
     area: 240,
     parking: 3,
     image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+    images: [
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+      'https://images.unsplash.com/photo-1600596542815-27b88e38e4d4?w=800&q=80',
+      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80',
+      'https://images.unsplash.com/photo-1484154218962-a1c00207099b?w=800&q=80',
+      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80',
+    ],
+    description: 'Cobertura espetacular com vista panorâmica da cidade. Terraço de 80m² com piscina privativa, espaço gourmet e sauna. Dois pavimentos com escada em mármore, suítes com varanda e home theater.',
     featured: true,
     createdAt: '2026-10-12',
   },
@@ -156,6 +179,9 @@ export function formatPrice(value: number, type: 'venda' | 'aluguel'): string {
     currency: 'BRL',
     maximumFractionDigits: 0,
   }).format(value)
-
   return type === 'aluguel' ? `${formatted}/mês` : formatted
+}
+
+export function getListingImages(listing: Listing): string[] {
+  return listing.images ?? [listing.image]
 }

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { BedDouble, Bath, Maximize, Car, MapPin } from 'lucide-react'
 import { MOCK_LISTINGS, formatPrice } from '@/lib/listings-data'
 
@@ -34,10 +35,12 @@ export default function ImoveisPage() {
       {/* Listings grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {MOCK_LISTINGS.map((listing) => (
-          <article
+          <Link
             key={listing.id}
-            className="group overflow-hidden rounded-lg border border-border-subtle bg-surface-raised transition-all hover:border-accent/40 hover:shadow-md"
+            href={`/imoveis/${listing.id}`}
+            className="group block overflow-hidden rounded-lg border border-border-subtle bg-surface-raised transition-all hover:border-accent/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
+            <article>
             {/* Image */}
             <div className="relative aspect-[4/3] overflow-hidden bg-surface-overlay">
               <img
@@ -97,7 +100,8 @@ export default function ImoveisPage() {
                 )}
               </div>
             </div>
-          </article>
+            </article>
+          </Link>
         ))}
       </div>
     </div>
