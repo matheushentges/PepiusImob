@@ -1,3 +1,4 @@
+
 .env.local
 .env*.local
 node_modules
@@ -7,4 +8,3 @@ out
 *.log
 .claude
 docs
-supabase
