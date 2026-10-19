@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { AdminNav } from './nav'
 
 export default async function AdminLayout({
   children,
@@ -15,10 +16,9 @@ export default async function AdminLayout({
     redirect('/login')
   }
 
-  // Check if user is admin
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('*')
     .eq('id', user.id)
     .single()
 
@@ -28,56 +28,25 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="w-64 border-r bg-muted/50">
-        <div className="flex h-16 items-center border-b px-6">
-          <h1 className="text-xl font-bold text-primary">Admin</h1>
-        </div>
-        <nav className="space-y-1 p-4">
-          <a
-            href="/admin"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-          >
-            Dashboard
-          </a>
-          <a
-            href="/admin/imobiliarias"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-          >
-            Imobiliárias
-          </a>
-          <a
-            href="/admin/licencas"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-          >
-            Licenças
-          </a>
-          <a
-            href="/admin/usuarios"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-          >
-            Usuários
-          </a>
-        </nav>
-      </aside>
+      <AdminNav userName={profile?.nome || user.email} />
 
-      {/* Main content */}
-      <div className="flex flex-1 flex-col">
-        {/* Header */}
-        <header className="flex h-16 items-center justify-between border-b px-6">
-          <div>
-            <p className="text-sm font-medium text-primary">Admin Panel</p>
+      <div className="flex flex-1 flex-col lg:ml-64">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border-subtle bg-surface-base/80 px-6 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center rounded-md bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
+              Admin
+            </span>
+            <p className="text-sm font-semibold text-text-primary">Painel Administrativo</p>
           </div>
           <a
             href="/dashboard"
-            className="text-sm font-medium text-muted-foreground hover:underline"
+            className="text-sm font-medium text-text-secondary transition-colors hover:text-accent"
           >
             Ir para Dashboard
           </a>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 lg:p-8">{children}</main>
       </div>
     </div>
   )
