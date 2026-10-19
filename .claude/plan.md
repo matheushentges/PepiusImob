@@ -573,7 +573,7 @@ Cada imobiliária pode:
 - `README.md` (atualizado)
 
 #### ⏳ Pendente:
-- [ ] Deploy efetivo na Vercel
+- [z ] Deploy efetivo na Vercel
 - [ ] Configurar variáveis de ambiente em produção
 - [ ] Testar em produção
 - [ ] Configurar domínio customizado (opcional)
