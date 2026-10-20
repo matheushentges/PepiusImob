@@ -1,6 +1,27 @@
+import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
+
 export const dynamic = 'force-dynamic'
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const supabase = await createClient()
+
+  // Buscar métricas reais do SaaS
+  const [{ count: totalTenants }, { count: activeTenants }, { count: totalUsers }] = await Promise.all([
+    supabase.from('tenants').select('*', { count: 'exact', head: true }),
+    supabase.from('tenants').select('*', { count: 'exact', head: true }).eq('active', true),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).neq('role', 'admin'),
+  ])
+
+  // Calcular receita mensal estimada (soma das licenças ativas)
+  const { data: licenses } = await supabase
+    .from('licenses')
+    .select('valor')
+    .eq('active', true)
+    .gte('fim', new Date().toISOString())
+
+  const monthlyRevenue = licenses?.reduce((acc, curr) => acc + Number(curr.valor), 0) || 0
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -16,10 +37,10 @@ export default function AdminPage() {
       {/* Stats Grid - Linha de Planta: cards com border precisa, sem sombras pesadas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Total de Imobiliárias', value: '0', accent: false },
-          { label: 'Imobiliárias Ativas', value: '0', accent: false },
-          { label: 'Total de Usuários', value: '0', accent: false },
-          { label: 'Receita Mensal', value: 'R$ 0', accent: true },
+          { label: 'Total de Imobiliárias', value: totalTenants || 0, accent: false },
+          { label: 'Imobiliárias Ativas', value: activeTenants || 0, accent: false },
+          { label: 'Total de Usuários', value: totalUsers || 0, accent: false },
+          { label: 'Receita Mensal', value: `R$ ${monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, accent: true },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -58,7 +79,7 @@ export default function AdminPage() {
               desc: 'Ver e editar todos os usuários',
             },
           ].map((action) => (
-            <a
+            <Link
               key={action.href}
               href={action.href}
               className="group rounded-md border border-border p-5 transition-colors hover:border-primary hover:bg-secondary"
@@ -67,7 +88,7 @@ export default function AdminPage() {
                 {action.title}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{action.desc}</p>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

@@ -31,6 +31,11 @@ export default async function DashboardLayout({
     .eq('id', user.id)
     .single()
 
+  // Admins devem usar o painel /admin, não o dashboard da imobiliária
+  if (profile?.role === 'admin') {
+    redirect('/admin')
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar - Linha de Planta signature: border-r precisa, fundo card */}
