@@ -5,8 +5,9 @@ import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Loader2, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import { ImageUpload } from '@/components/shared/image-upload'
 
 interface Property {
   id: string
@@ -30,6 +31,14 @@ interface Property {
   created_at: string
 }
 
+interface ExistingImage {
+  id?: string
+  url: string
+  file?: File
+  is_cover: boolean
+  ordem: number
+}
+
 const selectClassName =
   'flex h-9 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
 
@@ -39,14 +48,30 @@ export default function EditarImovelPage() {
   const id = params?.id as string
 
   const [property, setProperty] = useState<Property | null>(null)
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (id) fetchProperty()
+    if (id) {
+      fetchProperty()
+      fetchImages()
+    }
   }, [id])
+
+  async function fetchImages() {
+    try {
+      const response = await fetch(`/api/dashboard/properties/${id}/images`)
+      if (response.ok) {
+        const data = await response.json()
+        setExistingImages(data)
+      }
+    } catch {
+      // Imagens são opcionais, não bloquear carregamento
+    }
+  }
 
   async function fetchProperty() {
     try {
@@ -329,11 +354,13 @@ export default function EditarImovelPage() {
           {/* Seção: Imagens */}
           <section className="space-y-5">
             <h2 className="border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Imagens</h2>
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary/50 p-8 text-center">
-              <Upload className="mb-3 h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium text-foreground">Arraste imagens ou clique para enviar</p>
-              <p className="mt-1 text-xs text-muted-foreground">PNG, JPG até 5MB cada (máx. 20 imagens)</p>
-            </div>
+            <ImageUpload
+              propertyId={id}
+              existingImages={existingImages}
+              onImagesChange={setExistingImages}
+              maxImages={20}
+              maxSizeMB={5}
+            />
           </section>
 
           {/* Actions */}

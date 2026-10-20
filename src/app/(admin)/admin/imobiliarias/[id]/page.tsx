@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Trash2, Globe, CheckCircle2, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface Tenant {
@@ -15,6 +15,9 @@ interface Tenant {
   email: string
   telefone: string | null
   active: boolean
+  subdomain: string | null
+  custom_domain: string | null
+  domain_verified: boolean
   created_at: string
 }
 
@@ -63,6 +66,8 @@ export default function EditarImobiliariaPage() {
       slug: formData.get('slug') as string,
       email: formData.get('email') as string,
       telefone: formData.get('telefone') as string,
+      subdomain: formData.get('subdomain') as string || null,
+      custom_domain: formData.get('custom_domain') as string || null,
       active: tenant?.active ?? true,
     }
 
@@ -191,7 +196,7 @@ export default function EditarImobiliariaPage() {
               Editar Imobiliária
             </h1>
             <p className="text-sm text-muted-foreground">
-              Atualize as informações da imobiliária
+              Gerencie dados, domínio e status da imobiliária
             </p>
           </div>
         </div>
@@ -220,69 +225,133 @@ export default function EditarImobiliariaPage() {
             </div>
           )}
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="nome" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Nome da Imobiliária *
-              </Label>
-              <Input
-                id="nome"
-                name="nome"
-                required
-                defaultValue={tenant.nome}
-                placeholder="Ex: Imobiliária Exemplo"
-                className="h-9 bg-input"
-              />
-            </div>
+          {/* Seção: Dados Básicos */}
+          <section className="space-y-5">
+            <h2 className="border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Dados Básicos
+            </h2>
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="nome" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Nome da Imobiliária *
+                </Label>
+                <Input
+                  id="nome"
+                  name="nome"
+                  required
+                  defaultValue={tenant.nome}
+                  placeholder="Ex: Imobiliária Exemplo"
+                  className="h-9 bg-input"
+                />
+              </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="slug" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Slug (URL) *
-              </Label>
-              <Input
-                id="slug"
-                name="slug"
-                required
-                defaultValue={tenant.slug}
-                placeholder="imobiliaria-exemplo"
-                pattern="[a-z0-9-]+"
-                className="h-9 bg-input font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Apenas letras minúsculas, números e hífens
-              </p>
-            </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="slug" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Slug (URL) *
+                </Label>
+                <Input
+                  id="slug"
+                  name="slug"
+                  required
+                  defaultValue={tenant.slug}
+                  placeholder="imobiliaria-exemplo"
+                  pattern="[a-z0-9-]+"
+                  className="h-9 bg-input font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Apenas letras minúsculas, números e hífens
+                </p>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                E-mail *
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                defaultValue={tenant.email}
-                placeholder="contato@exemplo.com"
-                className="h-9 bg-input"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  E-mail *
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  defaultValue={tenant.email}
+                  placeholder="contato@exemplo.com"
+                  className="h-9 bg-input"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="telefone" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Telefone
-              </Label>
-              <Input
-                id="telefone"
-                name="telefone"
-                type="tel"
-                defaultValue={tenant.telefone || ''}
-                placeholder="(11) 99999-9999"
-                className="h-9 bg-input"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="telefone" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Telefone
+                </Label>
+                <Input
+                  id="telefone"
+                  name="telefone"
+                  type="tel"
+                  defaultValue={tenant.telefone || ''}
+                  placeholder="(11) 99999-9999"
+                  className="h-9 bg-input"
+                />
+              </div>
             </div>
-          </div>
+          </section>
 
+          {/* Seção: Domínio do Site */}
+          <section className="space-y-5">
+            <div className="flex items-center gap-2 border-b border-border pb-2">
+              <Globe className="h-4 w-4 text-primary" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Domínio do Site
+              </h2>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="subdomain" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Subdomínio
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="subdomain"
+                    name="subdomain"
+                    defaultValue={tenant.subdomain || ''}
+                    placeholder="minha-imobiliaria"
+                    className="h-9 bg-input font-mono text-sm"
+                  />
+                  <span className="shrink-0 text-sm text-muted-foreground">.pepius.com</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="custom_domain" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Domínio Próprio
+                </Label>
+                <Input
+                  id="custom_domain"
+                  name="custom_domain"
+                  defaultValue={tenant.custom_domain || ''}
+                  placeholder="www.minhaimobiliaria.com.br"
+                  className="h-9 bg-input font-mono text-sm"
+                />
+                <div className="flex items-center gap-1.5">
+                  {tenant.domain_verified ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3 text-green-600" />
+                      <span className="text-xs text-green-700">Verificado</span>
+                    </>
+                  ) : tenant.custom_domain ? (
+                    <>
+                      <AlertCircle className="h-3 w-3 text-orange-600" />
+                      <span className="text-xs text-orange-700">Pendente de verificação DNS</span>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Configure um CNAME apontando para pepius.com
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Actions */}
           <div className="flex items-center justify-between border-t border-border pt-6">
             <Button
               type="button"
@@ -323,7 +392,7 @@ export default function EditarImobiliariaPage() {
         </form>
       </div>
 
-      {/* System Info Card - Linha de Planta: border precisa, dados em mono */}
+      {/* System Info Card */}
       <div className="rounded-lg border border-border bg-card p-5">
         <h2 className="mb-4 text-sm font-semibold text-foreground">Informações do Sistema</h2>
         <dl className="space-y-2 text-sm">

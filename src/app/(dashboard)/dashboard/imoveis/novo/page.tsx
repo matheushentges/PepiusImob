@@ -5,16 +5,25 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Loader2, Upload } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { ImageUpload } from '@/components/shared/image-upload'
 
 const selectClassName =
   'flex h-9 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
+
+interface PendingImage {
+  url: string
+  file?: File
+  is_cover: boolean
+  ordem: number
+}
 
 export default function NovoImovelPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -53,6 +62,36 @@ export default function NovoImovelPage() {
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Erro ao criar imóvel')
+      }
+
+      const createdProperty = await response.json()
+
+      // Upload das imagens pendentes (preview local) após criação do imóvel
+      if (pendingImages.length > 0) {
+        for (let i = 0; i < pendingImages.length; i++) {
+          const img = pendingImages[i]
+          if (img.file) {
+            const formData = new FormData()
+            formData.append('file', img.file)
+            formData.append('property_id', createdProperty.id)
+            try {
+              const uploadRes = await fetch('/api/dashboard/properties/upload-image', {
+                method: 'POST',
+                body: formData,
+              })
+              if (uploadRes.ok && img.is_cover) {
+                const uploaded = await uploadRes.json()
+                await fetch('/api/dashboard/properties/upload-image', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: uploaded.id, is_cover: true }),
+                })
+              }
+            } catch {
+              // Continuar mesmo se uma imagem falhar
+            }
+          }
+        }
       }
 
       router.push('/dashboard/imoveis')
@@ -380,16 +419,18 @@ export default function NovoImovelPage() {
             </div>
           </section>
 
-          {/* Seção: Imagens (placeholder para futura implementação) */}
+          {/* Seção: Imagens */}
           <section className="space-y-5">
             <h2 className="border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Imagens
             </h2>
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-secondary/50 p-8 text-center">
-              <Upload className="mb-3 h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium text-foreground">Arraste imagens ou clique para enviar</p>
-              <p className="mt-1 text-xs text-muted-foreground">PNG, JPG até 5MB cada (máx. 20 imagens)</p>
-            </div>
+            <ImageUpload
+              propertyId={undefined}
+              existingImages={pendingImages}
+              onImagesChange={setPendingImages}
+              maxImages={20}
+              maxSizeMB={5}
+            />
           </section>
 
           {/* Actions */}

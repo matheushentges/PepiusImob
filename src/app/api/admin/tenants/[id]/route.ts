@@ -78,7 +78,7 @@ export async function PUT(
     }
 
     // Validar dados
-    const { nome, slug, email, telefone, active } = body
+    const { nome, slug, email, telefone, active, subdomain, custom_domain } = body
 
     if (!nome || !slug || !email) {
       return NextResponse.json(
@@ -93,7 +93,7 @@ export async function PUT(
       .select('id')
       .eq('slug', slug)
       .neq('id', id)
-      .single()
+      .maybeSingle()
 
     if (existingSlug) {
       return NextResponse.json(
@@ -102,17 +102,61 @@ export async function PUT(
       )
     }
 
+    // Verificar unicidade do subdomínio
+    if (subdomain) {
+      const { data: existingSubdomain } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('subdomain', subdomain)
+        .neq('id', id)
+        .maybeSingle()
+
+      if (existingSubdomain) {
+        return NextResponse.json(
+          { message: 'Este subdomínio já está em uso por outra imobiliária' },
+          { status: 409 }
+        )
+      }
+    }
+
+    // Verificar unicidade do domínio próprio
+    if (custom_domain) {
+      const { data: existingDomain } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('custom_domain', custom_domain)
+        .neq('id', id)
+        .maybeSingle()
+
+      if (existingDomain) {
+        return NextResponse.json(
+          { message: 'Este domínio já está vinculado a outra imobiliária' },
+          { status: 409 }
+        )
+      }
+    }
+
     // Atualizar a imobiliária
+    const updateData: Record<string, unknown> = {
+      nome,
+      slug,
+      email,
+      telefone,
+      active: active !== undefined ? active : true,
+      updated_at: new Date().toISOString(),
+    }
+
+    // Campos de domínio
+    if (subdomain !== undefined) updateData.subdomain = subdomain || null
+    if (custom_domain !== undefined) {
+      updateData.custom_domain = custom_domain || null
+      // Resetar verificação se o domínio mudou
+      updateData.domain_verified = false
+    }
+
     const { data: tenant, error } = await supabase
       .from('tenants')
-      .update({
-        nome,
-        slug,
-        email,
-        telefone,
-        active: active !== undefined ? active : true,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
