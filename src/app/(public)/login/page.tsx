@@ -29,14 +29,31 @@ export default function LoginPage() {
       return
     }
 
-    // Verificar role do usuário para redirecionamento correto
-    const { data: profile } = await supabase
+    // Buscar sessão atualizada e verificar role para redirecionamento correto
+    const { data: { session } } = await supabase.auth.getSession()
+    const userId = session?.user?.id
+
+    if (!userId) {
+      setError('Sessão não encontrada após login. Tente novamente.')
+      setLoading(false)
+      return
+    }
+
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', (await supabase.auth.getUser()).data.user?.id)
+      .eq('id', userId)
       .single()
 
-    if (profile?.role === 'admin') {
+    if (profileError || !profile) {
+      console.error('Erro ao buscar perfil:', profileError)
+      setError('Perfil não encontrado. Contate o suporte.')
+      setLoading(false)
+      return
+    }
+
+    setLoading(false)
+    if (profile.role === 'admin') {
       router.push('/admin')
     } else {
       router.push('/dashboard')
