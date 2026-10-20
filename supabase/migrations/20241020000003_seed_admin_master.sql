@@ -5,6 +5,15 @@
 -- Executado automaticamente no deploy da Vercel via Supabase Migrations
 -- =====================================================
 
+-- =====================================================
+-- INSTRUÇÕES PRÉVIAS (EXECUTE ANTES DESTA MIGRATION):
+-- Crie o usuário manualmente no Supabase Dashboard > Authentication > Users:
+--   Email: admin@pepius-imob.com
+--   Password: 123
+--   Auto Confirm User: ON
+-- Esta migration apenas vincula o profile e cria o tenant admin.
+-- =====================================================
+
 DO $$
 DECLARE
   v_user_id UUID;
@@ -22,22 +31,16 @@ BEGIN
   )
   ON CONFLICT (slug) DO NOTHING;
 
-  -- 2. Criar usuário no Supabase Auth com senha '123'
-  -- supabase.auth.admin.create_user é disponível nas migrations do Supabase CLI
+  -- 2. Buscar usuário existente no auth.users
   SELECT id INTO v_user_id
   FROM auth.users
   WHERE email = 'admin@pepius-imob.com';
 
   IF v_user_id IS NULL THEN
-    v_user_id := supabase.auth.admin.create_user(
-      email => 'admin@pepius-imob.com',
-      password => '123',
-      email_confirm => true,
-      user_metadata => '{"role": "admin", "nome": "Administrador Pepius"}'::jsonb
-    );
+    RAISE EXCEPTION 'Usuário admin@pepius-imob.com não encontrado em auth.users. Crie-o primeiro no Supabase Dashboard > Authentication.';
   END IF;
 
-  -- 3. Vincular profile ao tenant admin
+  -- 3. Vincular profile ao tenant admin (idempotente)
   INSERT INTO profiles (id, tenant_id, role, nome, email)
   VALUES (
     v_user_id,
@@ -52,7 +55,7 @@ BEGIN
     nome = EXCLUDED.nome,
     email = EXCLUDED.email;
 
-  RAISE NOTICE 'Admin master criado/atualizado: % (tenant: %)', v_user_id, v_tenant_id;
+  RAISE NOTICE 'Admin master vinculado: % (tenant: %)', v_user_id, v_tenant_id;
 END $$;
 
 -- Comentário documental
