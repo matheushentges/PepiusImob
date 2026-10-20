@@ -29,28 +29,18 @@ export default function LoginPage() {
       return
     }
 
-    // Buscar sessão atualizada e verificar role para redirecionamento correto
-    const { data: { session } } = await supabase.auth.getSession()
-    const userId = session?.user?.id
+    // Buscar perfil via API server-side para evitar problemas de RLS no cliente
+    const profileRes = await fetch('/api/auth/profile')
 
-    if (!userId) {
-      setError('Sessão não encontrada após login. Tente novamente.')
+    if (!profileRes.ok) {
+      const errData = await profileRes.json().catch(() => ({}))
+      console.error('Erro ao buscar perfil:', errData)
+      setError(errData.error || 'Perfil não encontrado. Contate o suporte.')
       setLoading(false)
       return
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    if (profileError || !profile) {
-      console.error('Erro ao buscar perfil:', profileError)
-      setError('Perfil não encontrado. Contate o suporte.')
-      setLoading(false)
-      return
-    }
+    const profile = await profileRes.json()
 
     setLoading(false)
     if (profile.role === 'admin') {
