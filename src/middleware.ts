@@ -2,8 +2,8 @@ import { updateSession } from '@/lib/supabase/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Domínio base do SaaS (ex: pepius.com ou localhost)
-const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || 'localhost:3000'
+// Domínio base do SaaS: usa variável de ambiente ou detecta automaticamente em produção
+const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN || (process.env.VERCEL ? 'pepius-imob.vercel.app' : 'localhost:3000')
 
 /**
  * Resolve o tenant_id com base no hostname da requisição.
