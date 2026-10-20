@@ -1,119 +1,76 @@
-import { Building2, MessageSquare, Settings, TrendingUp } from 'lucide-react'
+export const dynamic = 'force-dynamic'
 
 export default function DashboardPage() {
-  return (
-    <div className="space-y-8">
-      {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
-          Visão Geral
-        </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Acompanhe o desempenho da sua imobiliária
-        </p>
-      </div>
+ return (
+ <div className="space-y-8">
+ {/* Header */}
+ <div>
+ <h1 className="font-serif text-3xl font-semibold tracking-tight text-foreground">
+ Dashboard
+ </h1>
+ <p className="mt-1 text-sm text-muted-foreground">
+ Visão geral da sua imobiliária
+ </p>
+ </div>
 
-      {/* Stats grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Total de Imóveis"
-          value="0"
-          icon={Building2}
-        />
-        <StatCard
-          label="Imóveis Disponíveis"
-          value="0"
-          icon={TrendingUp}
-        />
-        <StatCard
-          label="Leads Este Mês"
-          value="0"
-          icon={MessageSquare}
-        />
-        <StatCard
-          label="Conversas Ativas"
-          value="0"
-          icon={MessageSquare}
-        />
-      </div>
+ {/* Stats Grid - Linha de Planta: cards com border precisa, sem sombras pesadas */}
+ <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+ {[
+ { label: 'Total de Imóveis', value: '0', accent: false },
+ { label: 'Disponíveis', value: '0', accent: false },
+ { label: 'Leads Este Mês', value: '0', accent: false },
+ { label: 'Conversas Ativas', value: '0', accent: true },
+ ].map((stat) => (
+ <div
+ key={stat.label}
+ className="rounded-lg border border-border bg-card p-5"
+ >
+ <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+ {stat.label}
+ </p>
+ <p className={`mt-2 text-2xl font-semibold ${stat.accent ? 'text-accent' : 'text-foreground'}`}>
+ {stat.value}
+ </p>
+ </div>
+ ))}
+ </div>
 
-      {/* Quick actions */}
-      <section>
-        <h2 className="mb-4 text-lg font-medium text-text-primary">
-          Ações Rápidas
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <QuickAction
-            href="/dashboard/imoveis/novo"
-            title="Novo Imóvel"
-            description="Cadastrar um novo imóvel"
-            icon={Building2}
-          />
-          <QuickAction
-            href="/dashboard/inbox"
-            title="Inbox"
-            description="Ver conversas omnichannel"
-            icon={MessageSquare}
-          />
-          <QuickAction
-            href="/dashboard/configuracoes/canais"
-            title="Configurar Canais"
-            description="Integrar WhatsApp, Instagram"
-            icon={Settings}
-          />
-        </div>
-      </section>
-    </div>
-  )
-}
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string
-  value: string
-  icon: React.ComponentType<{ className?: string }>
-}) {
-  return (
-    <div className="rounded-lg bg-surface-raised p-5 border border-border-subtle">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-          {label}
-        </p>
-        <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
-      </div>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-text-primary">
-        {value}
-      </p>
-    </div>
-  )
-}
-
-function QuickAction({
-  href,
-  title,
-  description,
-  icon: Icon,
-}: {
-  href: string
-  title: string
-  description: string
-  icon: React.ComponentType<{ className?: string }>
-}) {
-  return (
-    <a
-      href={href}
-      className="group flex items-start gap-4 rounded-lg border border-dashed border-border-default bg-surface-base p-5 transition-all hover:border-solid hover:border-accent hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-surface-overlay text-text-secondary transition-colors group-hover:bg-accent group-hover:text-accent-text">
-        <Icon className="h-5 w-5" aria-hidden="true" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-text-primary">{title}</p>
-        <p className="mt-0.5 text-xs text-text-secondary">{description}</p>
-      </div>
-    </a>
-  )
+ {/* Quick Actions - Linha de Planta: bordas precisas, hover sutil */}
+ <div className="rounded-lg border border-border bg-card">
+ <div className="border-b border-border px-5 py-4">
+ <h2 className="text-lg font-semibold text-foreground">Ações Rápidas</h2>
+ </div>
+ <div className="grid gap-4 p-5 md:grid-cols-3">
+ {[
+ {
+ href: '/dashboard/imoveis/novo',
+ title: 'Novo Imóvel',
+ desc: 'Cadastrar um novo imóvel no sistema',
+ },
+ {
+ href: '/dashboard/inbox',
+ title: 'Inbox',
+ desc: 'Ver conversas omnichannel',
+ },
+ {
+ href: '/dashboard/configuracoes/canais',
+ title: 'Configurar Canais',
+ desc: 'Integrar WhatsApp, Instagram e outros',
+ },
+ ].map((action) => (
+ <a
+ key={action.href}
+ href={action.href}
+ className="group rounded-md border border-border p-5 transition-colors hover:border-primary hover:bg-secondary"
+ >
+ <p className="text-sm font-semibold text-foreground group-hover:text-primary">
+ {action.title}
+ </p>
+ <p className="mt-1 text-xs text-muted-foreground">{action.desc}</p>
+ </a>
+ ))}
+ </div>
+ </div>
+ </div>
+ )
 }

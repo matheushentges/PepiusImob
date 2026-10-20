@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Serif_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 
-const inter = Inter({
+const dmSerif = DM_Serif_Display({
+  weight: "400",
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-dm-serif",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
 });
 
 export const metadata: Metadata = {
@@ -16,8 +22,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
-      <body className="min-h-screen bg-surface-base font-sans antialiased text-text-primary">
+    <html lang="pt-BR" className={`${dmSerif.variable} ${dmSans.variable}`}>
+      <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

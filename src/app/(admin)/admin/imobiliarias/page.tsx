@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -15,7 +14,6 @@ export const dynamic = 'force-dynamic'
 export default async function ImobiliariasPage() {
   const supabase = await createClient()
 
-  // Fetch all tenants
   const { data: tenants, error } = await supabase
     .from('tenants')
     .select('*, licenses(*)')
@@ -27,57 +25,71 @@ export default async function ImobiliariasPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Imobiliárias</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
+            Imobiliárias
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Gerencie todas as imobiliárias cadastradas
           </p>
         </div>
         <Button asChild>
-          <a href="/admin/imobiliarias/nova">+ Nova Imobiliária</a>
+          <a href="/admin/imobiliarias/nova">Nova Imobiliária</a>
         </Button>
       </div>
 
-      <Card>
+      {/* Table Card - Linha de Planta: border precisa, header separado por linha fina */}
+      <div className="rounded-lg border border-border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>E-mail</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Licença</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Nome
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Slug
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                E-mail
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Status
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Licença
+              </TableHead>
+              <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {tenants && tenants.length > 0 ? (
               tenants.map((tenant) => (
-                <TableRow key={tenant.id}>
-                  <TableCell className="font-medium">{tenant.nome}</TableCell>
+                <TableRow key={tenant.id} className="border-b border-border last:border-0">
+                  <TableCell className="font-medium text-foreground">{tenant.nome}</TableCell>
                   <TableCell>
-                    <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    <code className="rounded bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">
                       {tenant.slug}
                     </code>
                   </TableCell>
-                  <TableCell>{tenant.email}</TableCell>
+                  <TableCell className="text-muted-foreground">{tenant.email}</TableCell>
                   <TableCell>
                     {tenant.active ? (
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                      <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                         Ativo
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                      <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
                         Inativo
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-muted-foreground">
                     {tenant.license_expires_at
-                      ? new Date(tenant.license_expires_at).toLocaleDateString(
-                          'pt-BR'
-                        )
+                      ? new Date(tenant.license_expires_at).toLocaleDateString('pt-BR')
                       : 'Sem licença'}
                   </TableCell>
                   <TableCell className="text-right">
@@ -89,14 +101,14 @@ export default async function ImobiliariasPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
                   Nenhuma imobiliária cadastrada ainda.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </Card>
+      </div>
     </div>
   )
 }

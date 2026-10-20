@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card } from '@/components/ui/card'
+import { ArrowLeft, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 
 export default function NovaImobiliariaPage() {
   const router = useRouter()
@@ -48,80 +49,107 @@ export default function NovaImobiliariaPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Nova Imobiliária</h1>
-        <p className="text-muted-foreground">
-          Cadastre uma nova imobiliária no sistema
-        </p>
+      {/* Header - Linha de Planta */}
+      <div className="flex items-center gap-4">
+        <Link href="/admin/imobiliarias">
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md hover:bg-secondary">
+            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
+            Nova Imobiliária
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Cadastre uma nova imobiliária no sistema
+          </p>
+        </div>
       </div>
 
-      <Card className="p-6">
+      {/* Form Card - Borders-only, bg-card */}
+      <div className="rounded-lg border border-border bg-card p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="nome">Nome da Imobiliária *</Label>
-            <Input
-              id="nome"
-              name="nome"
-              required
-              placeholder="Ex: Imobiliária Exemplo"
-            />
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="nome" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Nome da Imobiliária *
+              </Label>
+              <Input
+                id="nome"
+                name="nome"
+                required
+                placeholder="Ex: Imobiliária Exemplo"
+                className="h-9 bg-input"
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="slug" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Slug (URL) *
+              </Label>
+              <Input
+                id="slug"
+                name="slug"
+                required
+                placeholder="imobiliaria-exemplo"
+                pattern="[a-z0-9-]+"
+                className="h-9 bg-input font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Apenas letras minúsculas, números e hífens
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                E-mail *
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="contato@exemplo.com"
+                className="h-9 bg-input"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="telefone" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Telefone
+              </Label>
+              <Input
+                id="telefone"
+                name="telefone"
+                type="tel"
+                placeholder="(11) 99999-9999"
+                className="h-9 bg-input"
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="slug">Slug (URL) *</Label>
-            <Input
-              id="slug"
-              name="slug"
-              required
-              placeholder="imobiliaria-exemplo"
-              pattern="[a-z0-9-]+"
-            />
-            <p className="text-xs text-muted-foreground">
-              Apenas letras minúsculas, números e hífens
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail *</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              placeholder="contato@exemplo.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="telefone">Telefone</Label>
-            <Input
-              id="telefone"
-              name="telefone"
-              type="tel"
-              placeholder="(11) 99999-9999"
-            />
-          </div>
-
-          <div className="flex gap-4">
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Criando...' : 'Criar Imobiliária'}
+          <div className="flex items-center gap-3 border-t border-border pt-6">
+            <Button type="submit" disabled={loading} className="h-9 px-5">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Criar Imobiliária
             </Button>
             <Button
               type="button"
               variant="outline"
+              className="h-9"
               onClick={() => router.back()}
             >
               Cancelar
             </Button>
           </div>
         </form>
-      </Card>
+      </div>
     </div>
   )
 }

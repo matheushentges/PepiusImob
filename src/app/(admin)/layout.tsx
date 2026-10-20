@@ -1,6 +1,14 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { AdminNav } from './nav'
+import Link from 'next/link'
+import { LayoutDashboard, Building2, KeyRound, Users, ArrowRight } from 'lucide-react'
+
+const navItems = [
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/imobiliarias', label: 'Imobiliárias', icon: Building2 },
+  { href: '/admin/licencas', label: 'Licenças', icon: KeyRound },
+  { href: '/admin/usuarios', label: 'Usuários', icon: Users },
+]
 
 export default async function AdminLayout({
   children,
@@ -27,26 +35,49 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
-      <AdminNav userName={profile?.nome || user.email} />
-
-      <div className="flex flex-1 flex-col lg:ml-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border-subtle bg-surface-base/80 px-6 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center rounded-md bg-accent-subtle px-2 py-0.5 text-xs font-medium text-accent">
-              Admin
-            </span>
-            <p className="text-sm font-semibold text-text-primary">Painel Administrativo</p>
-          </div>
-          <a
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar - Linha de Planta signature: border-r precisa, fundo card */}
+      <aside className="hidden w-64 flex-col border-r border-border bg-card md:flex">
+        <div className="flex h-14 items-center border-b border-border px-5">
+          <span className="font-serif text-lg font-semibold tracking-tight text-foreground">
+            Pepius
+          </span>
+          <span className="ml-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary-foreground">
+            Admin
+          </span>
+        </div>
+        <nav className="flex-1 space-y-0.5 p-3">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              <item.icon className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="border-t border-border p-3">
+          <Link
             href="/dashboard"
-            className="text-sm font-medium text-text-secondary transition-colors hover:text-accent"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
+            <ArrowRight className="h-3 w-3" />
             Ir para Dashboard
-          </a>
-        </header>
+          </Link>
+        </div>
+      </aside>
 
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+      {/* Main content */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Mobile header */}
+        <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:hidden">
+          <span className="font-serif text-base font-semibold text-foreground">Pepius Admin</span>
+        </header>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="mx-auto max-w-6xl">{children}</div>
+        </main>
       </div>
     </div>
   )

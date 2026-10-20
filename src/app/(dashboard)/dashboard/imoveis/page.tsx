@@ -1,149 +1,207 @@
-import { Building2, Plus, Search, MoreHorizontal, MapPin, BedDouble, Bath, Maximize } from 'lucide-react'
-import { MOCK_LISTINGS, formatPrice } from '@/lib/listings-data'
+import { createClient } from '@/lib/supabase/server'
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Plus, Home, Building, MapPin } from 'lucide-react'
+import Link from 'next/link'
 
-export default function DashboardImoveisPage() {
+export const dynamic = 'force-dynamic'
+
+const statusLabels: Record<string, string> = {
+  disponivel: 'Disponível',
+  vendido: 'Vendido',
+  alugado: 'Alugado',
+  reservado: 'Reservado',
+}
+
+const statusColors: Record<string, string> = {
+  disponivel: 'bg-green-50 text-green-700 ring-green-600/20',
+  vendido: 'bg-blue-50 text-blue-700 ring-blue-600/20',
+  alugado: 'bg-purple-50 text-purple-700 ring-purple-600/20',
+  reservado: 'bg-orange-50 text-orange-700 ring-orange-600/20',
+}
+
+const tipoLabels: Record<string, string> = {
+  casa: 'Casa',
+  apartamento: 'Apartamento',
+  terreno: 'Terreno',
+  comercial: 'Comercial',
+  rural: 'Rural',
+}
+
+const finalidadeLabels: Record<string, string> = {
+  venda: 'Venda',
+  locacao: 'Locação',
+  ambos: 'Ambos',
+}
+
+function formatCurrency(value: number | null) {
+  if (!value) return '—'
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+export default async function ImoveisPage() {
+  const supabase = await createClient()
+
+  const { data: properties, error } = await supabase
+    .from('properties')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching properties:', error)
+  }
+
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Header - Linha de Planta */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
             Imóveis
           </h1>
-          <p className="mt-1 text-sm text-text-secondary">
-            Gerencie os anúncios da sua imobiliária
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gerencie o portfólio de imóveis da sua imobiliária
           </p>
         </div>
-        <a
-          href="/dashboard/imoveis/novo"
-          className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-accent px-4 text-sm font-semibold text-accent-text shadow-xs transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Novo Imóvel
-        </a>
+        <Button asChild className="h-9 gap-2">
+          <Link href="/dashboard/imoveis/novo">
+            <Plus className="h-4 w-4" />
+            Novo Imóvel
+          </Link>
+        </Button>
       </div>
 
-      {/* Search and filters bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" aria-hidden="true" />
+      {/* Filters Bar - Linha de Planta: border precisa, inputs bg-input */}
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-4">
+        <div className="relative flex-1 min-w-[200px]">
+          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Buscar por título, bairro ou cidade..."
-            className="w-full rounded-md border border-border-default bg-surface-raised py-2 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            placeholder="Buscar por cidade, bairro..."
+            className="h-9 w-full rounded-md border border-input bg-input pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
-        <div className="flex gap-2">
-          {['Todos', 'Venda', 'Aluguel'].map((filter, i) => (
-            <button
-              key={filter}
-              type="button"
-              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                i === 0
-                  ? 'bg-accent-subtle text-accent'
-                  : 'border border-border-default bg-surface-raised text-text-secondary hover:border-accent hover:text-text-primary'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
+        <select className="h-9 rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+          <option value="">Todos os tipos</option>
+          <option value="casa">Casa</option>
+          <option value="apartamento">Apartamento</option>
+          <option value="terreno">Terreno</option>
+          <option value="comercial">Comercial</option>
+        </select>
+        <select className="h-9 rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+          <option value="">Todos os status</option>
+          <option value="disponivel">Disponível</option>
+          <option value="vendido">Vendido</option>
+          <option value="alugado">Alugado</option>
+        </select>
       </div>
 
-      {/* Listings table */}
-      <div className="overflow-hidden rounded-lg border border-border-subtle bg-surface-raised">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-border-subtle bg-surface-overlay/50">
-                <th className="px-4 py-3 font-medium text-text-secondary">Imóvel</th>
-                <th className="px-4 py-3 font-medium text-text-secondary">Tipo</th>
-                <th className="px-4 py-3 font-medium text-text-secondary">Preço</th>
-                <th className="px-4 py-3 font-medium text-text-secondary">Detalhes</th>
-                <th className="px-4 py-3 font-medium text-text-secondary">Status</th>
-                <th className="px-4 py-3 font-medium text-text-secondary text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-subtle">
-              {MOCK_LISTINGS.map((listing) => (
-                <tr key={listing.id} className="transition-colors hover:bg-surface-overlay/30">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-surface-overlay">
-                        <img
-                          src={listing.image}
-                          alt=""
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
+      {/* Table Card - Linha de Planta: border precisa, header separado por linha fina */}
+      <div className="rounded-lg border border-border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Imóvel
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Tipo
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Finalidade
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Preço
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Status
+              </TableHead>
+              <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Ações
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {properties && properties.length > 0 ? (
+              properties.map((property) => (
+                <TableRow key={property.id} className="border-b border-border last:border-0">
+                  <TableCell>
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground">
+                        {property.tipo === 'apartamento' ? (
+                          <Building className="h-5 w-5" />
+                        ) : (
+                          <Home className="h-5 w-5" />
+                        )}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-text-primary">{listing.title}</p>
-                        <div className="flex items-center gap-1 text-xs text-text-tertiary">
-                          <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-                          <span className="truncate">{listing.neighborhood}, {listing.city}</span>
-                        </div>
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {property.titulo}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {property.bairro}, {property.cidade}/{property.estado}
+                        </p>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                      listing.type === 'venda'
-                        ? 'bg-accent-subtle text-accent'
-                        : 'bg-surface-overlay text-text-secondary'
-                    }`}>
-                      {listing.type === 'venda' ? 'Venda' : 'Aluguel'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-medium tabular-nums text-text-primary">
-                    {formatPrice(listing.price, listing.type)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-secondary">
-                      {listing.bedrooms > 0 && (
-                        <span className="flex items-center gap-1">
-                          <BedDouble className="h-3 w-3" aria-hidden="true" />
-                          {listing.bedrooms}
-                        </span>
-                      )}
-                      {listing.bathrooms > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Bath className="h-3 w-3" aria-hidden="true" />
-                          {listing.bathrooms}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Maximize className="h-3 w-3" aria-hidden="true" />
-                        {listing.area}m²
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
-                      <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
-                      Ativo
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-surface-overlay hover:text-text-primary"
-                      aria-label="Mais ações"
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {tipoLabels[property.tipo] || property.tipo}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {finalidadeLabels[property.finalidade] || property.finalidade}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm tabular-nums text-foreground">
+                    {property.finalidade === 'locacao' || property.finalidade === 'ambos'
+                      ? formatCurrency(property.preco_locacao)
+                      : formatCurrency(property.preco_venda)}
+                    {property.finalidade === 'ambos' && property.preco_locacao && (
+                      <span className="ml-1 text-xs text-muted-foreground">/mês</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${statusColors[property.status] || 'bg-gray-50 text-gray-700 ring-gray-600/20'}`}
                     >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      {statusLabels[property.status] || property.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" asChild className="h-8">
+                      <Link href={`/dashboard/imoveis/${property.id}`}>Editar</Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="py-12 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                    <Home className="h-6 w-6" />
+                  </div>
+                  <p className="mt-3 text-sm font-medium text-foreground">Nenhum imóvel cadastrado</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Comece adicionando seu primeiro imóvel ao portfólio
+                  </p>
+                  <Button asChild className="mt-4 h-9">
+                    <Link href="/dashboard/imoveis/novo">Adicionar Imóvel</Link>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
-
-      {/* Summary footer */}
-      <p className="text-xs text-text-tertiary">
-        Exibindo {MOCK_LISTINGS.length} de {MOCK_LISTINGS.length} imóveis
-      </p>
     </div>
   )
 }

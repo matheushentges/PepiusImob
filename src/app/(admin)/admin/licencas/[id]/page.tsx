@@ -5,8 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 
 interface License {
@@ -134,149 +133,178 @@ export default function EditarLicencaPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="mx-auto max-w-2xl space-y-6">
+        <div className="h-8 w-64 animate-pulse rounded bg-muted" />
+        <div className="rounded-lg border border-border bg-card p-6">
+          <div className="space-y-4">
+            <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+            <div className="h-9 w-full animate-pulse rounded bg-muted" />
+            <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+            <div className="h-9 w-full animate-pulse rounded bg-muted" />
+          </div>
+        </div>
       </div>
     )
   }
 
   if (!license) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Licença não encontrada</p>
-        <Link href="/admin/licencas">
-          <Button variant="link">Voltar para listagem</Button>
-        </Link>
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-lg border border-border bg-card p-6 text-center">
+          <p className="text-sm text-muted-foreground">Licença não encontrada</p>
+          <Link href="/admin/licencas">
+            <Button variant="outline" className="mt-4 h-9">Voltar para listagem</Button>
+          </Link>
+        </div>
       </div>
     )
   }
 
+  const selectClassName = "flex h-9 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
+      {/* Header - Linha de Planta */}
       <div className="flex items-center gap-4">
         <Link href="/admin/licencas">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md hover:bg-secondary">
+            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">Editar Licença</h1>
-          <p className="text-muted-foreground">Atualize as informações da licença</p>
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
+            Editar Licença
+          </h1>
+          <p className="text-sm text-muted-foreground">Atualize as informações da licença</p>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações da Licença</CardTitle>
-          <CardDescription>Preencha os dados abaixo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="tenant_id">Imobiliária *</Label>
-                <select
-                  id="tenant_id"
-                  value={formData.tenant_id}
-                  onChange={(e) => setFormData({ ...formData, tenant_id: e.target.value })}
-                  required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">Selecione...</option>
-                  {tenants.map((tenant) => (
-                    <option key={tenant.id} value={tenant.id}>
-                      {tenant.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="plano">Plano *</Label>
-                <select
-                  id="plano"
-                  value={formData.plano}
-                  onChange={(e) => setFormData({ ...formData, plano: e.target.value })}
-                  required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="basico">Básico</option>
-                  <option value="profissional">Profissional</option>
-                  <option value="premium">Premium</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="valor">Valor (R$) *</Label>
-                <Input
-                  id="valor"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.valor}
-                  onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="active">Status</Label>
-                <select
-                  id="active"
-                  value={formData.active ? 'true' : 'false'}
-                  onChange={(e) => setFormData({ ...formData, active: e.target.value === 'true' })}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="true">Ativo</option>
-                  <option value="false">Inativo</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="inicio">Data de Início *</Label>
-                <Input
-                  id="inicio"
-                  type="date"
-                  value={formData.inicio}
-                  onChange={(e) => setFormData({ ...formData, inicio: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fim">Data de Fim *</Label>
-                <Input
-                  id="fim"
-                  type="date"
-                  value={formData.fim}
-                  onChange={(e) => setFormData({ ...formData, fim: e.target.value })}
-                  required
-                />
-              </div>
+      {/* Form Card - Borders-only, bg-card */}
+      <div className="rounded-lg border border-border bg-card p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="tenant_id" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Imobiliária *
+              </Label>
+              <select
+                id="tenant_id"
+                value={formData.tenant_id}
+                onChange={(e) => setFormData({ ...formData, tenant_id: e.target.value })}
+                required
+                className={selectClassName}
+              >
+                <option value="">Selecione...</option>
+                {tenants.map((tenant) => (
+                  <option key={tenant.id} value={tenant.id}>
+                    {tenant.nome}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar Alterações
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="plano" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Plano *
+              </Label>
+              <select
+                id="plano"
+                value={formData.plano}
+                onChange={(e) => setFormData({ ...formData, plano: e.target.value })}
+                required
+                className={selectClassName}
+              >
+                <option value="basico">Básico</option>
+                <option value="profissional">Profissional</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="valor" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Valor (R$) *
+              </Label>
+              <Input
+                id="valor"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.valor}
+                onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                required
+                className="h-9 bg-input font-mono tabular-nums"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="inicio" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Data de Início *
+              </Label>
+              <Input
+                id="inicio"
+                type="date"
+                value={formData.inicio}
+                onChange={(e) => setFormData({ ...formData, inicio: e.target.value })}
+                required
+                className="h-9 bg-input tabular-nums"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fim" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Data de Fim *
+              </Label>
+              <Input
+                id="fim"
+                type="date"
+                value={formData.fim}
+                onChange={(e) => setFormData({ ...formData, fim: e.target.value })}
+                required
+                className="h-9 bg-input tabular-nums"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="active" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Status
+              </Label>
+              <select
+                id="active"
+                value={formData.active ? 'true' : 'false'}
+                onChange={(e) => setFormData({ ...formData, active: e.target.value === 'true' })}
+                className={selectClassName}
+              >
+                <option value="true">Ativo</option>
+                <option value="false">Inativo</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-border pt-6">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              className="h-9"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Excluir Licença
+            </Button>
+
+            <div className="flex gap-3">
               <Link href="/admin/licencas">
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" className="h-9">
                   Cancelar
                 </Button>
               </Link>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleDelete}
-                className="ml-auto"
-              >
-                Excluir Licença
+              <Button type="submit" disabled={saving} className="h-9 px-5">
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Alterações
               </Button>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

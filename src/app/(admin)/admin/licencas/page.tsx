@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -10,10 +9,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
+export const dynamic = 'force-dynamic'
+
 export default async function LicencasPage() {
   const supabase = await createClient()
 
-  // Fetch all licenses with tenant info
   const { data: licenses, error } = await supabase
     .from('licenses')
     .select('*, tenants(nome, slug)')
@@ -40,55 +40,79 @@ export default async function LicencasPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Licenças</h1>
-          <p className="text-muted-foreground">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
+            Licenças
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Gerencie as licenças de todas as imobiliárias
           </p>
         </div>
         <Button asChild>
-          <a href="/admin/licencas/nova">+ Nova Licença</a>
+          <a href="/admin/licencas/nova">Nova Licença</a>
         </Button>
       </div>
 
-      <Card>
+      {/* Table Card - Linha de Planta: border precisa, header separado por linha fina */}
+      <div className="rounded-lg border border-border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Imobiliária</TableHead>
-              <TableHead>Plano</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Início</TableHead>
-              <TableHead>Fim</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Imobiliária
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Plano
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Valor
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Início
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Fim
+              </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Status
+              </TableHead>
+              <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {licenses && licenses.length > 0 ? (
               licenses.map((license) => (
-                <TableRow key={license.id}>
-                  <TableCell className="font-medium">
+                <TableRow key={license.id} className="border-b border-border last:border-0">
+                  <TableCell className="font-medium text-foreground">
                     {license.tenants?.nome || 'N/A'}
                   </TableCell>
                   <TableCell>
-                    <span className="capitalize">{license.plano}</span>
+                    <span className="capitalize text-muted-foreground">{license.plano}</span>
                   </TableCell>
-                  <TableCell>{formatCurrency(license.valor)}</TableCell>
-                  <TableCell>{formatDate(license.inicio)}</TableCell>
-                  <TableCell>{formatDate(license.fim)}</TableCell>
+                  <TableCell className="font-mono text-sm tabular-nums text-foreground">
+                    {formatCurrency(license.valor)}
+                  </TableCell>
+                  <TableCell className="tabular-nums text-muted-foreground">
+                    {formatDate(license.inicio)}
+                  </TableCell>
+                  <TableCell className="tabular-nums text-muted-foreground">
+                    {formatDate(license.fim)}
+                  </TableCell>
                   <TableCell>
                     {license.active && !isExpired(license.fim) ? (
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                      <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                         Ativo
                       </span>
                     ) : isExpired(license.fim) ? (
-                      <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
+                      <span className="inline-flex items-center rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20">
                         Expirado
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                      <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
                         Inativo
                       </span>
                     )}
@@ -102,14 +126,14 @@ export default async function LicencasPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
                   Nenhuma licença cadastrada ainda.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </Card>
+      </div>
     </div>
   )
 }
