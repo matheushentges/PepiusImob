@@ -45,6 +45,10 @@ Durante desenvolvimento, usamos Supabase Cloud. Para cliente, usamos a stack ofi
 Deploys do Vercel são previews de desenvolvimento, não instalações de clientes. `LICENSE_DEV_BYPASS=true` só funciona em `VERCEL_ENV=preview` ou no desenvolvimento local; `VERCEL_ENV=production` sempre exige uma lease assinada. Preview deve usar credenciais e dados Supabase de desenvolvimento isolados.
 Para abrir a vitrine de Preview sem consultar uma licença, configure `LICENSE_DEV_BYPASS=true` no escopo Preview do Vercel. Sem variáveis Supabase e tenant, a aplicação abre com catálogo vazio e autenticação desabilitada; o login volta a funcionar quando o Supabase é configurado. Para trabalhar com dados, configure no Preview `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server-only), `PEPIUS_TENANT_ID` e `LEAD_RATE_LIMIT_PEPPER`, todos ligados a um projeto de desenvolvimento isolado. Nunca copie credenciais de produção ou de clientes.
 
+## Interface da vitrine
+
+A rota inicial preserva a composição aprovada da marca Linha de Planta: navegação discreta, hero serifado, busca, destaques e rodapé. O conteúdo público é voltado a compradores e locatários; não deve prometer Inbox/IA nem vender cadastro self-service. A busca da home envia texto e finalidade para a listagem. Os tokens Tailwind da interface (`surface-*`, `text-*`, `border-*`, estados de erro/sucesso) são mapeados em `globals.css`; o tema escuro usa a classe `.dark` do `next-themes`.
+
 ## Segurança e dados
 
 - O navegador recebe apenas a anon key do Supabase. Service-role, pepper, tokens de operadores e chave privada são server-side; a chave privada só existe na Pepius.

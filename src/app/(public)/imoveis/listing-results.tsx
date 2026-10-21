@@ -22,10 +22,20 @@ const CATEGORY_OPTIONS = [
   { value: 'terreno', label: 'Terreno' },
 ] as const
 
-export function ListingResults({ listings, siteConfig }: { listings: Listing[]; siteConfig: PublicSiteConfig }) {
-  const [typeFilter, setTypeFilter] = useState('')
+export function ListingResults({
+  listings,
+  siteConfig,
+  initialSearch = '',
+  initialType = '',
+}: {
+  listings: Listing[]
+  siteConfig: PublicSiteConfig
+  initialSearch?: string
+  initialType?: string
+}) {
+  const [typeFilter, setTypeFilter] = useState(initialType)
   const [categoryFilter, setCategoryFilter] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(initialSearch)
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
 
