@@ -24,10 +24,12 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(true)
   const [supabase] = useState(createClient)
+  const [loading, setLoading] = useState(() => Boolean(supabase))
 
   const loadProfile = useCallback(async (userId: string) => {
+    if (!supabase) return
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -45,6 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase])
 
   useEffect(() => {
+    if (!supabase) return
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
@@ -72,6 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadProfile, supabase])
 
   async function signOut() {
+    if (!supabase) return
+
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)

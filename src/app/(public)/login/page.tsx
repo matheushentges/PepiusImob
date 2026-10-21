@@ -17,6 +17,12 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+
+    if (!supabase) {
+      setError('A autenticação não está configurada nesta instalação.')
+      return
+    }
+
     setLoading(true)
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
