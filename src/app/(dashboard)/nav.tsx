@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Menu, X, Home, MessageSquare, Settings, Building2, LogOut } from 'lucide-react'
+import { Menu, X, Home, Settings, Building2, LogOut, Users } from 'lucide-react'
 import { NavLink } from '@/components/nav-link'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/utils'
@@ -16,7 +16,7 @@ export function DashboardNav({ userName }: DashboardNavProps) {
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Visão Geral' },
     { href: '/dashboard/imoveis', icon: Building2, label: 'Imóveis' },
-    { href: '/dashboard/inbox', icon: MessageSquare, label: 'Inbox' },
+    { href: '/dashboard/leads', icon: Users, label: 'Leads' },
     { href: '/dashboard/configuracoes', icon: Settings, label: 'Configurações' },
   ]
 

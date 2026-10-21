@@ -8,7 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Users, Phone, Mail, MessageSquare } from 'lucide-react'
+import { Users, Phone, Mail } from 'lucide-react'
+import { notFound } from 'next/navigation'
+import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,14 +33,22 @@ function formatDate(date: string) {
 }
 
 export default async function LeadsPage() {
+  const license = await getLocalLicenseAccess()
+  if (license.active && !license.features.includes('leads')) notFound()
+
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('tenant_id').eq('id', user.id).maybeSingle()
+    : { data: null }
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('*, properties(titulo)')
+    .select('id, property_id, nome, email, telefone, mensagem, status, created_at, properties(titulo)')
+    .eq('tenant_id', profile?.tenant_id ?? '00000000-0000-0000-0000-000000000000')
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching leads:', error)
+    console.error('Agency lead page query failed', { code: error.code })
   }
 
   return (
@@ -146,7 +156,7 @@ export default async function LeadsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {lead.properties?.titulo || '—'}
+                    {lead.properties?.[0]?.titulo || '—'}
                   </TableCell>
                   <TableCell>
                     <span

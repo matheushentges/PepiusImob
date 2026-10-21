@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Building2 } from 'lucide-react'
@@ -25,7 +26,7 @@ export default function RealtorLoginPage() {
     })
 
     if (error) {
-      setError(error.message)
+      setError('E-mail ou senha inválidos.')
       setLoading(false)
       return
     }
@@ -38,10 +39,10 @@ export default function RealtorLoginPage() {
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4">
-        <a href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-accent">
+        <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-accent">
           <Building2 className="h-5 w-5" aria-hidden="true" />
           Pepius Imob
-        </a>
+        </Link>
         <ThemeToggle />
       </header>
 
@@ -109,9 +110,9 @@ export default function RealtorLoginPage() {
           <div className="border-t border-border-subtle pt-4 text-center">
             <p className="text-xs text-text-tertiary">
               Ainda não é parceiro?{' '}
-              <a href="/contato" className="font-medium text-accent transition-colors hover:text-accent-hover">
+              <Link href="/contato" className="font-medium text-accent transition-colors hover:text-accent-hover">
                 Conheça o Pepius Imob
-              </a>
+              </Link>
             </p>
           </div>
         </div>

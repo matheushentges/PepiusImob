@@ -6,9 +6,13 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src scripts tests next.config.ts",
     "type-check": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "license:agency": "node --experimental-strip-types scripts/license.mjs",
+    "license:admin": "node scripts/license-admin.mjs",
+    "agency:provision": "node scripts/agency-provision.mjs",
     "vercel:deploy": "vercel --prod"
   },
   "dependencies": {
@@ -27,6 +31,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-hook-form": "^7.89.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
   },

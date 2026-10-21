@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { Upload, X, GripVertical, Image as ImageIcon, Loader2, Star } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Upload, X, Loader2, Star } from 'lucide-react'
+import { useLicenseEditable } from '@/components/licensing/license-mode-provider'
 
 interface UploadedImage {
   id?: string
@@ -32,6 +32,7 @@ export function ImageUpload({
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const editable = useLicenseEditable()
 
   const updateImages = useCallback((newImages: UploadedImage[]) => {
     setImages(newImages)
@@ -39,6 +40,7 @@ export function ImageUpload({
   }, [onImagesChange])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
+    if (!editable) return
     e.preventDefault()
     e.stopPropagation()
     if (e.type === 'dragenter' || e.type === 'dragover') {
@@ -46,37 +48,10 @@ export function ImageUpload({
     } else if (e.type === 'dragleave') {
       setDragActive(false)
     }
-  }, [])
+  }, [editable])
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    setError(null)
-
-    const files = Array.from(e.dataTransfer.files).filter((f) =>
-      ['image/jpeg', 'image/png', 'image/webp'].includes(f.type)
-    )
-
-    if (files.length === 0) {
-      setError('Apenas imagens JPEG, PNG e WebP são permitidas')
-      return
-    }
-
-    await processFiles(files)
-  }, [images, propertyId])
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null)
-    const files = Array.from(e.target.files || [])
-    if (files.length > 0) {
-      await processFiles(files)
-    }
-    // Reset input para permitir selecionar o mesmo arquivo novamente
-    if (inputRef.current) inputRef.current.value = ''
-  }, [images, propertyId])
-
-  async function processFiles(files: File[]) {
+  const processFiles = useCallback(async (files: File[]) => {
+    if (!editable) return
     const validFiles = files.filter((f) => f.size <= maxSizeMB * 1024 * 1024)
     if (validFiles.length < files.length) {
       setError(`Algumas imagens excedem o limite de ${maxSizeMB}MB`)
@@ -121,13 +96,6 @@ export function ImageUpload({
       }
     } else {
       // Sem propertyId ainda (novo imóvel): preview local, upload após criação
-      const newImages: UploadedImage[] = filesToProcess.map((file) => ({
-        url: URL.createObjectURL(file),
-        file,
-        is_cover: false,
-        ordem: images.length + newImages.length,
-      }))
-      // Correção: calcular ordem corretamente
       const correctedImages = filesToProcess.map((file, idx) => ({
         url: URL.createObjectURL(file),
         file,
@@ -136,9 +104,35 @@ export function ImageUpload({
       }))
       updateImages([...images, ...correctedImages])
     }
-  }
+  }, [editable, images, maxImages, maxSizeMB, propertyId, updateImages])
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    if (!editable) return
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    setError(null)
+
+    const files = Array.from(e.dataTransfer.files).filter((f) =>
+      ['image/jpeg', 'image/png', 'image/webp'].includes(f.type)
+    )
+
+    if (files.length === 0) {
+      setError('Apenas imagens JPEG, PNG e WebP são permitidas')
+      return
+    }
+    await processFiles(files)
+  }, [editable, processFiles])
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null)
+    const files = Array.from(e.target.files || [])
+    if (files.length > 0) await processFiles(files)
+    if (inputRef.current) inputRef.current.value = ''
+  }, [processFiles])
 
   async function removeImage(index: number) {
+    if (!editable) return
     const image = images[index]
     if (image.id && propertyId) {
       try {
@@ -158,6 +152,7 @@ export function ImageUpload({
   }
 
   async function setAsCover(index: number) {
+    if (!editable) return
     const newImages = images.map((img, i) => ({
       ...img,
       is_cover: i === index,
@@ -187,10 +182,11 @@ export function ImageUpload({
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
-          dragActive
-            ? 'border-accent bg-accent/5'
+        onClick={() => editable && inputRef.current?.click()}
+        className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+          !editable ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'} ${
+          dragActive && editable
+          ? 'border-accent bg-accent/5'
             : 'border-border bg-secondary/50 hover:border-primary/30 hover:bg-secondary'
         }`}
       >
@@ -200,6 +196,7 @@ export function ImageUpload({
           multiple
           accept="image/jpeg,image/png,image/webp"
           onChange={handleFileSelect}
+          disabled={!editable}
           className="hidden"
         />
         {uploading ? (

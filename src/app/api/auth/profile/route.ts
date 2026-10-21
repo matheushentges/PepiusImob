@@ -18,16 +18,16 @@ export async function GET() {
   // Consulta server-side com cookies de sessão — RLS funciona corretamente
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('id, role, nome, email, tenant_id')
+    .select('role')
     .eq('id', user.id)
     .single()
 
   if (profileError || !profile) {
     return NextResponse.json(
-      { error: 'Perfil não encontrado', details: profileError?.message },
+      { error: 'Perfil não encontrado' },
       { status: 404 }
     )
   }
 
-  return NextResponse.json(profile)
+  return NextResponse.json({ role: profile.role }, { headers: { 'Cache-Control': 'no-store' } })
 }

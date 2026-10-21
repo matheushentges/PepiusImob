@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/theme-toggle'
 
@@ -18,13 +19,13 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
-    if (error) {
-      setError(error.message)
+    if (signInError) {
+      setError('E-mail ou senha inválidos.')
       setLoading(false)
       return
     }
@@ -33,9 +34,8 @@ export default function LoginPage() {
     const profileRes = await fetch('/api/auth/profile')
 
     if (!profileRes.ok) {
-      const errData = await profileRes.json().catch(() => ({}))
-      console.error('Erro ao buscar perfil:', errData)
-      setError(errData.error || 'Perfil não encontrado. Contate o suporte.')
+      await supabase.auth.signOut()
+      setError('Não foi possível acessar esta instalação. Contate o suporte da imobiliária.')
       setLoading(false)
       return
     }
@@ -43,10 +43,12 @@ export default function LoginPage() {
     const profile = await profileRes.json()
 
     setLoading(false)
-    if (profile.role === 'admin') {
-      router.push('/admin')
-    } else {
+    if (profile.role === 'imobiliaria_owner' || profile.role === 'imobiliaria_user') {
       router.push('/dashboard')
+    } else {
+      await supabase.auth.signOut()
+      setError('Não foi possível acessar esta instalação. Contate o suporte da imobiliária.')
+      return
     }
     router.refresh()
   }
@@ -55,9 +57,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4">
-        <a href="/" className="text-lg font-bold tracking-tight text-accent">
+        <Link href="/" className="text-lg font-bold tracking-tight text-accent">
           Pepius Imob
-        </a>
+        </Link>
         <ThemeToggle />
       </header>
 

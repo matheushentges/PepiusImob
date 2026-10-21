@@ -12,9 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  phone: z.string().min(10, 'Telefone inválido'),
-  message: z.string().optional(),
+  email: z.union([z.string().email('E-mail inválido'), z.literal('')]).optional(),
+  phone: z.string().min(10, 'Telefone inválido').max(30),
+  message: z.string().max(2000).optional(),
   preference: z.enum(['manha', 'tarde', 'noite']),
+  website: z.string().max(200).optional(),
 })
 
 type ContactFormData = z.infer<typeof contactSchema>
@@ -26,6 +28,7 @@ interface ContactFormProps {
 
 export function ContactForm({ listingId, listingTitle }: ContactFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const {
     register,
@@ -36,17 +39,36 @@ export function ContactForm({ listingId, listingTitle }: ContactFormProps) {
     resolver: zodResolver(contactSchema),
     defaultValues: {
       name: '',
+      email: '',
       phone: '',
       message: '',
       preference: 'manha',
+      website: '',
     },
   })
 
   async function onSubmit(data: ContactFormData) {
-    // Simulate API call — no backend yet
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-    setIsSubmitted(true)
-    console.log('Contact form submitted:', { listingId, listingTitle, ...data })
+    setSubmitError(null)
+    try {
+      const response = await fetch('/api/public/leads', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          propertyId: listingId,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          message: data.message,
+          preference: data.preference,
+          website: data.website,
+        }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Não foi possível enviar sua solicitação')
+      setIsSubmitted(true)
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Não foi possível enviar sua solicitação')
+    }
   }
 
   function handleReset() {
@@ -85,6 +107,10 @@ export function ContactForm({ listingId, listingTitle }: ContactFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="sr-only" aria-hidden="true">
+            <Label htmlFor="contact-website">Website</Label>
+            <Input id="contact-website" tabIndex={-1} autoComplete="off" {...register('website')} />
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="contact-name">Nome</Label>
             <Input
@@ -95,6 +121,18 @@ export function ContactForm({ listingId, listingTitle }: ContactFormProps) {
             {errors.name && (
               <p className="text-xs text-error">{errors.name.message}</p>
             )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="contact-email">E-mail (opcional)</Label>
+            <Input
+              id="contact-email"
+              type="email"
+              autoComplete="email"
+              placeholder="voce@email.com"
+              {...register('email')}
+            />
+            {errors.email && <p className="text-xs text-error">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -134,10 +172,13 @@ export function ContactForm({ listingId, listingTitle }: ContactFormProps) {
             />
           </div>
 
+          {submitError && <p className="text-xs text-error" role="alert">{submitError}</p>}
+
           <Button
             type="submit"
             className="w-full"
             disabled={isSubmitting}
+            aria-label={`Solicitar contato sobre ${listingTitle}`}
           >
             {isSubmitting ? (
               <span className="inline-flex items-center gap-2">

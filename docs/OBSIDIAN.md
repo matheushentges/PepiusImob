@@ -1,134 +1,101 @@
-# Pepius Imob - Notas Obsidian
-
-## 🏠 Visão Geral
-
-Sistema SaaS multi-tenant para imobiliárias com integração omnichannel (WhatsApp, Instagram, Messenger, Webchat) e agente IA para atendimento automatizado.
-
-## 📊 Módulos do Sistema
-
-### [[Portal Público]]
-- Listagem de imóveis
-- Busca avançada
-- Detalhes do imóvel
-- Formulário de contato
-- Chat com IA
-
-### [[Portal Dashboard Imobiliária]]
-- Gestão de imóveis (CRUD)
-- Inbox unificado omnichannel
-- Gestão de leads
-- Dashboard de métricas
-- Configuração de canais
-- Treinamento da IA
-
-### [[Portal Admin]]
-- Gestão de imobiliárias (tenants)
-- Sistema de licenças
-- Gestão de usuários
-- Métricas globais
-
-### [[Sistema Omnichannel]]
-- WhatsApp Business API
-- Instagram Messaging
-- Facebook Messenger
-- Webchat próprio
-- Agente IA (Claude/GPT)
-- Inbox unificado
-
-## 🗄️ Database Schema
-
-### Tenants (Imobiliárias)
-- Multi-tenancy via RLS
-- Cada imobiliária isolada
-- Licenças por tenant
-
-### Properties (Imóveis)
-- Vinculados ao tenant
-- Tipos: casa, apartamento, terreno, comercial, rural
-- Finalidade: venda, locação, ambos
-- Status: disponível, vendido, alugado, reservado
-
-### Conversations (Conversas Omnichannel)
-- Canal de origem
-- Status (bot/humano)
-- Histórico completo
-- Atribuição de agente
-
-### Messages (Mensagens)
-- Texto, imagem, vídeo, áudio, documento
-- Status: enviado, entregue, lido
-- Sender: customer, agent, bot
-
-## 🤖 Sistema de IA
-
-### Capabilities
-1. Responder perguntas gerais
-2. Consultar imóveis (busca inteligente)
-3. Capturar leads
-4. Agendar visitas
-5. Escalação para humano
-
-### Treinamento
-- FAQs personalizadas por tenant
-- Scripts de atendimento
-- Base de conhecimento dos imóveis
-- Context-aware (histórico)
-
-## 🔧 Stack Tecnológica
-
-- **Frontend**: Next.js 14+, TypeScript, TailwindCSS
-- **Backend**: Supabase (PostgreSQL + Auth + Storage)
-- **IA**: Anthropic Claude API
-- **Omnichannel**: Meta Business API
-- **Deploy**: Vercel + Supabase Cloud
-
-## 📅 Timeline
-
-- **Fase 1**: Setup ✅ (Completo)
-- **Fase 2**: Database & Auth (Próximo)
-- **Fase 3**: Portal Admin
-- **Fase 4**: Portal Imobiliária
-- **Fase 5**: Portal Público
-- **Fase 6**: Sistema Omnichannel + IA
-- **Fase 7**: Refinamentos
-- **Fase 8**: Deploy
-
-**Estimativa total**: 23-33 dias
-
-## 🔗 Links
-
-- Repositório: `C:\Users\Matheus\Documents\pepius-imob`
-- GitHub: https://github.com/MatheusDosSantosR/pepius-imob
-- Plano completo: [[plan.md]]
-- Progresso: [[PROGRESS.md]]
-
-## 💡 Decisões de Arquitetura
-
-### Multi-Tenancy
-Row Level Security (RLS) do PostgreSQL para isolamento total entre tenants.
-
-### Migração Futura
-Sistema preparado para migração:
-- PostgreSQL padrão (sem vendor lock-in)
-- Abstrações de serviços externos
-- Docker-ready
-- Standalone Next.js
-
-### Custos
-- Supabase: Free tier (500MB DB)
-- Vercel: Free tier
-- Claude API: ~$30-50/mês por tenant
-- WhatsApp: Gratuito até 1.000 conversas/mês
-
-## 🎯 Próximas Tarefas
-
-- [ ] Criar projeto no Supabase
-- [ ] Implementar schema do banco
-- [ ] Configurar RLS policies
-- [ ] Criar migrations SQL
-- [ ] Configurar autenticação
-- [ ] Implementar hooks de auth
-
+---
+title: Cérebro do produto — Pepius Imob
+type: product-context
+updated: 2026-10-21
+tags: [pepius-imob, on-premise, imobiliárias, licenciamento, segurança]
 ---
 
-**Tags**: #pepius #imobiliaria #saas #nextjs #supabase #omnichannel #ia
+# Pepius Imob — contexto canônico
+
+Esta é a nota de contexto do produto dentro do repositório. Antes de alterar o escopo, confira esta nota e [[PLANO_ON_PREMISE]]. Depois de cada entrega, atualize a nota, [[RESUMO]] e a documentação afetada. Para decisões arquiteturais difíceis de reverter, registre um [[adr/0001-on-prem-postgresql-and-license-control-plane]]. A futura plataforma Pepius pertence a outro produto; seu objetivo fica em [[PLANO_CONTROL_PLANE_FUTURO]].
+
+## Objetivo
+
+Entregar a cada imobiliária uma instalação isolada em VM, com uma vitrine pública para imóveis e um painel gerencial autenticado para a própria equipe. A Pepius licencia o aplicativo por serviço central e publica versões. Imóveis, dados de contato e leads ficam na infraestrutura operada pelo cliente.
+
+### Dentro do produto da imobiliária
+
+- Vitrine responsiva: busca, lista, detalhe de imóveis e formulário de contato.
+- Painel gerencial: imóveis, fotos, leads e personalização básica da vitrine.
+- Uma instalação por imobiliária, com autenticação por usuário e tenant local.
+- Supabase self-hosted em Docker Compose; banco PostgreSQL local.
+- Licença assinada e validada localmente, heartbeat diário, tolerância de sete dias offline e exportação local.
+
+### Fora deste produto
+
+- Painel global do dono da Pepius, cadastro comercial de clientes, gestão de pagamentos e finanças.
+- Gateway de pagamento, cobranças automatizadas e emissão fiscal.
+- Inbox omnichannel, WhatsApp, calendário e IA.
+- MySQL, SaaS multi-imobiliária ou dados de imóveis/leads enviados ao controle central.
+
+## Arquitetura de instalação
+
+```text
+Navegador ── TLS/Caddy ── Pepius Imob (Next.js)
+                               │
+                               └── Supabase self-hosted (Kong/Auth/Storage/PostgreSQL)
+                                      dados e objetos na VM do cliente
+
+Agente de licença ── HTTPS ── API central Pepius
+       │                           │
+       └── PostgreSQL local        └── DB comercial e chave privada Ed25519
+```
+
+Durante desenvolvimento, usamos Supabase Cloud. Para cliente, usamos a stack oficial Supabase self-hosted em Docker Compose e PostgreSQL. `SUPABASE_INTERNAL_URL` atende chamadas server-side na rede Docker; `NEXT_PUBLIC_SUPABASE_URL` é a URL HTTPS pública de Kong. Caddy termina TLS e sobrescreve `X-Real-IP`. PostgreSQL/Studio não são publicados na Internet.
+
+## Segurança e dados
+
+- O navegador recebe apenas a anon key do Supabase. Service-role, pepper, tokens de operadores e chave privada são server-side; a chave privada só existe na Pepius.
+- O público não tem leitura direta das tabelas privadas. O servidor consulta imóveis com projeção explícita e retorna bairro/cidade, sem endereço completo ou CEP.
+- Consultas usam PostgREST parametrizado. Zod valida corpos estritos, UUIDs, limites de texto/preço/imagens; uploads verificam assinatura do conteúdo e tenant proprietário.
+- RLS limita registros à imobiliária; Storage privado guarda fotos por caminho de tenant e entrega URLs assinadas com expiração de cinco minutos (até uma hora para exportação).
+- Leads públicos passam por honeypot e limite atômico por IP, cujo hash usa pepper local. O endpoint valida imóvel e licença antes de gravar; nenhum lead vai ao controle central.
+- Autorização é revalidada no servidor e na política RLS; o proxy Next 16 é apenas uma ajuda de navegação. Campos devolvidos por APIs públicas são whitelisted.
+- Operações comerciais são auditadas centralmente. Limites e resposta a incidentes estão em [[SEGURANCA]].
+
+## Licenciamento
+
+Uma instalação gera um par de chaves Ed25519 local. O operador emite um código de uso único e o cliente ativa localmente. A API central guarda hash do código e chave pública da instalação; entrega lease assinado com status, funcionalidades, validade e instalação. O banco local guarda o lease e a chave pública Pepius usada para validar a assinatura. A chave privada de assinatura não é distribuída.
+
+Heartbeat é assinado pela chave da instalação e ocorre a cada 24h. O lease dura no máximo sete dias, o que permite operar offline por até sete dias. Pagamento vencido não suspende antes de 15 dias completos; a partir daí o central retorna lease suspenso, aplicado no próximo heartbeat. Se a rede ficar indisponível, o lease expirado bloqueia a vitrine e escritas. Em suspensão, painel em leitura e exportação continuam; os dados não são removidos. Pagamento registrado restaura na resposta do heartbeat seguinte. Suspensão manual pode ser imediata.
+
+No modo suspenso, o app oculta a vitrine, bloqueia gravações no servidor e no RLS, mantém leitura do tenant no painel e oferece JSON com imóveis/leads e links assinados para fotos. Esses links expiram em até uma hora.
+
+O licenciamento é uma regra de operação oficial e não proteção inviolável contra quem controla a VM/root. A licença não é kill switch remoto instantâneo: depende do próximo heartbeat ou do fim da validade local.
+
+## Operação e responsabilidades
+
+- **Cliente:** VM, domínio/DNS, credenciais locais, PostgreSQL, armazenamento de imagens, firewall, criptografia, backups, teste de restauração e acesso root.
+- **Pepius:** serviço de licença, material privado de assinatura, tokens de operador, releases, migrations, documentação e correções do aplicativo.
+- **Desenvolvimento:** Supabase Cloud de desenvolvimento. Nunca use credenciais de clientes nos ambientes de desenvolvimento.
+- **Instalação:** Supabase Compose isolado + Compose Pepius; update com release/imagem versionada e migration revisada.
+
+## Estado implementado e pontos de validação
+
+- Vitrine usa dados do banco local; busca/lista/detalhe não usam mais mocks.
+- Lead público é gravado e associado ao imóvel no tenant configurado.
+- APIs gerenciais incluem CRUD de imóvel, imagens, status de lead, configurações whitelisted e exportação.
+- As configurações de título, descrição e cores validadas são aplicadas na lista e nos detalhes públicos; a identidade da imobiliária vem do tenant local.
+- Controle de licença inclui geração/administração CLI, código de ativação, assinatura, heartbeat e estado local.
+- Admin global e Inbox foram removidos da instalação da imobiliária; API central de licença fica desabilitada nela.
+- Dockerfiles/Compose de app e agente, Caddy e migrations separados foram adicionados.
+- Testes locais cobrem assinatura, adulteração/validade, limite de atraso e heartbeat; validar RLS/SQL, provisionamento, instalação e restore em instância Supabase self-hosted antes de liberar cliente.
+
+## Verificação desta entrega
+
+- `npm run type-check`, `npm run lint`, `npm test` (7 testes) e `npm run build` passaram. O lint mantém cinco avisos de `<img>` em previews/URLs assinadas.
+- `docker compose config` passou com o arquivo de exemplo. O daemon Docker não está disponível para subir a stack nem executar a migration/RLS localmente.
+- `npm audit --omit=dev` não encontrou vulnerabilidades de runtime. O audit completo sinaliza cinco ocorrências high do advisory de `braces` no encadeamento de lint; atualizar forçando rebaixaria Next e não foi aplicado.
+
+## Manutenção do cérebro
+
+Toda entrega de código deve atualizar esta nota e [[RESUMO]] com o comportamento real. Atualize plano, segurança, checklist e progresso quando forem afetados. Registre decisões de banco, protocolo, segurança, compatibilidade ou licenciamento em ADR. Mantenha documentos em UTF-8. Não reintroduza decisões antigas de SaaS, Inbox, IA ou MySQL sem rever o escopo com o usuário.
+
+## Links do repositório
+
+- [[PLANO_ON_PREMISE]] — escopo e implementação.
+- [[SEGURANCA]] — controles, ameaças e responsabilidade operacional.
+- [[GLOSSARY]] — termos do domínio.
+- [[PLANO_CONTROL_PLANE_FUTURO]] — objetivo futuro da plataforma administrativa Pepius.
+- [[RESUMO]] — estado atual do código e verificações.
+- [[adr/0001-on-prem-postgresql-and-license-control-plane]] — decisão arquitetural aprovada.

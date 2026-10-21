@@ -1,184 +1,46 @@
-# Checklist de Deploy - Pepius Imob
+# Checklist de instalação Pepius Imob on-premise
 
-Use este checklist antes de fazer o deploy em produção.
+## Antes da VM
 
-## ✅ Pré-Deploy
+- [ ] Definir responsável do cliente por VM, rede, disco, backups e recuperação.
+- [ ] Provisionar VM Linux, DNS público, TLS, firewall e acesso administrativo por VPN/allowlist.
+- [ ] Registrar release Supabase oficial fixada e `PEPIUS_VERSION` da aplicação.
+- [ ] Gerar secrets fortes/únicos para Postgres, JWT, anon/service-role, pepper e instalação.
+- [ ] Guardar secrets de serviço central em ambiente Pepius separado; cliente recebe só URL e public keys de verificação.
 
-### Configuração Local
-- [ ] `.env.local` configurado corretamente
-- [ ] Todas as dependências instaladas (`npm install`)
-- [ ] Build local funciona sem erros (`npm run build`)
-- [ ] Type checking passa (`npm run type-check`)
-- [ ] Aplicação roda localmente (`npm run dev`)
+## Supabase self-hosted
 
-### Supabase
-- [ ] Projeto criado no Supabase
-- [ ] Migration 1 aplicada: `20241006000001_initial_schema.sql`
-- [ ] Migration 2 aplicada: `20241006000002_rls_policies.sql`
-- [ ] Migration 3 aplicada: `20241006000003_auth_functions.sql`
-- [ ] Migration 4 aplicada: `20241006000004_seed_data.sql`
-- [ ] RLS policies ativas (verificar em Database > Policies)
-- [ ] Usuário admin criado (email: `admin@pepius.com`)
-- [ ] Credenciais copiadas (URL + Keys)
+- [ ] Instalar Compose oficial em pasta separada e confirmar rede `supabase_default`.
+- [ ] Restringir Postgres/Studio a localhost/rede privada; portas administrativas não públicas.
+- [ ] Configurar domínio público de API em Kong e URL interna `http://kong:8000`.
+- [ ] Fazer `supabase db push --dry-run` contra o banco de destino e revisar cada migration.
+- [ ] Exportar licenças/comercial/admin legados se houver antes da migration on-premise destrutiva.
+- [ ] Aplicar migrations e auditar grants/RLS com anon, authenticated e service-role.
+- [ ] Confirmar bucket `property-images` privado, tipos aceitos e limite de tamanho.
 
-### Código
-- [ ] Todas as alterações commitadas
-- [ ] Push feito para o GitHub
-- [ ] Branch `main` atualizada
-- [ ] Sem arquivos `.env.local` no repositório
-- [ ] `.gitignore` configurado corretamente
+## Aplicação e licença
 
-## 🚀 Deploy na Vercel
+- [ ] Criar `.env.onprem` a partir do modelo, revisar domínio, URLs pública/interna, anon key, service-role, tenant, HMAC pepper, trusted public keys e bypass desabilitado.
+- [ ] Construir imagens com tag de release imutável e iniciar Caddy, app e agente.
+- [ ] Criar tenant/usuário responsável pela CLI local e guardar senha temporária fora do shell history.
+- [ ] Ativar com código de uso único e confirmar assinatura/validade no estado local.
+- [ ] Confirmar heartbeat autenticado, DNS, certificado TLS, `X-Real-IP` e envio de contato limitado.
+- [ ] Confirmar que não há diretório de segredo ou service-role dentro de artefatos públicos/client bundle.
 
-### Primeira Vez
-- [ ] Conta criada/logada na Vercel
-- [ ] Repositório importado
-- [ ] Framework detectado como Next.js
-- [ ] Build command: `npm run build`
-- [ ] Output directory: `.next`
+## Aceite funcional e segurança
 
-### Variáveis de Ambiente
-Configure estas variáveis na Vercel (Settings > Environment Variables):
+- [ ] Visitante vê somente imóveis disponíveis e campos públicos permitidos; address/CEP não aparecem no JSON/REST público.
+- [ ] Usuários de imobiliária gerem somente seu tenant e seus arquivos; visitante/role cliente não entra no painel.
+- [ ] Testar SQL injection, UUID inválido, campo extra `tenant_id`/`role`, payload grande, MIME falso e URL de objeto de outro tenant.
+- [ ] Testar activation code one-time, idempotência da mesma chave e rejeição de chave/assinatura adulterada ou desconhecida.
+- [ ] Testar indisponibilidade central, dias offline 1–7, lease expirada no dia 8, atraso nos dias 14/15, suspensão, leitura/exportação e reativação.
+- [ ] Confirmar lead sem exposição no log e sem acesso anônimo via REST.
 
-**Obrigatórias:**
-- [ ] `NEXT_PUBLIC_SUPABASE_URL`
-- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- [ ] `SUPABASE_SERVICE_ROLE_KEY`
-- [ ] `NEXT_PUBLIC_APP_URL` (ex: https://seu-projeto.vercel.app)
+## Backup, restauração e atualização
 
-**Opcionais (para fase 6 - Omnichannel):**
-- [ ] `META_APP_ID`
-- [ ] `META_APP_SECRET`
-- [ ] `META_ACCESS_TOKEN`
-- [ ] `META_WEBHOOK_VERIFY_TOKEN`
-- [ ] `ANTHROPIC_API_KEY`
-
-### Deploy
-- [ ] Primeiro deploy iniciado
-- [ ] Build passou sem erros
-- [ ] Deploy completo (status: Ready)
-- [ ] URL de produção acessível
-
-## 🧪 Testes Pós-Deploy
-
-### Funcionalidades Básicas
-- [ ] Landing page carrega (`/`)
-- [ ] Página de login carrega (`/login`)
-- [ ] Login funciona com usuário seed
-- [ ] Redirecionamento após login funciona
-- [ ] Dashboard admin carrega (`/admin`)
-- [ ] Listagem de imobiliárias funciona (`/admin/imobiliarias`)
-
-### CRUD de Imobiliárias
-- [ ] Criar nova imobiliária funciona
-- [ ] Listagem atualiza após criação
-- [ ] Editar imobiliária funciona
-- [ ] Toggle ativo/inativo funciona
-- [ ] Deletar imobiliária funciona (quando não tem dados)
-
-### Autenticação
-- [ ] Logout funciona
-- [ ] Middleware protege rotas autenticadas
-- [ ] Redirect para login quando não autenticado
-- [ ] Roles funcionam (admin vs imobiliaria)
-
-### Performance
-- [ ] Páginas carregam em < 3s
-- [ ] Imagens otimizadas
-- [ ] Sem erros no console
-- [ ] Lighthouse score > 70
-
-## 🔧 Configurações Avançadas
-
-### Domínio Customizado (Opcional)
-- [ ] Domínio adicionado na Vercel
-- [ ] DNS configurado
-- [ ] HTTPS ativo
-- [ ] Redirect de www configurado
-
-### Webhooks (Fase 6)
-- [ ] URLs de webhook configuradas no Meta Business
-- [ ] Verify token configurado
-- [ ] Webhooks testados com ferramenta de teste
-
-### Monitoramento
-- [ ] Analytics configurado (se aplicável)
-- [ ] Sentry ou similar (error tracking)
-- [ ] Vercel Analytics ativo
-- [ ] Logs configurados
-
-## 📝 Documentação
-
-### Atualizar
-- [ ] README.md com URL de produção
-- [ ] DEPLOY.md revisado
-- [ ] Changelog atualizado
-- [ ] Documentação para clientes (se aplicável)
-
-### Backup
-- [ ] Backup do banco de dados
-- [ ] Backup das variáveis de ambiente
-- [ ] Documentação de recovery
-
-## 🎉 Go Live
-
-### Comunicação
-- [ ] Stakeholders notificados
-- [ ] Equipe informada sobre URL
-- [ ] Documentação compartilhada
-
-### Suporte
-- [ ] Plano de rollback definido
-- [ ] Contatos de emergência documentados
-- [ ] Suporte preparado para receber feedback
-
-## 🐛 Troubleshooting Comum
-
-### Build Falha
-```bash
-# Testar build localmente
-npm run build
-
-# Verificar errors de TypeScript
-npm run type-check
-
-# Verificar logs na Vercel
-```
-
-### Erro 500 em Produção
-1. Verificar logs na Vercel
-2. Verificar variáveis de ambiente
-3. Verificar conexão com Supabase
-4. Verificar RLS policies
-
-### Redirect Loop no Login
-1. Verificar middleware
-2. Verificar cookies (SameSite, Secure)
-3. Verificar configuração do Supabase Auth
-
-### Imagens não carregam
-1. Verificar configuração de `next.config.ts`
-2. Verificar permissões do Supabase Storage
-3. Verificar URLs das imagens
-
-## 📊 Métricas de Sucesso
-
-- [ ] Tempo de build < 2 min
-- [ ] Tempo de deploy < 5 min
-- [ ] Uptime > 99%
-- [ ] TTFB < 500ms
-- [ ] Core Web Vitals no verde
-
-## 🔄 CI/CD (Futuro)
-
-- [ ] GitHub Actions configurado
-- [ ] Testes automatizados no CI
-- [ ] Deploy automático no merge para main
-- [ ] Notificações de deploy no Slack/Discord
-
----
-
-**Data do Deploy**: _____________  
-**Responsável**: _____________  
-**Versão**: _____________  
-**Notas**: _____________
+- [ ] Criar backup cifrado de Postgres e cópia independente de Storage/config.
+- [ ] Guardar cópia fora da VM, restringir acesso e registrar retenção/RPO/RTO.
+- [ ] Restaurar ambos numa VM isolada; validar autenticação, imóvel, foto, lead, licença e exportação.
+- [ ] Testar restart/reboot e persistência de volumes e identidade de licença.
+- [ ] Atualizar cópia de staging com app versionado + migration; testar rollback conforme estratégia.
+- [ ] Registrar evidência, versão e responsáveis.

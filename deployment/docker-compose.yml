@@ -1,0 +1,72 @@
+services:
+  pepius-app:
+    image: pepius-imob:${PEPIUS_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?configure the public Supabase URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?configure the Supabase anon key}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?configure the application URL}
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ../.env.onprem
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    expose:
+      - "3000"
+    networks:
+      - app-private
+      - supabase
+
+  license-agent:
+    image: pepius-license-agent:${PEPIUS_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.agent
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ../.env.onprem
+    volumes:
+      - license-state:/var/lib/pepius/license-state
+    environment:
+      LICENSE_STATE_DIR: /var/lib/pepius/license-state
+    networks:
+      - supabase
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      pepius-app:
+        condition: service_healthy
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?configure the public domain}
+      ACME_EMAIL: ${ACME_EMAIL:?configure the TLS contact email}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - app-private
+      - supabase
+
+networks:
+  app-private:
+    internal: true
+  supabase:
+    external: true
+    name: ${SUPABASE_DOCKER_NETWORK:-supabase_default}
+
+volumes:
+  license-state:
+  caddy-data:
+  caddy-config:

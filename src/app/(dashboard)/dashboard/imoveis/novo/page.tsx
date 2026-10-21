@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { ImageUpload } from '@/components/shared/image-upload'
+import { useLicenseEditable } from '@/components/licensing/license-mode-provider'
 
 const selectClassName =
   'flex h-9 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
@@ -24,6 +25,7 @@ export default function NovoImovelPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([])
+  const editable = useLicenseEditable()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -124,7 +126,8 @@ export default function NovoImovelPage() {
 
       {/* Form Card - Borders-only, bg-card */}
       <div className="rounded-lg border border-border bg-card p-6">
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit}>
+          <fieldset disabled={!editable} className="w-full space-y-8 border-0 p-0">
           {error && (
             <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
@@ -435,7 +438,7 @@ export default function NovoImovelPage() {
 
           {/* Actions */}
           <div className="flex items-center gap-3 border-t border-border pt-6">
-            <Button type="submit" disabled={loading} className="h-9 px-5">
+            <Button type="submit" disabled={!editable || loading} className="h-9 px-5">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Criar Imóvel
             </Button>
@@ -444,10 +447,12 @@ export default function NovoImovelPage() {
               variant="outline"
               className="h-9"
               onClick={() => router.back()}
+              disabled={!editable}
             >
               Cancelar
             </Button>
           </div>
+          </fieldset>
         </form>
       </div>
     </div>

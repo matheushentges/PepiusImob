@@ -21,7 +21,6 @@ export function GalleryDialog({ images, title, isOpen, onClose, initialIndex = 0
     if (!dialog) return
 
     if (isOpen) {
-      setActiveIndex(initialIndex)
       if (!dialog.open) {
         dialog.showModal()
       }
@@ -36,7 +35,7 @@ export function GalleryDialog({ images, title, isOpen, onClose, initialIndex = 0
     return () => {
       document.body.style.overflow = ''
     }
-  }, [isOpen, initialIndex])
+  }, [isOpen])
 
   // Handle native dialog close event (Escape key)
   useEffect(() => {

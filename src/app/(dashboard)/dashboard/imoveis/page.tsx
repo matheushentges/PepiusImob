@@ -10,6 +10,8 @@ import {
 } from '@/components/ui/table'
 import { Plus, Home, Building, MapPin } from 'lucide-react'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,14 +54,21 @@ function formatCurrency(value: number | null) {
 
 export default async function ImoveisPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('tenant_id').eq('id', user.id).maybeSingle()
+    : { data: null }
 
   const { data: properties, error } = await supabase
     .from('properties')
-    .select('*')
+    .select('id, tenant_id, titulo, tipo, finalidade, status, preco_venda, preco_locacao, cidade, estado, bairro, created_at')
+    .eq('tenant_id', profile?.tenant_id ?? '00000000-0000-0000-0000-000000000000')
     .order('created_at', { ascending: false })
+  const license = await getLocalLicenseAccess()
+  if (license.active && !license.features.includes('properties')) notFound()
 
   if (error) {
-    console.error('Error fetching properties:', error)
+    console.error('Agency property page query failed', { code: error.code })
   }
 
   return (
@@ -74,12 +83,14 @@ export default async function ImoveisPage() {
             Gerencie o portfólio de imóveis da sua imobiliária
           </p>
         </div>
-        <Button asChild className="h-9 gap-2">
-          <Link href="/dashboard/imoveis/novo">
-            <Plus className="h-4 w-4" />
-            Novo Imóvel
-          </Link>
-        </Button>
+        {license.active && (
+          <Button asChild className="h-9 gap-2">
+            <Link href="/dashboard/imoveis/novo">
+              <Plus className="h-4 w-4" />
+              Novo Imóvel
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Filters Bar - Linha de Planta: border precisa, inputs bg-input */}
@@ -177,9 +188,11 @@ export default async function ImoveisPage() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild className="h-8">
-                      <Link href={`/dashboard/imoveis/${property.id}`}>Editar</Link>
-                    </Button>
+                    {license.active ? (
+                      <Button variant="ghost" size="sm" asChild className="h-8">
+                        <Link href={`/dashboard/imoveis/${property.id}`}>Editar</Link>
+                      </Button>
+                    ) : <span className="text-xs text-muted-foreground">Somente leitura</span>}
                   </TableCell>
                 </TableRow>
               ))

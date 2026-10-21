@@ -1,0 +1,15 @@
+.git
+.claude
+.agents
+.aider-desk
+.next
+node_modules
+.env*
+!.env.example
+.local
+coverage
+*.log
+docs
+supabase
+license-control-plane
+tests

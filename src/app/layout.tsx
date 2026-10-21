@@ -17,7 +17,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Pepius Imob - Sistema para Imobiliárias",
   description:
-    "Sistema SaaS completo para gestão de imobiliárias com atendimento omnichannel e IA",
+    "Vitrine de imóveis e painel gerencial on-premise para imobiliárias",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

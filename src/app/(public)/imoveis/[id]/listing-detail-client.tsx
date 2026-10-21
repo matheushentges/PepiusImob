@@ -13,9 +13,10 @@ import { ContactForm } from '@/components/listing/contact-form'
 interface ListingDetailClientProps {
   listing: Listing
   images: string[]
+  agencyName: string
 }
 
-export function ListingDetailClient({ listing, images }: ListingDetailClientProps) {
+export function ListingDetailClient({ listing, images, agencyName }: ListingDetailClientProps) {
   const [galleryOpen, setGalleryOpen] = useState(false)
 
   return (
@@ -30,7 +31,7 @@ export function ListingDetailClient({ listing, images }: ListingDetailClientProp
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             Voltar aos imóveis
           </Link>
-          <span className="text-lg font-bold tracking-tight text-accent">Pepius Imob</span>
+          <span className="text-lg font-bold tracking-tight text-accent">{agencyName}</span>
         </div>
       </header>
 
@@ -126,6 +127,7 @@ export function ListingDetailClient({ listing, images }: ListingDetailClientProp
       </main>
 
       <GalleryDialog
+        key={galleryOpen ? 'open' : 'closed'}
         images={images}
         title={listing.title}
         isOpen={galleryOpen}

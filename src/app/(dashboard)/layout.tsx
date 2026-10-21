@@ -1,12 +1,14 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { LayoutDashboard, Building2, MessageSquare, Users, Settings, LogOut, Menu } from 'lucide-react'
+import { LayoutDashboard, Building2, Users, Settings, LogOut, Menu } from 'lucide-react'
+import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
+import { LicenseSuspended } from '@/components/licensing/license-suspended'
+import { LicenseModeProvider } from '@/components/licensing/license-mode-provider'
 
-const navItems = [
+const baseNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/imoveis', label: 'Imóveis', icon: Building2 },
-  { href: '/dashboard/inbox', label: 'Inbox', icon: MessageSquare },
   { href: '/dashboard/leads', label: 'Leads', icon: Users },
   { href: '/dashboard/configuracoes', label: 'Configurações', icon: Settings },
 ]
@@ -31,10 +33,20 @@ export default async function DashboardLayout({
     .eq('id', user.id)
     .single()
 
-  // Admins devem usar o painel /admin, não o dashboard da imobiliária
-  if (profile?.role === 'admin') {
-    redirect('/admin')
+  if (
+    !profile?.tenant_id ||
+    (profile.role !== 'imobiliaria_owner' && profile.role !== 'imobiliaria_user')
+  ) {
+    redirect('/login?error=acesso')
   }
+
+  const license = await getLocalLicenseAccess()
+  const navItems = baseNavItems.filter((item) =>
+    !license.active ||
+    item.href === '/dashboard' ||
+    item.href === '/dashboard/configuracoes' ||
+    license.features.includes(item.href === '/dashboard/leads' ? 'leads' : 'properties'),
+  )
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -87,7 +99,10 @@ export default async function DashboardLayout({
           </button>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          <div className="mx-auto max-w-6xl">{children}</div>
+          <div className="mx-auto max-w-6xl">
+            {!license.active && <LicenseSuspended />}
+            <LicenseModeProvider editable={license.active}>{children}</LicenseModeProvider>
+          </div>
         </main>
       </div>
     </div>

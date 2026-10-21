@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { ImageUpload } from '@/components/shared/image-upload'
+import { useLicenseEditable } from '@/components/licensing/license-mode-provider'
 
 interface Property {
   id: string
@@ -53,15 +54,9 @@ export default function EditarImovelPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const editable = useLicenseEditable()
 
-  useEffect(() => {
-    if (id) {
-      fetchProperty()
-      fetchImages()
-    }
-  }, [id])
-
-  async function fetchImages() {
+  const fetchImages = useCallback(async () => {
     try {
       const response = await fetch(`/api/dashboard/properties/${id}/images`)
       if (response.ok) {
@@ -71,9 +66,9 @@ export default function EditarImovelPage() {
     } catch {
       // Imagens são opcionais, não bloquear carregamento
     }
-  }
+  }, [id])
 
-  async function fetchProperty() {
+  const fetchProperty = useCallback(async () => {
     try {
       const response = await fetch(`/api/dashboard/properties/${id}`)
       if (!response.ok) throw new Error('Erro ao carregar imóvel')
@@ -84,7 +79,16 @@ export default function EditarImovelPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    const frame = requestAnimationFrame(() => {
+      void fetchProperty()
+      void fetchImages()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [fetchImages, fetchProperty, id])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -206,7 +210,8 @@ export default function EditarImovelPage() {
 
       {/* Form Card - Borders-only, bg-card */}
       <div className="rounded-lg border border-border bg-card p-6">
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit}>
+          <fieldset disabled={!editable} className="w-full space-y-8 border-0 p-0">
           {error && (
             <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
@@ -365,7 +370,7 @@ export default function EditarImovelPage() {
 
           {/* Actions */}
           <div className="flex items-center justify-between border-t border-border pt-6">
-            <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleting || saving} className="h-9">
+            <Button type="button" variant="destructive" onClick={handleDelete} disabled={!editable || deleting || saving} className="h-9">
               {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
               Excluir
             </Button>
@@ -377,6 +382,7 @@ export default function EditarImovelPage() {
               </Button>
             </div>
           </div>
+          </fieldset>
         </form>
       </div>
 

@@ -1,228 +1,38 @@
-# Pepius Imob - Resumo do Desenvolvimento
+# Estado atual do Pepius Imob
 
-## 📊 Progresso Atual
+Atualizado em 2026-10-21.
 
-### ✅ Fases Completas
+## Produto vigente
 
-#### Fase 1: Estrutura Base (Setup) ✅
-- Next.js 14+ com TypeScript configurado
-- TailwindCSS + Shadcn/ui instalado
-- Supabase client, server e middleware
-- Estrutura de pastas organizada
-- Variáveis de ambiente
-- Git inicializado
+Aplicação on-premise de uma imobiliária por instalação: vitrine pública e painel gerencial com imóveis, fotos e leads. Desenvolvimento continua em Supabase Cloud; produção de cliente usa Supabase self-hosted com PostgreSQL local na VM. Não inclui painel administrativo Pepius, Inbox, IA ou MySQL.
 
-#### Fase 2: Database & Auth ✅
-- Schema completo (11 tabelas)
-- 4 migrations SQL
-- Row Level Security (RLS) implementado
-- Funções de autenticação
-- Hook useAuth
-- Providers (QueryClient + Auth)
-- Proteção de rotas via middleware
+## Implementado no código
 
-#### Fase 3: Portal Admin (Em Progresso) 🚧
-- ✅ Componentes UI (Button, Input, Label, Card, Table)
-- ✅ Listagem de imobiliárias
-- ✅ Criação de imobiliárias
-- ⏳ Edição de imobiliárias
-- ⏳ Gestão de licenças
-- ⏳ Gestão de usuários
+- Vitrine dinâmica usa banco, filtros e detalhe; a saída pública omite endereço completo/CEP e mídia usa URLs assinadas.
+- Contato público valida imóvel/tenant/licença, limita submissões, impede logs com PII e grava lead localmente.
+- CRUD de imóveis e imagens, consulta/status de leads, personalização básica whitelisted e exportação de dados autenticada.
+- Auth server-side/RLS, perfis de imobiliária e provisionamento inicial via CLI local.
+- Lease Ed25519, código de ativação de uso único, heartbeat, validação local, CLI de operador, API central separada e auditada.
+- Em lease suspensa/expirada, vitrine/gravações bloqueadas e painel em leitura com exportação; dados locais não são removidos.
+- Admin global e Inbox removidos do app imobiliário. Feature flag da API central permanece desabilitada para o cliente.
+- Docker standalone, Compose do app/agente, Caddy/TLS e documentação de setup/segurança/roadmap/ADR.
 
-## 🏗️ Estrutura Atual
+## Verificações automatizadas
 
-```
-pepius-imob/
-├── src/
-│   ├── app/
-│   │   ├── (public)/           # Portal público
-│   │   │   ├── page.tsx        # Landing page ✅
-│   │   │   └── login/          # Login ✅
-│   │   ├── (dashboard)/        # Portal imobiliária
-│   │   │   └── dashboard/      # Dashboard base ✅
-│   │   ├── (admin)/            # Portal admin
-│   │   │   └── admin/
-│   │   │       ├── page.tsx    # Dashboard admin ✅
-│   │   │       └── imobiliarias/
-│   │   │           ├── page.tsx      # Lista ✅
-│   │   │           └── nova/page.tsx # Form ✅
-│   │   └── api/
-│   │       └── admin/
-│   │           └── tenants/    # CRUD API ✅
-│   ├── components/
-│   │   ├── ui/                 # Shadcn components ✅
-│   │   ├── shared/
-│   │   └── providers.tsx       # React Query + Auth ✅
-│   ├── hooks/
-│   │   └── use-auth.tsx        # Auth hook ✅
-│   ├── lib/
-│   │   ├── supabase/           # Clientes Supabase ✅
-│   │   └── utils.ts            # Utilitários ✅
-│   └── types/
-│       └── database.types.ts   # Tipos ✅
-├── supabase/
-│   ├── migrations/             # 4 migrations ✅
-│   └── SETUP.md               # Guia completo ✅
-└── docs/
-    └── OBSIDIAN.md            # Notas Obsidian ✅
-```
+`npm run type-check`, `npm run lint`, `npm test` (7 testes) e `npm run build` passaram; `docker compose config` passou com valores de exemplo. O lint deixa cinco avisos de `<img>` para imagens temporarias/assinadas. `npm audit --omit=dev` encontrou zero vulnerabilidades; o audit completo reporta cinco ocorrencias high de `braces` em dependencias de lint (dev), sem correcao nao disruptiva disponivel no lock atual.
 
-## 🎯 Funcionalidades Implementadas
+## Ainda necessário antes de produção
 
-### Portal Público
-- ✅ Landing page com hero e features
-- ✅ Navegação básica
-- ✅ Página de login (UI pronta)
+- Rodar migrations em Supabase self-hosted limpa e validar grants/policies com anon, dois tenants, usuários e service-role.
+- Validar provisionamento do tenant e usuário, ativação uma vez, reenvio idempotente, falha de API, sete dias offline, suspensão 15º dia, leitura/exportação e restauração.
+- Validar Compose com stack Supabase oficial numa VM limpa, reboot, domínios, TLS, atualizações versionadas e rollback.
+- Cifrar backup de PostgreSQL e Storage, restaurar ambos numa VM isolada e registrar evidência de teste.
+- Fazer review de segurança, configurar segredos/rotação reais, monitoramento e política operacional.
 
-### Portal Admin
-- ✅ Layout com sidebar
-- ✅ Dashboard com cards de estatísticas
-- ✅ Listagem de imobiliárias (tabela)
-- ✅ Criar nova imobiliária
-- ✅ Validação de permissões (apenas admin)
-- ✅ API routes para CRUD
+## Documentação canônica
 
-### Portal Dashboard (Imobiliária)
-- ✅ Layout com sidebar
-- ✅ Dashboard básico
-- ⏳ CRUD de imóveis (próximo)
-
-### Infraestrutura
-- ✅ Multi-tenancy com RLS
-- ✅ Autenticação Supabase
-- ✅ Middleware de proteção
-- ✅ React Query configurado
-- ✅ TypeScript types completos
-
-## 📝 Próximas Tarefas
-
-### Imediatas (Fase 3 - Continuar)
-1. [ ] Página de edição de imobiliária
-2. [ ] Toggle ativar/desativar imobiliária
-3. [ ] Gestão de licenças (CRUD)
-4. [ ] Listagem de usuários
-5. [ ] Dashboard admin com métricas reais
-
-### Fase 4: Portal da Imobiliária
-1. [ ] CRUD completo de imóveis
-2. [ ] Upload de imagens (Supabase Storage)
-3. [ ] Gestão de leads
-4. [ ] Dashboard com métricas
-
-### Fase 5: Portal do Cliente (Público)
-1. [ ] Listagem de imóveis
-2. [ ] Filtros de busca
-3. [ ] Página de detalhes
-4. [ ] Formulário de contato
-
-### Fase 6: Omnichannel + IA
-1. [ ] Webhooks (WhatsApp, Instagram, Messenger)
-2. [ ] Integração Claude API
-3. [ ] Inbox unificado
-4. [ ] Widget webchat
-
-## 🔧 Como Configurar
-
-### 1. Clonar e Instalar
-```bash
-cd pepius-imob
-npm install
-```
-
-### 2. Configurar Supabase
-1. Criar projeto em supabase.com
-2. Copiar credenciais para `.env.local`
-3. Aplicar migrations (ver `supabase/SETUP.md`)
-4. Criar usuário admin
-
-### 3. Rodar em Desenvolvimento
-```bash
-npm run dev
-```
-
-Acesse: http://localhost:3000
-
-## 📦 Dependências Principais
-
-- Next.js 15.x
-- React 19.x
-- TypeScript 5.x
-- Supabase (@supabase/supabase-js, @supabase/ssr)
-- TailwindCSS 4.x
-- Shadcn/ui
-- Tanstack Query
-- React Hook Form + Zod
-- Lucide React
-
-## 🎨 Design System
-
-- **Componentes**: Shadcn/ui (Radix + Tailwind)
-- **Tema**: Zinc (personalizável)
-- **Ícones**: Lucide React
-- **Fontes**: Inter
-
-## 📊 Database Schema (11 Tabelas)
-
-1. **tenants** - Imobiliárias
-2. **profiles** - Usuários
-3. **properties** - Imóveis
-4. **property_images** - Fotos dos imóveis
-5. **leads** - Contatos/leads
-6. **licenses** - Licenças SaaS
-7. **channels** - Canais omnichannel
-8. **conversations** - Conversas
-9. **messages** - Mensagens
-10. **ai_training_data** - Dados de treinamento da IA
-
-## 🔐 Sistema de Roles
-
-- **admin** - Acesso total (você)
-- **imobiliaria_owner** - Dono da imobiliária
-- **imobiliaria_user** - Usuário da imobiliária
-- **cliente** - Cliente final (público)
-
-## 📈 Status por Módulo
-
-| Módulo | Status | Progresso |
-|--------|--------|-----------|
-| Setup | ✅ Completo | 100% |
-| Database | ✅ Completo | 100% |
-| Auth | ✅ Completo | 100% |
-| Admin - Imobiliárias | 🚧 Em progresso | 60% |
-| Admin - Licenças | ⏳ Pendente | 0% |
-| Admin - Usuários | ⏳ Pendente | 0% |
-| Dashboard - Imóveis | ⏳ Pendente | 0% |
-| Dashboard - Inbox | ⏳ Pendente | 0% |
-| Público - Listagem | ⏳ Pendente | 0% |
-| Omnichannel | ⏳ Pendente | 0% |
-| IA Agent | ⏳ Pendente | 0% |
-
-## 💡 Decisões Técnicas
-
-### Multi-Tenancy
-- Isolamento via RLS do PostgreSQL
-- Campo `tenant_id` em todas as tabelas relevantes
-- Policies específicas por role
-
-### Autenticação
-- Supabase Auth (JWT)
-- Hook customizado `useAuth`
-- Middleware para proteção de rotas
-- Server Components para verificação server-side
-
-### Estado
-- React Query para cache e fetching
-- Server Components quando possível
-- Client Components apenas quando necessário
-
-### API Routes
-- Next.js API Routes
-- Validação de permissões em cada endpoint
-- Erros padronizados
-
----
-
-**Total de commits**: 5
-**Linhas de código**: ~3.000+
-**Tempo estimado gasto**: 6-8 horas
-**Progresso geral**: ~25% (Fase 3 de 8)
+- [[OBSIDIAN]] é o cérebro do produto.
+- [[PLANO_ON_PREMISE]] é escopo/aceite.
+- [[SEGURANCA]] define controles e operação.
+- [[PLANO_CONTROL_PLANE_FUTURO]] registra o produto administrativo financeiro Pepius futuro.
+- [[GLOSSARY]] e [[adr/0001-on-prem-postgresql-and-license-control-plane]] definem domínio/decisões.

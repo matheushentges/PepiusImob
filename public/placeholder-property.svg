@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Imagem de imóvel indisponível">
+  <rect width="800" height="600" fill="#ebe8e2" />
+  <path d="M220 420V250l180-130 180 130v170H450V315H350v105z" fill="#b8afa2" />
+  <path d="M190 260 400 105l210 155-22 30-188-140-188 140z" fill="#857c70" />
+  <rect x="370" y="340" width="60" height="80" fill="#ebe8e2" />
+</svg>

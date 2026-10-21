@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight, Images } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 interface ImageCarouselProps {
   images: string[]
@@ -26,9 +25,14 @@ export function ImageCarousel({ images, title, onOpenGallery }: ImageCarouselPro
 
   useEffect(() => {
     if (!emblaApi) return
-    onSelect()
+    const frame = requestAnimationFrame(onSelect)
     emblaApi.on('reInit', onSelect)
     emblaApi.on('select', onSelect)
+    return () => {
+      cancelAnimationFrame(frame)
+      emblaApi.off('reInit', onSelect)
+      emblaApi.off('select', onSelect)
+    }
   }, [emblaApi, onSelect])
 
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])

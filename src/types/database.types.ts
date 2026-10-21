@@ -18,7 +18,6 @@ export interface Database {
           telefone: string | null
           logo_url: string | null
           active: boolean
-          license_expires_at: string | null
           created_at: string
           updated_at: string
         }
@@ -30,7 +29,6 @@ export interface Database {
           telefone?: string | null
           logo_url?: string | null
           active?: boolean
-          license_expires_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -42,7 +40,6 @@ export interface Database {
           telefone?: string | null
           logo_url?: string | null
           active?: boolean
-          license_expires_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -51,7 +48,7 @@ export interface Database {
         Row: {
           id: string
           tenant_id: string | null
-          role: 'admin' | 'imobiliaria_owner' | 'imobiliaria_user' | 'cliente'
+          role: 'imobiliaria_owner' | 'imobiliaria_user' | 'cliente'
           nome: string
           email: string
           telefone: string | null
@@ -62,7 +59,7 @@ export interface Database {
         Insert: {
           id: string
           tenant_id?: string | null
-          role: 'admin' | 'imobiliaria_owner' | 'imobiliaria_user' | 'cliente'
+          role: 'imobiliaria_owner' | 'imobiliaria_user' | 'cliente'
           nome: string
           email: string
           telefone?: string | null
@@ -73,7 +70,7 @@ export interface Database {
         Update: {
           id?: string
           tenant_id?: string | null
-          role?: 'admin' | 'imobiliaria_owner' | 'imobiliaria_user' | 'cliente'
+          role?: 'imobiliaria_owner' | 'imobiliaria_user' | 'cliente'
           nome?: string
           email?: string
           telefone?: string | null

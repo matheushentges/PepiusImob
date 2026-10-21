@@ -1,52 +1,44 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { getAgencyContext } from '@/lib/auth/agency'
+import { getSignedPropertyImageUrl } from '@/lib/storage/property-images'
+import { canReadLicensedFeature } from '@/lib/licensing/local-state'
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const result = await getAgencyContext()
+  if (!result.context) return result.response
+  if (!(await canReadLicensedFeature('properties'))) {
+    return NextResponse.json({ error: 'Esta funcionalidade não está incluída na licença' }, { status: 403 })
+  }
   const { id } = await params
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('tenant_id, role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile?.tenant_id || profile.role === 'admin') {
-    return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
-  }
-
-  // Verificar se o imóvel pertence ao tenant
-  const { data: property } = await supabase
-    .from('properties')
-    .select('id')
-    .eq('id', id)
-    .eq('tenant_id', profile.tenant_id)
-    .maybeSingle()
-
-  if (!property) {
+  if (!z.string().uuid().safeParse(id).success) {
     return NextResponse.json({ error: 'Imóvel não encontrado' }, { status: 404 })
   }
 
-  const { data: images, error } = await supabase
+  const { data: property } = await result.context.supabase
+    .from('properties')
+    .select('id')
+    .eq('id', id)
+    .eq('tenant_id', result.context.tenantId)
+    .maybeSingle()
+  if (!property) return NextResponse.json({ error: 'Imóvel não encontrado' }, { status: 404 })
+
+  const { data, error } = await result.context.supabase
     .from('property_images')
-    .select('*')
+    .select('id, property_id, url, ordem, is_cover, created_at')
     .eq('property_id', id)
     .order('ordem', { ascending: true })
-
   if (error) {
-    console.error('Error fetching images:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Property image list failed', { code: error.code })
+    return NextResponse.json({ error: 'Não foi possível carregar as imagens' }, { status: 503 })
   }
 
-  return NextResponse.json(images || [])
+  const images = await Promise.all((data ?? []).map(async (image) => ({
+    ...image,
+    url: await getSignedPropertyImageUrl(image.url),
+  })))
+  return NextResponse.json(images, { headers: { 'Cache-Control': 'no-store' } })
 }

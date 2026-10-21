@@ -1,98 +1,56 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getAgencyContext } from '@/lib/auth/agency'
+import { canReadLicensedFeature, requireActiveLicense } from '@/lib/licensing/local-state'
+import { propertyInputSchema } from '@/lib/properties/validation'
+import { bodyErrorResponse, readJsonBody } from '@/lib/security/request-body'
 
-export async function POST(request: Request) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('tenant_id, role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile?.tenant_id || profile.role === 'admin') {
-    return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
-  }
-
-  try {
-    const body = await request.json()
-
-    const { data, error } = await supabase
-      .from('properties')
-      .insert({
-        tenant_id: profile.tenant_id,
-        titulo: body.titulo,
-        descricao: body.descricao,
-        tipo: body.tipo,
-        finalidade: body.finalidade,
-        status: body.status || 'disponivel',
-        preco_venda: body.preco_venda,
-        preco_locacao: body.preco_locacao,
-        endereco: body.endereco,
-        cidade: body.cidade,
-        estado: body.estado,
-        cep: body.cep,
-        bairro: body.bairro,
-        area_total: body.area_total,
-        area_construida: body.area_construida,
-        quartos: body.quartos,
-        banheiros: body.banheiros,
-        vagas_garagem: body.vagas_garagem,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error creating property:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(data)
-  } catch (error) {
-    console.error('Error:', error)
-    return NextResponse.json({ error: 'Erro ao criar imóvel' }, { status: 500 })
-  }
-}
+const createPropertySchema = propertyInputSchema
 
 export async function GET() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  const result = await getAgencyContext()
+  if (!result.context) return result.response
+  if (!(await canReadLicensedFeature('properties'))) {
+    return NextResponse.json({ error: 'Esta funcionalidade não está incluída na licença' }, { status: 403 })
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('tenant_id, role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile?.tenant_id || profile.role === 'admin') {
-    return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
-  }
-
-  const { data, error } = await supabase
+  const { data, error } = await result.context.supabase
     .from('properties')
-    .select('*')
-    .eq('tenant_id', profile.tenant_id)
+    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
+    .eq('tenant_id', result.context.tenantId)
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching properties:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Agency property list failed', { code: error.code })
+    return NextResponse.json({ error: 'Não foi possível carregar os imóveis' }, { status: 503 })
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } })
+}
+
+export async function POST(request: Request) {
+  const result = await getAgencyContext(request)
+  if (!result.context) return result.response
+  if (!(await requireActiveLicense('properties'))) {
+    return NextResponse.json({ error: 'A licença não permite alterações neste momento' }, { status: 423 })
+  }
+
+  const body = await readJsonBody(request, 32_768)
+  if (!body.ok) return bodyErrorResponse(body.reason)
+  const parsed = createPropertySchema.safeParse(body.value)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Confira os dados do imóvel' }, { status: 400 })
+  }
+
+  const { data, error } = await result.context.supabase
+    .from('properties')
+    .insert({ ...parsed.data, tenant_id: result.context.tenantId })
+    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
+    .single()
+
+  if (error || !data) {
+    console.error('Agency property create failed', { code: error?.code })
+    return NextResponse.json({ error: 'Não foi possível salvar o imóvel' }, { status: 503 })
+  }
+
+  return NextResponse.json(data, { status: 201, headers: { 'Cache-Control': 'no-store' } })
 }
