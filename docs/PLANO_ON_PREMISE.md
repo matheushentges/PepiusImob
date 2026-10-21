@@ -18,6 +18,7 @@ O pacote da imobiliária não inclui painel administrativo Pepius, cobrança onl
 ## Infraestrutura
 
 - Desenvolvimento: Supabase Cloud.
+- Vercel serve apenas para Preview de desenvolvimento, com `LICENSE_DEV_BYPASS=true` e dados Supabase isolados; Vercel Production nunca ignora a licença nem substitui a instalação on-premise.
 - Cliente: Supabase self-hosted em Compose e PostgreSQL local na VM, uma instalação por imobiliária.
 - App Next.js 16 no Compose Pepius, atrás de Caddy/TLS. O serviço interno de Kong só atende pela rede Docker.
 - Storage self-hosted guarda imagens na VM. Banco e Storage são itens separados de backup/restauração.

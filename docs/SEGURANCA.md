@@ -48,6 +48,7 @@
 ## Infra, secrets e criptografia
 
 - TLS termina no Caddy; configure domínio real e renovação automática. Configure DNS e firewall para portas 80/443 apenas, acesso administrativo por VPN/allowlist.
+- `LICENSE_DEV_BYPASS=true` só é aceito no desenvolvimento local ou em Vercel Preview explicitamente configurado; `VERCEL_ENV=production` sempre o ignora. Previews devem usar um projeto Supabase de desenvolvimento isolado, nunca dados ou credenciais de clientes.
 - Não expor PostgreSQL, Studio, Storage ou Kong diretamente. Use a network Docker do Supabase e `SUPABASE_INTERNAL_URL=http://kong:8000` entre serviços.
 - Rotacione senha do Postgres, JWT secret, anon/service keys, peppers e operator tokens; altere cada serviço relacionado e teste login/heartbeat após rotação.
 - Criptografe volume/disco e backups em repouso; proteja as chaves de backup separadas da VM. TLS protege trânsito, não volume comprometido.

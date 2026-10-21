@@ -25,8 +25,15 @@ function trustedKeys(): Record<string, string> {
   }
 }
 
+function developmentLicenseBypassEnabled(): boolean {
+  if (process.env.LICENSE_DEV_BYPASS !== 'true') return false
+  if (process.env.VERCEL_ENV === 'production') return false
+
+  return process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === 'preview'
+}
+
 export async function getLocalLicenseAccess(): Promise<LocalLicenseAccess> {
-  if (process.env.NODE_ENV !== 'production' && process.env.LICENSE_DEV_BYPASS === 'true') {
+  if (developmentLicenseBypassEnabled()) {
     return { active: true, status: 'active', features: ['public-listing', 'properties', 'leads'], expiresAt: null }
   }
 

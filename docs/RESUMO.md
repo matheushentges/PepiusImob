@@ -16,10 +16,12 @@ Aplicação on-premise de uma imobiliária por instalação: vitrine pública e 
 - Em lease suspensa/expirada, vitrine/gravações bloqueadas e painel em leitura com exportação; dados locais não são removidos.
 - Admin global e Inbox removidos do app imobiliário. Feature flag da API central permanece desabilitada para o cliente.
 - Docker standalone, Compose do app/agente, Caddy/TLS e documentação de setup/segurança/roadmap/ADR.
+- O bypass de licença é permitido localmente e em Vercel Preview explicitamente configurado; Vercel Production continua exigindo lease assinada.
+- Para abrir um Preview sem banco, basta configurar `LICENSE_DEV_BYPASS=true` no ambiente Preview; com Supabase de desenvolvimento, configurar URL, anon key, service-role key server-side e tenant isolado.
 
 ## Verificações automatizadas
 
-`npm run type-check`, `npm run lint`, `npm test` (7 testes) e `npm run build` passaram; `docker compose config` passou com valores de exemplo. O lint deixa cinco avisos de `<img>` para imagens temporarias/assinadas. `npm audit --omit=dev` encontrou zero vulnerabilidades; o audit completo reporta cinco ocorrencias high de `braces` em dependencias de lint (dev), sem correcao nao disruptiva disponivel no lock atual.
+`npm run type-check`, `npm run lint`, `npm test` (7 testes) e `npm run build` passaram na revisao anterior. Nesta correção também passaram type-check, lint e build; o lint mantém cinco avisos de `<img>` e zero erros. `docker compose config` passou com valores de exemplo. `npm audit --omit=dev` encontrou zero vulnerabilidades; o audit completo reporta cinco ocorrencias high de `braces` em dependencias de lint (dev), sem correcao nao disruptiva disponivel no lock atual.
 
 ## Ainda necessário antes de produção
 
