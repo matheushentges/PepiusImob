@@ -1,12 +1,38 @@
 -- =====================================================
 -- FIX: Recursão infinita nas políticas RLS de profiles
--- Problema: auth.is_admin() e auth.user_tenant_id() consultam
--- a tabela profiles dentro das próprias políticas de SELECT,
--- causando loop infinito (erro 42P17).
--- Solução: Substituir por políticas inline sem funções auxiliares.
+-- Causa raiz: subqueries em USING() que referenciam a própria
+-- tabela profiles causam erro 42P17 no PostgREST/Supabase.
+-- Solução: funções SECURITY DEFINER no schema public que
+-- leem profiles bypassando RLS, usadas nas políticas.
 -- =====================================================
 
--- Remover todas as políticas existentes em profiles
+-- 1. Funções que leem profiles sem passar pelo RLS.
+-- Elas só consultam o usuário da sessão; não aceitam IDs arbitrários.
+
+CREATE OR REPLACE FUNCTION public.current_user_role()
+RETURNS text AS $$
+  SELECT p.role::text
+  FROM public.profiles AS p
+  WHERE p.id = (SELECT auth.uid())
+  LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = '';
+
+CREATE OR REPLACE FUNCTION public.current_user_tenant_id()
+RETURNS uuid AS $$
+  SELECT p.tenant_id
+  FROM public.profiles AS p
+  WHERE p.id = (SELECT auth.uid())
+  LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = '';
+
+REVOKE ALL ON FUNCTION public.current_user_role() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.current_user_tenant_id() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.current_user_role() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.current_user_tenant_id() TO authenticated;
+
+-- 2. Remover TODAS as políticas antigas de profiles
 DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can view profiles in their tenant" ON profiles;
 DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
@@ -15,63 +41,53 @@ DROP POLICY IF EXISTS "Admins can manage all profiles" ON profiles;
 DROP POLICY IF EXISTS "profiles_select_own" ON profiles;
 DROP POLICY IF EXISTS "profiles_select_admin_all" ON profiles;
 DROP POLICY IF EXISTS "profiles_select_tenant" ON profiles;
+DROP POLICY IF EXISTS "profiles_self_read" ON profiles;
+DROP POLICY IF EXISTS "profiles_admin_read_all" ON profiles;
+DROP POLICY IF EXISTS "profiles_tenant_read" ON profiles;
+DROP POLICY IF EXISTS "profiles_self_update" ON profiles;
+DROP POLICY IF EXISTS "profiles_admin_manage_all" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_self" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_by_admin" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_same_tenant" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_self" ON profiles;
+DROP POLICY IF EXISTS "profiles_manage_by_admin" ON profiles;
 
--- Política 1: Usuário pode ler seu próprio perfil (sem dependência externa)
-CREATE POLICY "profiles_self_read"
-ON profiles FOR SELECT
-TO authenticated
+-- Remover as variantes inseguras de uma edição anterior dessa migration.
+DROP FUNCTION IF EXISTS public.get_user_role(uuid);
+DROP FUNCTION IF EXISTS public.get_user_tenant(uuid);
+
+-- 3. Novas políticas usando funções SECURITY DEFINER (zero recursão)
+
+CREATE POLICY "profiles_select_self"
+ON profiles FOR SELECT TO authenticated
 USING (id = auth.uid());
 
--- Política 2: Admin pode ler todos os perfis
--- Usa subquery direta em vez de auth.is_admin() para evitar recursão
-CREATE POLICY "profiles_admin_read_all"
-ON profiles FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM profiles p_check
-    WHERE p_check.id = auth.uid() AND p_check.role = 'admin'
-  )
-);
+CREATE POLICY "profiles_select_by_admin"
+ON profiles FOR SELECT TO authenticated
+USING (public.current_user_role() = 'admin');
 
--- Política 3: Usuários podem ler perfis do mesmo tenant
--- Subquery direta evita chamada recursiva a auth.user_tenant_id()
-CREATE POLICY "profiles_tenant_read"
-ON profiles FOR SELECT
-TO authenticated
-USING (
-  tenant_id IS NOT NULL
-  AND tenant_id = (
-    SELECT p_t.tenant_id FROM profiles p_t WHERE p_t.id = auth.uid() LIMIT 1
-  )
-);
+CREATE POLICY "profiles_select_same_tenant"
+ON profiles FOR SELECT TO authenticated
+USING (tenant_id IS NOT NULL AND tenant_id = public.current_user_tenant_id());
 
--- Política 4: Usuário pode atualizar seu próprio perfil
-CREATE POLICY "profiles_self_update"
-ON profiles FOR UPDATE
-TO authenticated
+CREATE POLICY "profiles_update_self"
+ON profiles FOR UPDATE TO authenticated
 USING (id = auth.uid())
-WITH CHECK (id = auth.uid());
-
--- Política 5: Admin pode gerenciar todos os perfis (INSERT/UPDATE/DELETE)
-CREATE POLICY "profiles_admin_manage_all"
-ON profiles FOR ALL
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM profiles p_check
-    WHERE p_check.id = auth.uid() AND p_check.role = 'admin'
-  )
-)
 WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM profiles p_check
-    WHERE p_check.id = auth.uid() AND p_check.role = 'admin'
-  )
+  id = auth.uid()
+  AND role::text = public.current_user_role()
+  AND tenant_id IS NOT DISTINCT FROM public.current_user_tenant_id()
 );
 
--- Recriar funções auxiliares com SECURITY DEFINER para uso em outras tabelas
--- (estas funções são usadas em policies de properties, leads, etc., não em profiles)
+CREATE POLICY "profiles_manage_by_admin"
+ON profiles FOR ALL TO authenticated
+USING (public.current_user_role() = 'admin')
+WITH CHECK (public.current_user_role() = 'admin');
+
+-- 4. Funções auxiliares globais para OUTRAS tabelas (properties, leads, etc.)
+-- Estas consultam profiles mas NÃO são usadas em políticas de profiles,
+-- então não causam recursão. Mantidas para compatibilidade.
+
 CREATE OR REPLACE FUNCTION auth.user_tenant_id()
 RETURNS UUID AS $$
   SELECT tenant_id FROM profiles WHERE id = auth.uid()
@@ -79,8 +95,5 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 CREATE OR REPLACE FUNCTION auth.is_admin()
 RETURNS BOOLEAN AS $$
-  SELECT EXISTS(
-    SELECT 1 FROM profiles
-    WHERE id = auth.uid() AND role = 'admin'
-  )
+  SELECT EXISTS(SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
