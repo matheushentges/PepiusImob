@@ -27,17 +27,45 @@ type PropertyRecord = {
 
 export type PublicSiteConfig = {
   agencyName: string
-  heroTitle: string
-  heroSubtitle: string
+  creci: string
+  slogan: string
+  logoUrl: string | null
+  faviconUrl: string | null
   primaryColor: string
   accentColor: string
+  heroTitle: string
+  heroSubtitle: string
+  whatsapp: string
+  telefone: string
+  emailContato: string
+  enderecoCompleto: string
+  redesSociais: {
+    instagram: string
+    facebook: string
+    linkedin: string
+    youtube: string
+  }
 }
 
 const DEFAULT_SITE_CONFIG: Omit<PublicSiteConfig, 'agencyName'> = {
+  creci: '',
+  slogan: '',
+  logoUrl: null,
+  faviconUrl: null,
   heroTitle: 'Encontre seu próximo imóvel',
   heroSubtitle: 'Explore imóveis para venda e locação e encontre um lugar que combina com seus planos.',
   primaryColor: '#334155',
   accentColor: '#E07A5F',
+  whatsapp: '',
+  telefone: '',
+  emailContato: '',
+  enderecoCompleto: '',
+  redesSociais: {
+    instagram: '',
+    facebook: '',
+    linkedin: '',
+    youtube: '',
+  },
 }
 
 function safeText(value: unknown, fallback: string, maxLength: number): string {
@@ -81,12 +109,38 @@ export async function getPublicSiteConfig(): Promise<PublicSiteConfig> {
     ? data.site_config as Record<string, unknown>
     : {}
 
+  const rawLogo = typeof stored.logo_url === 'string' && stored.logo_url.trim() ? stored.logo_url.trim() : null
+  const rawFavicon = typeof stored.favicon_url === 'string' && stored.favicon_url.trim() ? stored.favicon_url.trim() : null
+
+  const [logoUrl, faviconUrl] = await Promise.all([
+    rawLogo ? getSignedPropertyImageUrl(rawLogo, 3600) : null,
+    rawFavicon ? getSignedPropertyImageUrl(rawFavicon, 3600) : null,
+  ])
+
+  const rawRedes = (stored.redes_sociais && typeof stored.redes_sociais === 'object' && !Array.isArray(stored.redes_sociais))
+    ? stored.redes_sociais as Record<string, unknown>
+    : {}
+
   return {
     agencyName: safeText(data.nome, 'Imobiliária', 120),
-    heroTitle: safeText(stored.hero_title, DEFAULT_SITE_CONFIG.heroTitle, 100),
-    heroSubtitle: safeText(stored.hero_subtitle, DEFAULT_SITE_CONFIG.heroSubtitle, 300),
+    creci: safeText(stored.creci, '', 40),
+    slogan: safeText(stored.slogan, '', 160),
+    logoUrl,
+    faviconUrl,
     primaryColor: safeColor(stored.primary_color, DEFAULT_SITE_CONFIG.primaryColor),
     accentColor: safeColor(stored.accent_color, DEFAULT_SITE_CONFIG.accentColor),
+    heroTitle: safeText(stored.hero_title, DEFAULT_SITE_CONFIG.heroTitle, 120),
+    heroSubtitle: safeText(stored.hero_subtitle, DEFAULT_SITE_CONFIG.heroSubtitle, 350),
+    whatsapp: safeText(stored.whatsapp, '', 30),
+    telefone: safeText(stored.telefone, '', 30),
+    emailContato: safeText(stored.email_contato, '', 120),
+    enderecoCompleto: safeText(stored.endereco_completo, '', 250),
+    redesSociais: {
+      instagram: safeText(rawRedes.instagram, '', 150),
+      facebook: safeText(rawRedes.facebook, '', 150),
+      linkedin: safeText(rawRedes.linkedin, '', 150),
+      youtube: safeText(rawRedes.youtube, '', 150),
+    },
   }
 }
 

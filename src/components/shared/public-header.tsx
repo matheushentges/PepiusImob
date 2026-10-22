@@ -13,6 +13,7 @@ import {
   Phone,
   ShieldCheck,
   Search,
+  MessageCircle,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import type { PublicSiteConfig } from '@/lib/public-listings'
@@ -45,6 +46,8 @@ export function PublicHeader({ siteConfig }: PublicHeaderProps) {
   const isImoveis = pathname.startsWith('/imoveis')
   const isPrivacidade = pathname === '/privacidade'
 
+  const cleanWhatsapp = siteConfig.whatsapp?.replace(/\D/g, '')
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-md transition-colors">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -54,12 +57,25 @@ export function PublicHeader({ siteConfig }: PublicHeaderProps) {
           className="flex items-center gap-2 min-w-0 group"
           aria-label={`${siteConfig.agencyName} — página inicial`}
         >
-          <span className="font-serif text-lg sm:text-xl font-semibold tracking-tight text-foreground truncate group-hover:text-accent transition-colors">
-            {siteConfig.agencyName}
-          </span>
-          <span className="shrink-0 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent border border-accent/20">
-            Imóveis
-          </span>
+          {siteConfig.logoUrl ? (
+            <div className="flex items-center h-10 py-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={siteConfig.logoUrl}
+                alt={siteConfig.agencyName}
+                className="h-8 sm:h-9 w-auto max-w-[180px] sm:max-w-[220px] object-contain"
+              />
+            </div>
+          ) : (
+            <>
+              <span className="font-serif text-lg sm:text-xl font-semibold tracking-tight text-foreground truncate group-hover:text-accent transition-colors">
+                {siteConfig.agencyName}
+              </span>
+              <span className="shrink-0 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent border border-accent/20">
+                Imóveis
+              </span>
+            </>
+          )}
         </Link>
 
         {/* Navegação Desktop */}
@@ -100,6 +116,21 @@ export function PublicHeader({ siteConfig }: PublicHeaderProps) {
 
         {/* Ações no Header (Direita) */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {cleanWhatsapp && (
+            <a
+              href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(
+                `Olá! Acessei o site da ${siteConfig.agencyName} e gostaria de informações sobre imóveis.`,
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-emerald-600/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-500/20"
+              aria-label="Falar pelo WhatsApp"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span>WhatsApp</span>
+            </a>
+          )}
+
           <Link
             href="/imoveis"
             className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-accent/25 bg-accent/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent transition-all hover:bg-accent hover:text-white"
@@ -188,6 +219,21 @@ export function PublicHeader({ siteConfig }: PublicHeaderProps) {
               <Phone className="h-4 w-4 text-accent" />
               <span>Fale Conosco</span>
             </Link>
+
+            {cleanWhatsapp && (
+              <a
+                href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(
+                  `Olá! Acessei o site da ${siteConfig.agencyName} e gostaria de informações sobre imóveis.`,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg bg-emerald-500/10 px-3 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4 text-emerald-500" />
+                <span>Atendimento via WhatsApp</span>
+              </a>
+            )}
 
             <Link
               href="/privacidade"
