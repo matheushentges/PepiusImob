@@ -28,17 +28,17 @@ export function CookieConsentBanner() {
     <aside
       aria-label="Aviso de cookies e privacidade"
       role="region"
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-xl animate-in fade-in slide-in-from-bottom-5 duration-300 sm:bottom-6 sm:right-6 sm:left-auto"
+      className="fixed bottom-3 left-3 right-3 z-50 mx-auto max-w-xl animate-in fade-in slide-in-from-bottom-5 duration-300 sm:bottom-6 sm:right-6 sm:left-auto"
     >
-      <div className="rounded-xl border border-border/80 bg-card/95 p-5 shadow-2xl backdrop-blur-md dark:bg-card/90">
-        <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+      <div className="rounded-xl border border-border/80 bg-card/95 p-4 sm:p-5 shadow-2xl backdrop-blur-md dark:bg-card/90">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
             <Cookie className="h-5 w-5" aria-hidden="true" />
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-serif text-base font-semibold text-foreground">
+              <h3 className="font-serif text-sm sm:text-base font-semibold text-foreground">
                 Privacidade & Cookies
               </h3>
               <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -50,7 +50,7 @@ export function CookieConsentBanner() {
               Utilizamos cookies essenciais de navegação e segurança para garantir que você tenha a melhor experiência na nossa vitrine, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).
             </p>
 
-            <div className="mt-3 text-xs text-muted-foreground">
+            <div className="mt-2.5 text-xs text-muted-foreground">
               Consulte nossa{' '}
               <Link
                 href="/privacidade"
@@ -61,11 +61,11 @@ export function CookieConsentBanner() {
               .
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2.5">
+            <div className="mt-3.5 flex flex-col sm:flex-row gap-2">
               <button
                 type="button"
                 onClick={() => handleAccept('all')}
-                className="inline-flex h-9 items-center justify-center rounded-md bg-accent px-4 text-xs font-semibold text-accent-foreground shadow-sm transition-all hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                className="inline-flex h-9 w-full sm:w-auto items-center justify-center rounded-md bg-accent px-4 text-xs font-semibold text-accent-foreground shadow-sm transition-all hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
                 Aceitar todos
               </button>
@@ -73,7 +73,7 @@ export function CookieConsentBanner() {
               <button
                 type="button"
                 onClick={() => handleAccept('essential')}
-                className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-secondary/80 px-3.5 text-xs font-medium text-secondary-foreground transition-all hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                className="inline-flex h-9 w-full sm:w-auto items-center justify-center rounded-md border border-border bg-secondary/80 px-3.5 text-xs font-medium text-secondary-foreground transition-all hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
                 Apenas essenciais
               </button>

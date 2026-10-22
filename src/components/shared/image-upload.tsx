@@ -240,7 +240,7 @@ export function ImageUpload({
 
       {/* Grid de Previews */}
       {images.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {images.map((image, index) => (
             <div
               key={image.id || image.url}
@@ -256,14 +256,14 @@ export function ImageUpload({
 
               {/* Badge Cover */}
               {image.is_cover && (
-                <div className="absolute left-1 top-1 flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground">
+                <div className="absolute left-1.5 top-1.5 z-10 flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground shadow-xs">
                   <Star className="h-2.5 w-2.5" />
                   Capa
                 </div>
               )}
 
-              {/* Overlay com ações */}
-              <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+              {/* Overlay com ações — sempre visível em mobile (sem hover), hover em desktop */}
+              <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/40 sm:bg-black/50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 {!image.is_cover && (
                   <button
                     type="button"
@@ -271,10 +271,11 @@ export function ImageUpload({
                       e.stopPropagation()
                       setAsCover(index)
                     }}
-                    className="rounded-md bg-white/90 p-1.5 text-xs font-medium text-foreground hover:bg-white"
+                    className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-xs font-medium text-foreground hover:bg-white shadow-xs cursor-pointer"
                     title="Definir como capa"
+                    aria-label="Definir como capa"
                   >
-                    <Star className="h-3 w-3" />
+                    <Star className="h-3.5 w-3.5" />
                   </button>
                 )}
                 <button
@@ -283,10 +284,11 @@ export function ImageUpload({
                     e.stopPropagation()
                     removeImage(index)
                   }}
-                  className="rounded-md bg-red-500/90 p-1.5 text-white hover:bg-red-600"
+                  className="flex h-8 w-8 items-center justify-center rounded-md bg-red-600/90 text-white hover:bg-red-600 shadow-xs cursor-pointer"
                   title="Remover imagem"
+                  aria-label="Remover imagem"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

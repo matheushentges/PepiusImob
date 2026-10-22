@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Serif_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
@@ -13,6 +13,12 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-dm-sans",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   title: "Pepius Imob - Sistema para Imobiliárias",

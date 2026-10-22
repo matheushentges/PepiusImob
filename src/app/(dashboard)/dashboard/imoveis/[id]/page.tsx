@@ -217,7 +217,7 @@ export default function EditarImovelPage() {
       </div>
 
       {/* Form Card - Borders-only, bg-card */}
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="rounded-lg border border-border bg-card p-4 sm:p-6">
         <form onSubmit={handleSubmit}>
           <fieldset disabled={!editable} className="w-full space-y-8 border-0 p-0">
           {uploadWarning !== null && uploadWarning > 0 && (
@@ -400,14 +400,32 @@ export default function EditarImovelPage() {
           </section>
 
           {/* Actions */}
-          <div className="flex items-center justify-between border-t border-border pt-6">
-            <Button type="button" variant="destructive" onClick={handleDelete} disabled={!editable || deleting || saving} className="h-9">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-border pt-6">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={!editable || deleting || saving}
+              className="h-10 sm:h-9 w-full sm:w-auto"
+            >
               {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
               Excluir
             </Button>
-            <div className="flex gap-3">
-              <Button type="button" variant="outline" className="h-9" onClick={() => router.back()} disabled={saving || deleting}>Cancelar</Button>
-              <Button type="submit" disabled={saving || deleting} className="h-9 px-5">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 sm:h-9 w-full sm:w-auto"
+                onClick={() => router.back()}
+                disabled={saving || deleting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={saving || deleting}
+                className="h-10 sm:h-9 px-5 w-full sm:w-auto"
+              >
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Salvar Alterações
               </Button>

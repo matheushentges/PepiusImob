@@ -80,7 +80,7 @@ export default function ConfiguracoesPage() {
         <h1 className="font-serif text-2xl font-semibold tracking-tight">Configurações da vitrine</h1>
         <p className="mt-1 text-sm text-muted-foreground">Personalize a página pública de {siteName}.</p>
       </header>
-      <form onSubmit={submit} className="space-y-6 rounded-lg border border-border bg-card p-6">
+      <form onSubmit={submit} className="space-y-6 rounded-lg border border-border bg-card p-4 sm:p-6">
         {error && <p role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}
         {success && <p role="status" className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-800">Configurações salvas.</p>}
         <div className="space-y-2">
@@ -103,7 +103,7 @@ export default function ConfiguracoesPage() {
           ))}
         </div>
         <div className="flex justify-end border-t border-border pt-5">
-          <Button type="submit" disabled={saving || !canEdit} className="gap-2">
+          <Button type="submit" disabled={saving || !canEdit} className="h-10 sm:h-9 w-full sm:w-auto gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Salvar configurações
           </Button>

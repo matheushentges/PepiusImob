@@ -155,7 +155,7 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         {[
           { label: 'Total', value: stats.total, accent: false },
           { label: 'Novos', value: stats.novo, accent: false },
@@ -173,8 +173,8 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-4">
-        <div className="relative min-w-[200px] flex-1">
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
+        <div className="relative w-full sm:flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <input
             type="search"
@@ -182,14 +182,14 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar por nome, e-mail, telefone ou imóvel..."
             aria-label="Buscar leads"
-            className="h-9 w-full rounded-md border border-input bg-input pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-10 sm:h-9 w-full rounded-md border border-input bg-input pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
           aria-label="Filtrar por status"
-          className="h-9 rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="h-10 sm:h-9 w-full sm:w-auto rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           <option value="">Todos os status</option>
           <option value="novo">Novo</option>
@@ -198,13 +198,106 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
           <option value="perdido">Perdido</option>
         </select>
         {filtersActive && (
-          <Button type="button" variant="outline" size="sm" className="h-9" onClick={clearFilters}>
+          <Button type="button" variant="outline" size="sm" className="h-10 sm:h-9 w-full sm:w-auto" onClick={clearFilters}>
             Limpar filtros
           </Button>
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
+      <p className="text-xs text-muted-foreground">
+        {filtered.length} {filtered.length === 1 ? 'lead' : 'leads'}
+        {filtersActive ? ' com os filtros atuais' : ' registrados'}
+      </p>
+
+      {/* Mobile View - Cards de Leads compactos e acionáveis */}
+      <div className="space-y-3 md:hidden">
+        {filtered.length > 0 ? (
+          filtered.map((lead) => (
+            <div
+              key={lead.id}
+              className="rounded-lg border border-border bg-card p-4 space-y-3 shadow-xs"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {lead.nome}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Recebido em {formatDate(lead.createdAt)}
+                  </p>
+                </div>
+                {statusBadge(lead.status)}
+              </div>
+
+              {lead.propertyTitle && (
+                <div className="rounded bg-secondary/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Interesse: </span>
+                  <span className="truncate">{lead.propertyTitle}</span>
+                </div>
+              )}
+
+              {/* Ações diretas de contato */}
+              <div className="flex flex-wrap gap-2 text-xs">
+                {lead.telefone && (
+                  <a
+                    href={`tel:${lead.telefone.replace(/[^0-9+]/g, '')}`}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/50 px-2.5 py-1.5 font-medium text-foreground hover:bg-secondary"
+                  >
+                    <Phone className="h-3 w-3 text-accent" />
+                    <span>Ligar</span>
+                  </a>
+                )}
+                {lead.email && (
+                  <a
+                    href={`mailto:${lead.email}`}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary/50 px-2.5 py-1.5 font-medium text-foreground hover:bg-secondary truncate max-w-[180px]"
+                  >
+                    <Mail className="h-3 w-3 text-accent shrink-0" />
+                    <span className="truncate">{lead.email}</span>
+                  </a>
+                )}
+              </div>
+
+              {lead.mensagem && (
+                <p className="line-clamp-2 rounded bg-secondary/30 p-2 text-xs text-muted-foreground">
+                  &ldquo;{lead.mensagem}&rdquo;
+                </p>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 w-full justify-center"
+                onClick={() => openLead(lead)}
+              >
+                Ver Detalhes do Atendimento
+              </Button>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-lg border border-border bg-card p-8 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+              <Users className="h-6 w-6" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-foreground">
+              {filtersActive ? 'Nenhum lead encontrado' : 'Nenhum lead registrado'}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {filtersActive
+                ? 'Ajuste a busca ou o status para ver outros contatos.'
+                : 'Os leads aparecerão aqui quando clientes entrarem em contato'}
+            </p>
+            {filtersActive && (
+              <Button type="button" variant="outline" size="sm" className="mt-4 w-full" onClick={clearFilters}>
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View - Tabela completa */}
+      <div className="hidden md:block overflow-x-auto rounded-lg border border-border bg-card">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border hover:bg-transparent">
@@ -302,17 +395,17 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
 
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-2 sm:p-4 sm:items-center"
           onClick={() => setSelected(null)}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="lead-detail-title"
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-border bg-card shadow-xl"
+            className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-card shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between border-b border-border px-5 py-4">
+            <div className="flex items-start justify-between border-b border-border px-4 sm:px-5 py-4">
               <div>
                 <h2 id="lead-detail-title" className="font-serif text-lg font-semibold text-foreground">
                   {selected.nome}
@@ -331,7 +424,7 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
               </button>
             </div>
 
-            <div className="space-y-5 px-5 py-5">
+            <div className="space-y-5 px-4 sm:px-5 py-5">
               <div className="flex flex-wrap items-center gap-2">
                 {statusBadge(selected.status)}
                 {selected.horarioPreferido && (
@@ -380,13 +473,13 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
                 <label htmlFor="lead-status" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Status do atendimento
                 </label>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <select
                     id="lead-status"
                     value={draftStatus}
                     onChange={(event) => setDraftStatus(event.target.value)}
                     disabled={!canEdit || saving}
-                    className="h-9 rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-10 sm:h-9 w-full sm:w-auto rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="novo">Novo</option>
                     <option value="em_contato">Em Contato</option>
@@ -395,7 +488,7 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
                   </select>
                   <Button
                     type="button"
-                    className="h-9"
+                    className="h-10 sm:h-9 w-full sm:w-auto"
                     onClick={saveStatus}
                     disabled={!canEdit || saving || draftStatus === selected.status}
                   >

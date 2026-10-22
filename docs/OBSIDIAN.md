@@ -45,9 +45,15 @@ Durante desenvolvimento, usamos Supabase Cloud. Para cliente, usamos a stack ofi
 O Vercel Production está sendo usado temporariamente para avaliar o produto; não substitui uma instalação de cliente on-premise. `LICENSE_DEV_BYPASS=true` só funciona em `VERCEL_ENV=preview` ou no desenvolvimento local; Production exige uma lease assinada ativa. Preview deve usar credenciais e dados Supabase de desenvolvimento isolados.
 Para abrir a vitrine de Preview sem consultar uma licença, configure `LICENSE_DEV_BYPASS=true` no escopo Preview do Vercel. Sem variáveis Supabase e tenant, a aplicação abre com catálogo vazio e autenticação desabilitada; o login volta a funcionar quando o Supabase é configurado. Para trabalhar com dados, configure no Preview `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server-only), `PEPIUS_TENANT_ID` e `LEAD_RATE_LIMIT_PEPPER`, todos ligados a um projeto de desenvolvimento isolado. Nunca copie credenciais de produção ou de clientes.
 
-## Interface da vitrine
+## Interface da vitrine e painel gerencial
 
 A rota inicial preserva a composição aprovada da marca Linha de Planta: navegação limpa, hero serifado, busca, destaques e rodapé institucional. O hero usa título/subtítulo configurados no tenant; a seção de destaques só aparece quando há imóveis marcados. O conteúdo público é estritamente voltado a compradores e locatários; o botão de login administrativo foi removido do topo público e substituído por um hiperlink institucional discreto `"Imobiliária"` no rodapé (direcionando a `/login`). A busca da home envia texto e finalidade para a listagem. Imóveis com finalidade "ambos" exibem preço de venda e de locação juntos na home, na listagem e no detalhe. O tema padrão é **claro** (`light`), com suporte completo a tema escuro via `@custom-variant dark` do Tailwind v4; o seletor `ThemeToggle` está presente tanto no cabeçalho público quanto no painel gerencial. A vitrine cumpre a LGPD apresentando o banner de consentimento de cookies (`CookieConsentBanner`) com persistência em `localStorage` e a página de Política de Privacidade (`/privacidade`).
+
+Ambas as interfaces (vitrine e painel administrativo) são 100% responsivas para dispositivos móveis (320px–428px):
+- Viewport explícito em `src/app/layout.tsx` (`export const viewport: Viewport`) garantindo proporção e escala 1:1 sem zoom-out do navegador.
+- Tabelas de imóveis e leads com adaptação fluida: em telas mobile (`md:hidden`), os registros são renderizados em cards verticais ergonômicos com botões de ação e atalhos rápidos (`tel:` / `mailto:` para contatos), mantendo a visualização tabular clássica em desktop (`hidden md:block`).
+- Menu mobile do painel gerencial com touch targets mínimos de 44px e ícones semânticos para todas as rotas (incluindo licença).
+- Componentes flutuantes (FAB de contato e banner de cookies) posicionados com margens seguras e largura responsiva sem sobreposição ou quebra de tela.
 
 ## Segurança e dados
 

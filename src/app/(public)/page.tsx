@@ -25,12 +25,12 @@ export default async function HomePage() {
       style={{ '--primary': siteConfig.primaryColor, '--accent': siteConfig.accentColor } as CSSProperties}
     >
       <header className="sticky top-0 z-50 border-b border-border bg-card/90 backdrop-blur-sm">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2" aria-label={`${siteConfig.agencyName} — página inicial`}>
-            <span className="font-serif text-xl font-semibold tracking-tight text-foreground">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2 min-w-0" aria-label={`${siteConfig.agencyName} — página inicial`}>
+            <span className="font-serif text-lg sm:text-xl font-semibold tracking-tight text-foreground truncate">
               {siteConfig.agencyName}
             </span>
-            <span className="rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent-foreground">
+            <span className="shrink-0 rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent-foreground">
               Imóveis
             </span>
           </Link>
@@ -47,86 +47,68 @@ export default async function HomePage() {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
               href="/imoveis"
-              className="hidden sm:inline-flex text-xs font-semibold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
+              className="inline-flex text-xs font-semibold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors py-1.5 px-2 rounded hover:bg-secondary"
             >
-              Ver todos os imóveis →
+              Catálogo <span className="hidden sm:inline">completo →</span>
             </Link>
             <ThemeToggle />
           </div>
         </div>
-        <nav aria-label="Navegação móvel" className="border-t border-border md:hidden">
-          <div className="container mx-auto flex items-center justify-between px-4 py-2.5">
-            <div className="flex items-center gap-5">
-              <Link href="#imoveis" className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
-                Imóveis
-              </Link>
-              <Link href="#sobre" className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
-                Sobre
-              </Link>
-              <Link href="#contato" className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
-                Contato
-              </Link>
-            </div>
-            <Link
-              href="/imoveis"
-              className="text-xs font-semibold text-accent hover:underline"
-            >
-              Catálogo completo
-            </Link>
-          </div>
-        </nav>
       </header>
 
       <main>
         <section className="relative overflow-hidden">
-          <div className="container mx-auto px-4 py-20 md:px-6 md:py-32">
+          <div className="container mx-auto px-4 py-12 sm:px-6 sm:py-20 md:py-28">
             <div className="mx-auto max-w-3xl text-center">
-              <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-accent">
+              <p className="mb-3 text-[11px] sm:text-xs font-medium uppercase tracking-[0.2em] text-accent">
                 {siteConfig.agencyName}
               </p>
-              <h1 className="font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-5xl md:text-6xl">
+              <h1 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl break-words">
                 {siteConfig.heroTitle}
               </h1>
-              <p className="mt-6 text-lg leading-relaxed text-muted-foreground md:text-xl">
+              <p className="mt-4 sm:mt-6 text-base leading-relaxed text-muted-foreground sm:text-lg md:text-xl max-w-2xl mx-auto">
                 {siteConfig.heroSubtitle}
               </p>
 
-              <form action="/imoveis" method="get" className="mx-auto mt-10 max-w-xl">
+              <form action="/imoveis" method="get" className="mx-auto mt-8 sm:mt-10 max-w-xl">
                 <label htmlFor="home-search" className="sr-only">
                   Buscar imóveis por cidade, bairro ou tipo
                 </label>
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                  <input
-                    id="home-search"
-                    name="q"
-                    type="search"
-                    maxLength={120}
-                    placeholder="Busque por cidade, bairro ou tipo de imóvel..."
-                    className="h-14 w-full rounded-lg border border-border bg-card pl-12 pr-28 text-base shadow-sm transition-all placeholder:text-muted-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-                  />
+                <div className="flex flex-col gap-2.5 sm:relative sm:block">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                    <input
+                      id="home-search"
+                      name="q"
+                      type="search"
+                      maxLength={120}
+                      placeholder="Cidade, bairro ou tipo de imóvel..."
+                      className="h-12 sm:h-14 w-full rounded-lg border border-border bg-card pl-11 pr-4 sm:pr-28 text-sm sm:text-base shadow-sm transition-all placeholder:text-muted-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                    />
+                  </div>
                   <button
                     type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                    className="w-full sm:w-auto sm:absolute sm:right-2 sm:top-1/2 sm:-translate-y-1/2 h-11 sm:h-10 rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Buscar
+                    <Search className="h-4 w-4 sm:hidden" />
+                    <span>Buscar imóveis</span>
                   </button>
                 </div>
-                <div className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                  <Link href="/imoveis?tipo=venda" className="flex items-center gap-1.5 transition-colors hover:text-foreground">
-                    <Building2 className="h-4 w-4" aria-hidden="true" />
+                <div className="mt-4 flex flex-wrap justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                  <Link href="/imoveis?tipo=venda" className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-secondary/50 px-3 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">
+                    <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
                     Comprar
                   </Link>
-                  <Link href="/imoveis?tipo=aluguel" className="flex items-center gap-1.5 transition-colors hover:text-foreground">
-                    <KeyRound className="h-4 w-4" aria-hidden="true" />
+                  <Link href="/imoveis?tipo=aluguel" className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-secondary/50 px-3 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">
+                    <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
                     Alugar
                   </Link>
-                  <Link href="#imoveis" className="flex items-center gap-1.5 transition-colors hover:text-foreground">
-                    <MapPin className="h-4 w-4" aria-hidden="true" />
-                    Ver destaques
+                  <Link href="#imoveis" className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-secondary/50 px-3 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">
+                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                    Destaques
                   </Link>
                 </div>
               </form>

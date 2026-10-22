@@ -226,7 +226,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
       {/* Grid Principal: Status & Tempo Restante + Recursos */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Card Principal: Status e Tempo Restante (ocupa 2 colunas) */}
-        <div className="rounded-xl border border-border bg-card p-6 shadow-xs lg:col-span-2">
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs lg:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-5">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
@@ -309,8 +309,8 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
               </div>
               <div className="sm:col-span-2">
                 <span className="text-muted-foreground">ID da Instalação:</span>
-                <div className="mt-0.5 flex items-center gap-2">
-                  <code className="rounded bg-background px-2 py-1 font-mono text-[11px] text-foreground border border-border/60">
+                <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                  <code className="rounded bg-background px-2 py-1 font-mono text-[11px] text-foreground border border-border/60 break-all">
                     {details.installationId || 'Não gerado ainda'}
                   </code>
                   {details.installationId && (
@@ -340,7 +340,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
         </div>
 
         {/* Card Lateral: Funcionalidades Contratadas */}
-        <div className="flex flex-col justify-between rounded-xl border border-border bg-card p-6 shadow-xs">
+        <div className="flex flex-col justify-between rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
           <div>
             <div className="flex items-center gap-2 border-b border-border pb-4">
               <Server className="h-5 w-5 text-accent" />
@@ -411,7 +411,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
       </div>
 
       {/* Card de Ativação / Inserção de Código */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
         <div className="flex items-start gap-3 border-b border-border pb-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
             <KeyRound className="h-5 w-5" />

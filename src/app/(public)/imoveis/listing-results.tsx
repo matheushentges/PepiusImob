@@ -120,13 +120,13 @@ export function ListingResults({
           {/* Type filter pills */}
           <div className="space-y-1.5">
             <span className="text-xs font-medium text-text-secondary">Tipo</span>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {TYPE_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setTypeFilter(option.value)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`min-h-[40px] rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                     typeFilter === option.value
                       ? 'bg-accent text-accent-text'
                       : 'border border-border-default bg-surface-base text-text-secondary hover:border-accent hover:text-text-primary'
@@ -198,7 +198,7 @@ export function ListingResults({
             <button
               type="button"
               onClick={clearFilters}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border-default bg-surface-base px-4 text-sm font-medium text-text-secondary transition-colors hover:border-error hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-border-default bg-surface-base px-4 text-sm font-medium text-text-secondary transition-colors hover:border-error hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
               Limpar filtros

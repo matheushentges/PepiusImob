@@ -66,7 +66,7 @@ export default async function PrivacyPage() {
 
         <div className="space-y-8">
           {/* Section 1 */}
-          <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <FileText className="h-5 w-5" />
@@ -79,7 +79,7 @@ export default async function PrivacyPage() {
           </section>
 
           {/* Section 2 */}
-          <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <Eye className="h-5 w-5" />
@@ -104,7 +104,7 @@ export default async function PrivacyPage() {
           </section>
 
           {/* Section 3 */}
-          <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <Cookie className="h-5 w-5" />
@@ -124,7 +124,7 @@ export default async function PrivacyPage() {
           </section>
 
           {/* Section 4 */}
-          <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <Database className="h-5 w-5" />
@@ -137,7 +137,7 @@ export default async function PrivacyPage() {
           </section>
 
           {/* Section 5 */}
-          <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <UserCheck className="h-5 w-5" />
@@ -159,7 +159,7 @@ export default async function PrivacyPage() {
           </section>
 
           {/* Section 6 */}
-          <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <section className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <Lock className="h-5 w-5" />
