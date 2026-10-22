@@ -20,7 +20,12 @@ export const siteConfigSchema = z.object({
     facebook: z.string().trim().max(150).optional().default(''),
     linkedin: z.string().trim().max(150).optional().default(''),
     youtube: z.string().trim().max(150).optional().default(''),
-  }).optional().default({}),
+  }).default({
+    instagram: '',
+    facebook: '',
+    linkedin: '',
+    youtube: '',
+  }),
 }).strict()
 
 export const tenantBrandingSchema = z.object({
