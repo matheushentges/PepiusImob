@@ -10,7 +10,6 @@ Sistema on-premise para uma imobiliária por instalação: vitrine pública, pai
 - O controle de licenças fica no serviço central Pepius. A instalação recebe apenas a chave pública para validar leases assinados.
 - A integração com o serviço central envia identificador da instalação e estado da licença; imóveis e leads permanecem na VM.
 
-Consulte o [plano on-premise](docs/PLANO_ON_PREMISE.md), o [cérebro do produto](docs/OBSIDIAN.md), o [guia de segurança](docs/SEGURANCA.md) e o [roadmap do futuro painel Pepius](docs/PLANO_CONTROL_PLANE_FUTURO.md).
 
 ## Desenvolvimento
 
@@ -35,4 +34,4 @@ Cada instalação precisa de domínio/DNS apontando para a VM, certificado TLS, 
 
 O operador Pepius emite códigos de ativação e registra pagamentos pela CLI privada/API autenticada. A instalação faz heartbeat diário e aceita operação offline por até sete dias. Após 15 dias corridos além de `paid_through`, o serviço central suspende a licença; a instalação aplica a suspensão ao próximo heartbeat ou quando o lease local expira. Em suspensão, a vitrine sai do ar, as alterações são bloqueadas e o painel oferece leitura e exportação. Os dados permanecem na VM.
 
-As rotinas operacionais e os limites dessa proteção estão documentados em [[OBSIDIAN]] e [[PLANO_ON_PREMISE]]. Quem controla a VM com privilégios de root pode alterar o software; o licenciamento regula o funcionamento oficial, sem prometer inviolabilidade contra o administrador do servidor.
+Quem controla a VM com privilégios de root pode alterar o software; o licenciamento regula o funcionamento oficial da aplicação.

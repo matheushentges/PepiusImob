@@ -45,3 +45,7 @@ next-env.d.ts
 supabase/.temp/
 /.local/
 .superpowers/
+
+# Documentação interna, arquitetura e cérebro do produto (estritamente local no Obsidian)
+/docs/
+/.claude/

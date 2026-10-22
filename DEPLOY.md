@@ -14,7 +14,6 @@ O guia canônico é [`supabase/SETUP.md`](supabase/SETUP.md). Resumo:
 6. Ative a instalação com um código de uso único emitido pelo control plane Pepius.
 7. Faça backup criptografado de PostgreSQL e Storage e teste o restore numa VM isolada antes de liberar o cliente.
 
-Detalhes de segurança, rotação e recuperação estão em [`docs/SEGURANCA.md`](docs/SEGURANCA.md). Escopo e critérios de aceite estão em [`docs/PLANO_ON_PREMISE.md`](docs/PLANO_ON_PREMISE.md).
 
 ## Preview na Vercel
 
