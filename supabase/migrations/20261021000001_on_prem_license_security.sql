@@ -79,18 +79,6 @@ $$;
 
 DROP FUNCTION IF EXISTS public.create_admin_user(TEXT, TEXT, TEXT);
 
-CREATE OR REPLACE FUNCTION auth.user_tenant_id()
-RETURNS UUID
-LANGUAGE sql
-SECURITY DEFINER
-STABLE
-SET search_path = ''
-AS $$
-  SELECT tenant_id FROM public.profiles WHERE id = (SELECT auth.uid()) LIMIT 1;
-$$;
-
-REVOKE ALL ON FUNCTION auth.user_tenant_id() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION auth.user_tenant_id() TO authenticated, service_role;
 
 CREATE TABLE IF NOT EXISTS public.public_lead_rate_limits (
   ip_hash TEXT PRIMARY KEY,
@@ -387,6 +375,4 @@ USING (
   bucket_id = 'property-images'
   AND public.license_has_feature('properties')
   AND (storage.foldername(name))[1] = public.current_user_tenant_id()::TEXT
-);
-
-DROP FUNCTION IF EXISTS auth.is_admin();
+);\n

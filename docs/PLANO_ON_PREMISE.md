@@ -94,4 +94,6 @@ O projeto preserva as migrations históricas para criar o schema Supabase; a mig
 
 Implementados: vitrine de dados reais, APIs de leads e gestão, configurações limitadas, roles de imobiliária, agente/API Ed25519, CLI de licenças e provisionamento, Dockerfiles/Compose/Caddy, migrations separadas da instalação e controle, exportação e documentação principal.
 
+Esta lista descreve código existente, não aceite operacional. A revisão funcional e os próximos itens por prioridade estão em [[REVISAO_MODULO_INICIAL]]. Em especial, concluir o fluxo de leads na UI e validar o control plane e Supabase self-hosted antes do piloto.
+
 Pendentes antes de cliente: testar migrations e RLS numa stack Supabase self-hosted limpa; exercitar provisionamento/ativação/suspensão/restore ponta a ponta; validar instalação e upgrade/rollback; completar backups restauráveis de Postgres e Storage; gerar e guardar as chaves reais; passar revisão de segurança e teste com duas imobiliárias isoladas. Não declare a versão pronta antes desses ensaios.

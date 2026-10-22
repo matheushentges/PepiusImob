@@ -2,13 +2,15 @@
 
 ## Desenvolvimento
 
-Desenvolvimento continua usando Supabase Cloud. Configure as chaves de desenvolvimento em `.env.local`, faça link do projeto e aplique as migrations:
+A CLI do Supabase está instalada como dependência de desenvolvimento deste repositório (versão 2.121.0). Use `npx supabase`; isso instala a ferramenta de linha de comando e não inicia um banco local. Para autenticar, execute `npx supabase login` e conclua o acesso com um Personal Access Token do Supabase.
+
+Desenvolvimento continua usando Supabase Cloud. Configure as chaves de desenvolvimento em `.env.local`, faça link do projeto e aplique as migrations. Os helpers de RLS ficam em `public` com `search_path` fixo; as migrations não criam funções no schema protegido `auth`.
 
 ```bash
-supabase login
-supabase link --project-ref <ref-do-projeto-de-desenvolvimento>
-supabase db push --dry-run
-supabase db push
+npx supabase login
+npx supabase link --project-ref <ref-do-projeto-de-desenvolvimento>
+npx supabase db push --dry-run
+npx supabase db push
 ```
 
 Não use chaves de produção local/on-premise no desenvolvimento.
@@ -23,8 +25,8 @@ O banco entregue é PostgreSQL. Não há suporte ou configuração de MySQL. Ins
 4. Aplique as migrations versionadas deste projeto ao banco on-premise. Instale o Supabase CLI e use a URL local de PostgreSQL; faça primeiro `db push --dry-run` e revise as migrations pendentes:
 
    ```bash
-   supabase db push --db-url 'postgresql://postgres:<senha-URL-encoded>@127.0.0.1:5432/postgres' --dry-run
-   supabase db push --db-url 'postgresql://postgres:<senha-URL-encoded>@127.0.0.1:5432/postgres'
+   npx supabase db push --db-url 'postgresql://postgres:<senha-URL-encoded>@127.0.0.1:5432/postgres' --dry-run
+   npx supabase db push --db-url 'postgresql://postgres:<senha-URL-encoded>@127.0.0.1:5432/postgres'
    ```
 
 5. A migration `20261021000001_on_prem_license_security.sql` migra o banco legado de imobiliária: remove a licença antiga e os dados comerciais/conta administrativa global, remove o seed de demonstração, endurece RLS e torna Storage privado. Exporte dados de faturamento/contas reais antes de aplicá-la. Em instalações novas, os registros de demonstração são descartados intencionalmente.
@@ -65,5 +67,7 @@ O operador da VM protege e testa cópias criptografadas do banco e dos objetos d
 ## Serviço central de licenças (ambiente Pepius separado)
 
 `license-control-plane/migrations/0001_license_control_plane.sql` deve ser aplicado a um projeto Supabase separado, controlado pela Pepius, nunca ao banco da imobiliária. Somente esse serviço recebe chave privada Ed25519, chave service-role, tokens dos operadores e flag `LICENSE_CONTROL_PLANE_ENABLED=true`. O pacote da imobiliária mantém essa flag falsa e não recebe segredos do operador.
+
+Para a avaliação de Vercel Production, o projeto central temporário Supabase Free `lwsnunuufkqmursocztg` foi criado em sa-east-1 e recebeu essa migration. As chaves legadas `anon`/`service_role` foram desativadas; a aplicação usa uma chave `sb_secret` dedicada. O projeto Free não gera cobrança recorrente, permite até dois projetos ativos e pode pausar após inatividade. Não habilite complementos pagos nem migre esse projeto para uma organização paga sem revisar custos. As variáveis sensíveis e a chave privada de assinatura ficam no ambiente server-side do Vercel e no `.env.local` ignorado pelo Git; nunca copie esses valores para o pacote da imobiliária.
 
 Os comandos do proprietário ficam em `scripts/license-admin.mjs`; eles criam licenças, suspendem/restauram e registram pagamentos. A emissão guarda apenas hash do código de ativação. Não coloque tokens em histórico de shell, `.env.onprem` ou container de cliente. Veja [[PLANO_CONTROL_PLANE_FUTURO]].

@@ -7,7 +7,7 @@ tags: [pepius-imob, on-premise, imobiliárias, licenciamento, segurança]
 
 # Pepius Imob — contexto canônico
 
-Esta é a nota de contexto do produto dentro do repositório. Antes de alterar o escopo, confira esta nota e [[PLANO_ON_PREMISE]]. Depois de cada entrega, atualize a nota, [[RESUMO]] e a documentação afetada. Para decisões arquiteturais difíceis de reverter, registre um [[adr/0001-on-prem-postgresql-and-license-control-plane]]. A futura plataforma Pepius pertence a outro produto; seu objetivo fica em [[PLANO_CONTROL_PLANE_FUTURO]].
+Esta é a nota de contexto do produto dentro do repositório. Antes de alterar o escopo, confira esta nota e [[PLANO_ON_PREMISE]]. Depois de cada entrega, atualize a nota, [[RESUMO]] e a documentação afetada. Para decisões arquiteturais difíceis de reverter, consulte [[adr/0001-on-prem-postgresql-and-license-control-plane]] e [[adr/0002-auth-helpers-in-public-schema]]. A futura plataforma Pepius pertence a outro produto; seu objetivo fica em [[PLANO_CONTROL_PLANE_FUTURO]].
 
 ## Objetivo
 
@@ -41,8 +41,8 @@ Agente de licença ── HTTPS ── API central Pepius
        └── PostgreSQL local        └── DB comercial e chave privada Ed25519
 ```
 
-Durante desenvolvimento, usamos Supabase Cloud. Para cliente, usamos a stack oficial Supabase self-hosted em Docker Compose e PostgreSQL. `SUPABASE_INTERNAL_URL` atende chamadas server-side na rede Docker; `NEXT_PUBLIC_SUPABASE_URL` é a URL HTTPS pública de Kong. Caddy termina TLS e sobrescreve `X-Real-IP`. PostgreSQL/Studio não são publicados na Internet.
-Deploys do Vercel são previews de desenvolvimento, não instalações de clientes. `LICENSE_DEV_BYPASS=true` só funciona em `VERCEL_ENV=preview` ou no desenvolvimento local; `VERCEL_ENV=production` sempre exige uma lease assinada. Preview deve usar credenciais e dados Supabase de desenvolvimento isolados.
+Durante desenvolvimento, usamos Supabase Cloud. Para cliente, usamos a stack oficial Supabase self-hosted em Docker Compose e PostgreSQL. `SUPABASE_INTERNAL_URL` atende chamadas server-side na rede Docker; `NEXT_PUBLIC_SUPABASE_URL` é a URL HTTPS pública de Kong. Caddy termina TLS e sobrescreve `X-Real-IP`. PostgreSQL/Studio não são publicados na Internet. Helpers de RLS ficam em `public` com `SECURITY DEFINER`, `search_path` vazio e lookup pelo usuário autenticado; migrations não alteram o schema protegido `auth`.
+O Vercel Production está sendo usado temporariamente para avaliar o produto; não substitui uma instalação de cliente on-premise. `LICENSE_DEV_BYPASS=true` só funciona em `VERCEL_ENV=preview` ou no desenvolvimento local; Production exige uma lease assinada ativa. Preview deve usar credenciais e dados Supabase de desenvolvimento isolados.
 Para abrir a vitrine de Preview sem consultar uma licença, configure `LICENSE_DEV_BYPASS=true` no escopo Preview do Vercel. Sem variáveis Supabase e tenant, a aplicação abre com catálogo vazio e autenticação desabilitada; o login volta a funcionar quando o Supabase é configurado. Para trabalhar com dados, configure no Preview `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server-only), `PEPIUS_TENANT_ID` e `LEAD_RATE_LIMIT_PEPPER`, todos ligados a um projeto de desenvolvimento isolado. Nunca copie credenciais de produção ou de clientes.
 
 ## Interface da vitrine
@@ -90,8 +90,14 @@ O licenciamento é uma regra de operação oficial e não proteção inviolável
 ## Verificação desta entrega
 
 - `npm run type-check`, `npm run lint`, `npm test` (7 testes) e `npm run build` passaram. O lint mantém cinco avisos de `<img>` em previews/URLs assinadas.
-- `docker compose config` passou com o arquivo de exemplo. O daemon Docker não está disponível para subir a stack nem executar a migration/RLS localmente.
+- `docker compose config` passou com o arquivo de exemplo. O daemon Docker não está disponível para validar Supabase self-hosted, RLS/pgTAP ou restore em VM. As migrations foram aplicadas com sucesso ao Supabase Cloud usado temporariamente para avaliação.
 - `npm audit --omit=dev` não encontrou vulnerabilidades de runtime. O audit completo sinaliza cinco ocorrências high do advisory de `braces` no encadeamento de lint; atualizar forçando rebaixaria Next e não foi aplicado.
+
+## Ambiente temporário de avaliação (21/10/2026)
+
+Após autorização do proprietário, o Supabase Cloud atualmente associado ao Vercel Production está sendo usado temporariamente para avaliar a vitrine. Foi criado o tenant Linha de Planta, slug linha-de-planta-demonstracao, UUID 64377038-0f9c-40fa-bdac-cd928924f624. Ele contém 10 anúncios fictícios disponíveis em 10 cidades, distribuídos entre venda (4), locação (4) e ambas as finalidades (2). As descrições identificam os anúncios como demonstrativos. Não foram adicionadas imagens, então a vitrine usa o placeholder.
+
+As variáveis de Production no Vercel foram atualizadas com URL, chaves Supabase, tenant e pepper. O Supabase CLI 2.121.0 foi autenticado e as nove migrations pendentes foram aplicadas; site_config existe, Storage de imagens está privado e RLS restringe acesso. Os 10 imóveis demonstrativos permanecem. O perfil global existente foi vinculado a esse tenant como imobiliaria_owner. O control plane temporário Pepius License Control usa o projeto Supabase `lwsnunuufkqmursocztg` (organização Free, região sa-east-1); a migration própria foi aplicada e as variáveis de assinatura/operação foram configuradas no ambiente local e em Vercel Production. As chaves legadas desse projeto foram desativadas após aparecerem no retorno do CLI; o serviço usa a chave `sb_secret` nova. O projeto Free pode pausar após período sem atividade e respeita o limite de dois projetos ativos gratuitos. Ainda falta publicar o deployment com essas variáveis e emitir/ativar a lease de avaliação; até isso ocorrer, Production continua fechada. Não apresentar os anúncios como inventário real; são dados temporários para avaliação.
 
 ## Manutenção do cérebro
 
@@ -100,8 +106,10 @@ Toda entrega de código deve atualizar esta nota e [[RESUMO]] com o comportament
 ## Links do repositório
 
 - [[PLANO_ON_PREMISE]] — escopo e implementação.
+- [[REVISAO_MODULO_INICIAL]] — lacunas funcionais, segurança e operação identificadas para o MVP.
 - [[SEGURANCA]] — controles, ameaças e responsabilidade operacional.
 - [[GLOSSARY]] — termos do domínio.
 - [[PLANO_CONTROL_PLANE_FUTURO]] — objetivo futuro da plataforma administrativa Pepius.
 - [[RESUMO]] — estado atual do código e verificações.
 - [[adr/0001-on-prem-postgresql-and-license-control-plane]] — decisão arquitetural aprovada.
+- [[adr/0002-auth-helpers-in-public-schema]] — compatibilidade e segurança dos helpers de RLS.

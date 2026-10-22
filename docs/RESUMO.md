@@ -6,6 +6,8 @@ Atualizado em 2026-10-21.
 
 Aplicação on-premise de uma imobiliária por instalação: vitrine pública e painel gerencial com imóveis, fotos e leads. Desenvolvimento continua em Supabase Cloud; produção de cliente usa Supabase self-hosted com PostgreSQL local na VM. Não inclui painel administrativo Pepius, Inbox, IA ou MySQL.
 
+A auditoria do que falta para o MVP está em [[REVISAO_MODULO_INICIAL]]. As páginas e APIs já existem, mas a gestão pela tela ainda está parcial e a instalação/licenciamento central aguardam validação real.
+
 ## Implementado no código
 
 - Vitrine dinâmica usa banco, filtros e detalhe; a saída pública omite endereço completo/CEP e mídia usa URLs assinadas.
@@ -33,10 +35,17 @@ Aplicação on-premise de uma imobiliária por instalação: vitrine pública e 
 - Cifrar backup de PostgreSQL e Storage, restaurar ambos numa VM isolada e registrar evidência de teste.
 - Fazer review de segurança, configurar segredos/rotação reais, monitoramento e política operacional.
 
+## Ambiente de avaliação (2026-10-21)
+
+- Por autorização do proprietário, o Supabase Cloud associado ao Vercel Production recebeu o tenant demonstrativo Linha de Planta (linha-de-planta-demonstracao) e 10 anúncios fictícios em 10 cidades; 4 venda, 4 locação e 2 ambas. Não há imagens, então as listagens usam placeholder.
+- URL e chave pública Supabase de Production coincidem com o ambiente local. A chave de serviço, PEPIUS_TENANT_ID e LEAD_RATE_LIMIT_PEPPER foram atualizados nas variáveis Production do Vercel. Ainda não foi feito deploy.
+- Supabase CLI 2.121.0 foi autenticado e todas as nove migrations da imobiliária foram aplicadas. site_config e local_license_state existem; a lease ainda está vazia. O perfil existente foi associado ao tenant demonstrativo como imobiliaria_owner. Foi criado o projeto Supabase Free `lwsnunuufkqmursocztg` (sa-east-1) para Pepius License Control; a migration central foi aplicada, as variáveis privadas foram configuradas em Vercel Production e as chaves JWT legadas do projeto central foram desativadas. O plano Free não gera cobrança recorrente, permite dois projetos ativos e pode pausar projetos após inatividade. Ainda faltam novo deployment e emissão/ativação de uma lease de avaliação; Production segue fechada até a lease ser gravada.
+- A migration removeu o tenant administrativo legado e a tabela de licenças comerciais vazia. Não havia imóveis, leads ou Storage ligados a ele; os 10 anúncios do tenant demonstrativo usam UUID distinto e foram preservados.
+
 ## Documentação canônica
 
 - [[OBSIDIAN]] é o cérebro do produto.
 - [[PLANO_ON_PREMISE]] é escopo/aceite.
 - [[SEGURANCA]] define controles e operação.
 - [[PLANO_CONTROL_PLANE_FUTURO]] registra o produto administrativo financeiro Pepius futuro.
-- [[GLOSSARY]] e [[adr/0001-on-prem-postgresql-and-license-control-plane]] definem domínio/decisões.
+- [[GLOSSARY]] e [[adr/0001-on-prem-postgresql-and-license-control-plane]] definem domínio e arquitetura; [[adr/0002-auth-helpers-in-public-schema]] registra o limite dos helpers de RLS.

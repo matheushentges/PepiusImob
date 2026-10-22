@@ -84,16 +84,5 @@ ON profiles FOR ALL TO authenticated
 USING (public.current_user_role() = 'admin')
 WITH CHECK (public.current_user_role() = 'admin');
 
--- 4. Funções auxiliares globais para OUTRAS tabelas (properties, leads, etc.)
--- Estas consultam profiles mas NÃO são usadas em políticas de profiles,
--- então não causam recursão. Mantidas para compatibilidade.
 
-CREATE OR REPLACE FUNCTION auth.user_tenant_id()
-RETURNS UUID AS $$
-  SELECT tenant_id FROM profiles WHERE id = auth.uid()
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
-
-CREATE OR REPLACE FUNCTION auth.is_admin()
-RETURNS BOOLEAN AS $$
-  SELECT EXISTS(SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
+-- Application helpers live in public; Supabase Cloud protects the auth schema.
