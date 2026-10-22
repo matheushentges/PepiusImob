@@ -90,6 +90,7 @@ O licenciamento é uma regra de operação oficial e não proteção inviolável
 - Admin global e Inbox foram removidos da instalação da imobiliária; API central de licença fica desabilitada nela.
 - Dockerfiles/Compose de app e agente, Caddy e migrations separados foram adicionados; `DEPLOY.md` aponta para o fluxo on-premise e trata Vercel apenas como preview.
 - Testes locais cobrem assinatura, adulteração/validade, limite de atraso, heartbeat, preços por oferta e validação de imóvel; validar RLS/SQL, provisionamento, instalação e restore em instância Supabase self-hosted antes de liberar cliente.
+- **Portal Administrativo de Licenças (`pepius-license-portal`):** Criado em repositório GitHub e diretório local dedicado (`https://github.com/matheushentges/pepius-license-portal` / `c:\Users\Matheus\Documents\pepius-license-portal`) e implantado em projeto Vercel próprio (`https://pepius-license-portal.vercel.app`), totalmente desacoplado do repositório da imobiliária. Conectado ao Supabase do Control Plane (`lwsnunuufkqmursocztg`). O portal roda em Next.js 16 independente com autenticação de operadores via Supabase Auth (SSR), proteção server-only, design system Linha de Planta e suporte completo a: Dashboard de métricas financeiras/MRR, listagem com busca/filtros, emissão de nova licença com código de ativação de 7 dias e comando CLI, registro de pagamentos, suspensão/reativação manual e trilha imutável de auditoria.
 
 ## Verificação desta entrega
 
