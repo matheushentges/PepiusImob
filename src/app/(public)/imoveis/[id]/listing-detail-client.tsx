@@ -9,6 +9,7 @@ import { ImageCarousel } from '@/components/listing/image-carousel'
 import { GalleryDialog } from '@/components/listing/gallery-dialog'
 import { ListingSpecs } from '@/components/listing/listing-specs'
 import { ContactForm } from '@/components/listing/contact-form'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 interface ListingDetailClientProps {
   listing: Listing
@@ -31,7 +32,10 @@ export function ListingDetailClient({ listing, images, agencyName }: ListingDeta
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             Voltar aos imóveis
           </Link>
-          <span className="text-lg font-bold tracking-tight text-accent">{agencyName}</span>
+          <div className="flex items-center gap-4">
+            <span className="text-lg font-bold tracking-tight text-accent">{agencyName}</span>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -145,6 +149,37 @@ export function ListingDetailClient({ listing, images, agencyName }: ListingDeta
         isOpen={galleryOpen}
         onClose={() => setGalleryOpen(false)}
       />
+
+      {/* Public Footer */}
+      <footer className="border-t border-border-subtle bg-surface-raised py-10 mt-20">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-5 px-4 text-center md:flex-row md:px-6 md:text-left">
+          <div>
+            <p className="font-serif text-lg font-semibold tracking-tight text-text-primary">{agencyName}</p>
+            <p className="mt-1 text-sm text-text-secondary">Imóveis para venda e locação</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+            <Link href="/" className="text-text-secondary transition-colors hover:text-text-primary">
+              Início
+            </Link>
+            <Link href="/imoveis" className="text-text-secondary transition-colors hover:text-text-primary">
+              Vitrine de Imóveis
+            </Link>
+            <Link href="/privacidade" className="text-text-secondary transition-colors hover:text-text-primary">
+              Privacidade & Cookies
+            </Link>
+            <Link
+              href="/login"
+              className="text-xs text-text-tertiary transition-colors hover:text-text-secondary hover:underline"
+              title="Acesso exclusivo para corretores e equipe da imobiliária"
+            >
+              Imobiliária
+            </Link>
+          </div>
+          <p className="text-xs text-text-tertiary">
+            © {new Date().getFullYear()} {agencyName}. Todos os direitos reservados.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

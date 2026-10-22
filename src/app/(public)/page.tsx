@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import { formatPrice, listingPurposeLabel } from '@/lib/listings-data'
 import { getPublicListings, getPublicSiteConfig } from '@/lib/public-listings'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,23 +47,34 @@ export default async function HomePage() {
             </Link>
           </nav>
 
-          <Link
-            href="/login"
-            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Área da imobiliária
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/imoveis"
+              className="hidden sm:inline-flex text-xs font-semibold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
+            >
+              Ver todos os imóveis →
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
         <nav aria-label="Navegação móvel" className="border-t border-border md:hidden">
-          <div className="container mx-auto flex items-center justify-center gap-6 px-4 py-2.5">
-            <Link href="#imoveis" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Imóveis
-            </Link>
-            <Link href="#sobre" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Sobre
-            </Link>
-            <Link href="#contato" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Contato
+          <div className="container mx-auto flex items-center justify-between px-4 py-2.5">
+            <div className="flex items-center gap-5">
+              <Link href="#imoveis" className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+                Imóveis
+              </Link>
+              <Link href="#sobre" className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+                Sobre
+              </Link>
+              <Link href="#contato" className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+                Contato
+              </Link>
+            </div>
+            <Link
+              href="/imoveis"
+              className="text-xs font-semibold text-accent hover:underline"
+            >
+              Catálogo completo
             </Link>
           </div>
         </nav>
@@ -239,16 +251,38 @@ export default async function HomePage() {
         </section>
       </main>
 
-      <footer id="contato" className="border-t border-border bg-card py-10">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-5 px-4 text-center md:flex-row md:px-6 md:text-left">
-          <div>
-            <p className="font-serif text-lg font-semibold tracking-tight text-foreground">{siteConfig.agencyName}</p>
-            <p className="mt-1 text-sm text-muted-foreground">Imóveis para venda e locação</p>
+      <footer id="contato" className="border-t border-border bg-card py-12">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
+            <div>
+              <p className="font-serif text-xl font-semibold tracking-tight text-foreground">{siteConfig.agencyName}</p>
+              <p className="mt-1 text-sm text-muted-foreground">Soluções completas para venda e locação de imóveis</p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+              <Link href="#imoveis" className="text-muted-foreground transition-colors hover:text-foreground">
+                Destaques
+              </Link>
+              <Link href="/imoveis" className="text-muted-foreground transition-colors hover:text-foreground">
+                Buscar Imóveis
+              </Link>
+              <Link href="/privacidade" className="text-muted-foreground transition-colors hover:text-foreground">
+                Privacidade & Cookies
+              </Link>
+              <Link
+                href="/login"
+                className="text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground hover:underline"
+                title="Acesso exclusivo para corretores e equipe da imobiliária"
+              >
+                Imobiliária
+              </Link>
+            </div>
           </div>
-          <Link href="/imoveis" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Conheça nossa vitrine
-          </Link>
-          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} {siteConfig.agencyName}. Todos os direitos reservados.</p>
+
+          <div className="mt-8 border-t border-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+            <p>© {new Date().getFullYear()} {siteConfig.agencyName}. Todos os direitos reservados.</p>
+            <p className="text-[11px] text-muted-foreground/60">Tecnologia Pepius Imob On-Premise</p>
+          </div>
         </div>
       </footer>
     </div>

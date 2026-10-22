@@ -47,7 +47,7 @@ Para abrir a vitrine de Preview sem consultar uma licença, configure `LICENSE_D
 
 ## Interface da vitrine
 
-A rota inicial preserva a composição aprovada da marca Linha de Planta: navegação discreta, hero serifado, busca, destaques e rodapé. O hero usa título/subtítulo configurados no tenant; a seção de destaques só aparece quando há imóveis marcados. O conteúdo público é voltado a compradores e locatários; não deve prometer Inbox/IA nem vender cadastro self-service. A busca da home envia texto e finalidade para a listagem. Imóveis com finalidade "ambos" exibem preço de venda e de locação juntos na home, na listagem e no detalhe. Os tokens Tailwind da interface (`surface-*`, `text-*`, `border-*`, estados de erro/sucesso) são mapeados em `globals.css`; o tema escuro usa a classe `.dark` do `next-themes`.
+A rota inicial preserva a composição aprovada da marca Linha de Planta: navegação limpa, hero serifado, busca, destaques e rodapé institucional. O hero usa título/subtítulo configurados no tenant; a seção de destaques só aparece quando há imóveis marcados. O conteúdo público é estritamente voltado a compradores e locatários; o botão de login administrativo foi removido do topo público e substituído por um hiperlink institucional discreto `"Imobiliária"` no rodapé (direcionando a `/login`). A busca da home envia texto e finalidade para a listagem. Imóveis com finalidade "ambos" exibem preço de venda e de locação juntos na home, na listagem e no detalhe. O tema padrão é **claro** (`light`), com suporte completo a tema escuro via `@custom-variant dark` do Tailwind v4; o seletor `ThemeToggle` está presente tanto no cabeçalho público quanto no painel gerencial. A vitrine cumpre a LGPD apresentando o banner de consentimento de cookies (`CookieConsentBanner`) com persistência em `localStorage` e a página de Política de Privacidade (`/privacidade`).
 
 ## Segurança e dados
 
@@ -85,7 +85,7 @@ O licenciamento é uma regra de operação oficial e não proteção inviolável
 - APIs gerenciais incluem CRUD de imóvel, imagens, status de lead, configurações whitelisted e exportação.
 - As configurações de título, descrição e cores validadas são aplicadas na home, na lista e nos detalhes públicos; a identidade da imobiliária vem do tenant local.
 - Falhas de upload/capa/exclusão de foto são exibidas ao usuário; uploads passam por re-encode que remove metadados e o delete do imóvel limpa o Storage.
-- Navegação mobile do painel funciona por drawer; login não referencia rota inexistente; contato público linka a política de privacidade local.
+- Navegação mobile e desktop do painel humanizada com `dashboard-nav-links` ("Visão Geral", "Catálogo de Imóveis", "Contatos de Clientes", "Personalização do Site", atalho "Site ↗" e rota ativa via `usePathname`); login não referencia rota inexistente; vitrine possui banner de cookies e política de privacidade completa de acordo com a LGPD.
 - Controle de licença inclui geração/administração CLI, código de ativação, assinatura, heartbeat e estado local.
 - Admin global e Inbox foram removidos da instalação da imobiliária; API central de licença fica desabilitada nela.
 - Dockerfiles/Compose de app e agente, Caddy e migrations separados foram adicionados; `DEPLOY.md` aponta para o fluxo on-premise e trata Vercel apenas como preview.

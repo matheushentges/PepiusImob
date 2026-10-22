@@ -17,12 +17,12 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Pepius Imob - Sistema para Imobiliárias",
   description:
-    "Vitrine de imóveis e painel gerencial on-premise para imobiliárias",
+    "Vitrine de imóveis e painel gerencial para imobiliárias",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${dmSerif.variable} ${dmSans.variable}`}>
+    <html lang="pt-BR" suppressHydrationWarning className={`${dmSerif.variable} ${dmSans.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>{children}</Providers>
       </body>
