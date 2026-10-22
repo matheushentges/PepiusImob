@@ -9,6 +9,13 @@ import { bodyErrorResponse, readJsonBody } from '@/lib/security/request-body'
 type RouteContext = { params: Promise<{ id: string }> }
 const idSchema = z.string().uuid()
 
+const patchSchema = z.object({
+  featured: z.boolean().optional(),
+  status: z.enum(['disponivel', 'vendido', 'alugado', 'reservado']).optional(),
+}).strict().refine((data) => data.featured !== undefined || data.status !== undefined, {
+  message: 'Envie ao menos um campo para atualização',
+})
+
 export async function GET(_request: Request, { params }: RouteContext) {
   const result = await getAgencyContext()
   if (!result.context) return result.response
@@ -60,6 +67,39 @@ export async function PUT(request: Request, { params }: RouteContext) {
   if (error || !data) {
     console.error('Agency property update failed', { code: error?.code })
     return NextResponse.json({ error: 'Não foi possível salvar o imóvel' }, { status: error ? 503 : 404 })
+  }
+  return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } })
+}
+
+export async function PATCH(request: Request, { params }: RouteContext) {
+  const result = await getAgencyContext(request)
+  if (!result.context) return result.response
+  if (!(await requireActiveLicense('properties'))) {
+    return NextResponse.json({ error: 'A licença não permite alterações neste momento' }, { status: 423 })
+  }
+  const { id } = await params
+  if (!idSchema.safeParse(id).success) {
+    return NextResponse.json({ error: 'Imóvel não encontrado' }, { status: 404 })
+  }
+
+  const body = await readJsonBody(request, 4096)
+  if (!body.ok) return bodyErrorResponse(body.reason)
+  const parsed = patchSchema.safeParse(body.value)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Dados inválidos para atualização' }, { status: 400 })
+  }
+
+  const { data, error } = await result.context.supabase
+    .from('properties')
+    .update(parsed.data)
+    .eq('id', id)
+    .eq('tenant_id', result.context.tenantId)
+    .select('id, featured, status')
+    .maybeSingle()
+
+  if (error || !data) {
+    console.error('Agency property patch failed', { code: error?.code })
+    return NextResponse.json({ error: 'Não foi possível atualizar o imóvel' }, { status: error ? 503 : 404 })
   }
   return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } })
 }
