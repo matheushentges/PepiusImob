@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   Info,
   Server,
-  Lock,
 } from 'lucide-react'
 import type { LicenseStatusDetails } from '@/lib/licensing/service'
 
@@ -28,6 +27,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
   const [isActivating, setIsActivating] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [copiedId, setCopiedId] = useState(false)
+  const [showConfirmOverwrite, setShowConfirmOverwrite] = useState(false)
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error' | null
     message: string
@@ -59,12 +59,23 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
     }
   }
 
-  async function handleActivate(e: React.FormEvent) {
+  function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!activationCode.trim() || !isOwner) return
 
+    // Se já possui uma licença ativa, solicita confirmação para não sobrescrever acidentalmente
+    if (details.status === 'active') {
+      setShowConfirmOverwrite(true)
+      return
+    }
+
+    executeActivation()
+  }
+
+  async function executeActivation() {
     setIsActivating(true)
     setFeedback({ type: null, message: '' })
+    setShowConfirmOverwrite(false)
 
     try {
       const res = await fetch('/api/dashboard/licensing/activate', {
@@ -292,7 +303,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  O sistema renova a validade automaticamente via heartbeat diário quando conectado à rede.
+                  O sistema renova a validade automaticamente.
                 </p>
               </div>
             )}
@@ -347,7 +358,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
               <h3 className="font-semibold text-foreground">Recursos do Pacote</h3>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Módulos licenciados e ativos nesta instalação on-premise:
+              Módulos incluídos:
             </p>
 
             <ul className="mt-4 space-y-3 text-xs">
@@ -397,16 +408,6 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
               </li>
             </ul>
           </div>
-
-          <div className="mt-6 rounded-lg border border-border/60 bg-secondary/30 p-3 text-[11px] text-muted-foreground">
-            <div className="flex items-center gap-1.5 font-medium text-foreground">
-              <Lock className="h-3.5 w-3.5 text-accent" />
-              <span>Privacidade On-Premise</span>
-            </div>
-            <p className="mt-1">
-              Nenhum dado de imóvel, lead ou imagem é transmitido ao servidor central de licenças.
-            </p>
-          </div>
         </div>
       </div>
 
@@ -419,7 +420,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
           <div>
             <h3 className="text-base font-semibold text-foreground">Ativação ou Renovação da Licença</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Informe o código de ativação fornecido pela Pepius através do Portal de Licenças.
+              Informe o código de ativação fornecido pela Pepius.
             </p>
           </div>
         </div>
@@ -434,7 +435,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
             </p>
           </div>
         ) : (
-          <form onSubmit={handleActivate} className="mt-5 space-y-4">
+          <form onSubmit={handleFormSubmit} className="mt-5 space-y-4">
             <div>
               <label htmlFor="activationCode" className="block text-xs font-semibold text-foreground">
                 Código de Ativação da Instalação
@@ -445,7 +446,7 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
                   type="text"
                   value={activationCode}
                   onChange={(e) => setActivationCode(e.target.value)}
-                  placeholder="Cole o código gerado no Portal de Licenças (ex: 32 caracteres hexadecimais)"
+                  placeholder="Cole o código de ativação fornecido pela Pepius"
                   disabled={isActivating}
                   className="flex-1 rounded-lg border border-input bg-background px-3.5 py-2.5 font-mono text-xs text-foreground placeholder:font-sans placeholder:text-muted-foreground focus-visible:border-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent disabled:opacity-50"
                   required
@@ -469,13 +470,72 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
                 </button>
               </div>
               <p className="mt-1.5 text-[11px] text-muted-foreground">
-                O código de ativação é de uso único. Após a validação com a chave Ed25519 da instalação, a
-                lease é gravada localmente de forma criptográfica.
+                O código de ativação é de uso único.
               </p>
             </div>
           </form>
         )}
       </div>
+
+      {/* Modal de Confirmação para Substituir Licença Ativa */}
+      {showConfirmOverwrite && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-overwrite-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            onClick={() => !isActivating && setShowConfirmOverwrite(false)}
+          />
+
+          {/* Card do Diálogo */}
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl transition-all animate-in zoom-in-95 fade-in duration-200">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 id="confirm-overwrite-title" className="text-base font-semibold text-foreground">
+                  Substituir licença vigente?
+                </h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                  Esta instalação já possui uma licença ativa e operacional. Ao prosseguir, a autorização e chave
+                  vigentes serão substituídas pelo novo código informado.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setShowConfirmOverwrite(false)}
+                disabled={isActivating}
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground transition-all hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={executeActivation}
+                disabled={isActivating}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isActivating ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Substituindo...</span>
+                  </>
+                ) : (
+                  <span>Sim, Substituir Licença</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
