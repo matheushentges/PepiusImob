@@ -30,16 +30,72 @@ Entregar a cada imobiliária uma instalação isolada em VM, com uma vitrine pú
 
 ## Arquitetura de instalação
 
-```text
-Navegador ── TLS/Caddy ── Pepius Imob (Next.js)
-                               │
-                               └── Supabase self-hosted (Kong/Auth/Storage/PostgreSQL)
-                                      dados e objetos na VM do cliente
+### Diagrama Geral da Estrutura do Sistema
 
-Agente de licença ── HTTPS ── API central Pepius
-       │                           │
-       └── PostgreSQL local        └── DB comercial e chave privada Ed25519
-```
+```mermaid
+flowchart TB
+    subgraph CLIENT_PREMISE["🏢 AMBIENTE DO CLIENTE (Instalação On-Premise na VM da Imobiliária)"]
+        direction TB
+        
+        subgraph USERS["Usuários e Acessos"]
+            PUBLIC_USER["👤 Visitantes e Clientes<br/>(Compradores e Locatários)"]
+            AGENCY_TEAM["👔 Equipe da Imobiliária<br/>(Corretores e Gestores)"]
+        end
+
+        subgraph EDGE["Borda e Proxy"]
+            CADDY["🛡️ Caddy Server (Proxy Reverso)<br/>Terminação TLS Automática / Porta 443"]
+        end
+
+        subgraph APP["Aplicação Pepius Imob (Next.js 16 App Router)"]
+            direction TB
+            VITRINE["🌐 Vitrine Pública<br/>• Catálogo e Busca de Imóveis<br/>• Detalhes e Galeria de Fotos<br/>• Form de Leads (Honeypot + Rate Limit)"]
+            DASHBOARD["📊 Painel Gerencial Autenticado<br/>• Gestão Completa de Imóveis<br/>• CRM de Leads e Atendimento<br/>• Personalização Visual da Vitrine<br/>• Tela de Licença e Ativação"]
+            LICENSE_CLIENT["🔑 Módulo Local de Licença<br/>• Chaves Ed25519 da Instalação<br/>• Verificador Criptográfico Local<br/>• Agente de Heartbeat Diário"]
+        end
+
+        subgraph LOCAL_DATA["Dados e Armazenamento (Supabase Self-Hosted Local)"]
+            direction TB
+            PG_LOCAL[("🐘 PostgreSQL Local<br/>• Imóveis, Preços e Fotos<br/>• Leads e Histórico de Contatos<br/>• Perfis e Tenant da Imobiliária<br/>• Tabela local_license_state")]
+            STORAGE_LOCAL["📁 Supabase Storage Local<br/>Fotos de Imóveis (URLs Privadas Assinadas)"]
+            AUTH_LOCAL["🔐 Supabase Auth (GoTrue)<br/>Sessões JWT Seguras e RLS por Tenant"]
+        end
+    end
+
+    subgraph PEPIUS_CLOUD["☁️ CONTROLE CENTRAL PEPIUS (Control Plane Independente)"]
+        direction TB
+        PEPIUS_ADMIN["👨‍💼 Equipe Pepius (Operador / Vendas)"]
+        PORTAL_LICENCA["💻 Portal de Licenças Pepius<br/>(pepius-license-portal.vercel.app)"]
+        API_LICENCA["⚡ API Central de Licenciamento<br/>(/api/licensing/v1/activate & heartbeat)"]
+        DB_CENTRAL[("🔒 DB Central de Licenças<br/>• Chave Privada Ed25519 Central<br/>• Contas, Pagamentos e MRR<br/>• Hash de Códigos de Ativação")]
+    end
+
+    %% Conexões de Entrada
+    PUBLIC_USER -->|"Acesso Web HTTPS"| CADDY
+    AGENCY_TEAM -->|"Acesso Gerencial HTTPS"| CADDY
+    CADDY -->|"Encaminhamento Interno"| APP
+
+    %% Módulos da Aplicação
+    APP --> VITRINE
+    APP --> DASHBOARD
+    APP --> LICENSE_CLIENT
+
+    %% Operações Locais
+    VITRINE -->|"Leitura Pública Sanitizada / Gravação de Leads"| PG_LOCAL
+    DASHBOARD -->|"CRUD Completo / Isolamento RLS"| PG_LOCAL
+    DASHBOARD -->|"Upload e Exclusão Segura"| STORAGE_LOCAL
+    APP -->|"Validação de Sessão"| AUTH_LOCAL
+    LICENSE_CLIENT <-->|"Leitura e Gravação de Lease Local"| PG_LOCAL
+
+    %% Operações Centrais
+    PEPIUS_ADMIN -->|"Emite e Gerencia Licenças"| PORTAL_LICENCA
+    PORTAL_LICENCA -->|"Registra Pagamentos e Emite Código"| DB_CENTRAL
+    PORTAL_LICENCA --> API_LICENCA
+
+    %% Fluxo de Licenciamento On-Premise <-> Central
+    AGENCY_TEAM -.->|"1. Insere Código de Ativação no Painel"| DASHBOARD
+    LICENSE_CLIENT ==>|"2. Ativação & Heartbeat Diário (Assinado Ed25519)"| API_LICENCA
+    API_LICENCA -->|"Valida Código / Status Financeiro"| DB_CENTRAL
+    API_LICENCA ==>|"3. Retorna Lease Assinada (7 dias de validade)"| LICENSE_CLIENT
 
 Durante desenvolvimento, usamos Supabase Cloud. Para cliente, usamos a stack oficial Supabase self-hosted em Docker Compose e PostgreSQL. `SUPABASE_INTERNAL_URL` atende chamadas server-side na rede Docker; `NEXT_PUBLIC_SUPABASE_URL` é a URL HTTPS pública de Kong. Caddy termina TLS e sobrescreve `X-Real-IP`. PostgreSQL/Studio não são publicados na Internet. Helpers de RLS ficam em `public` com `SECURITY DEFINER`, `search_path` vazio e lookup pelo usuário autenticado; migrations não alteram o schema protegido `auth`.
 O Vercel Production está sendo usado temporariamente para avaliar o produto; não substitui uma instalação de cliente on-premise. `LICENSE_DEV_BYPASS=true` só funciona em `VERCEL_ENV=preview` ou no desenvolvimento local; Production exige uma lease assinada ativa. Preview deve usar credenciais e dados Supabase de desenvolvimento isolados.
@@ -74,6 +130,144 @@ Heartbeat é assinado pela chave da instalação e ocorre a cada 24h. O lease du
 No modo suspenso, o app oculta a vitrine, bloqueia gravações no servidor e no RLS, mantém leitura do tenant no painel e oferece JSON com imóveis/leads e links assinados para fotos. Esses links expiram em até uma hora.
 
 O licenciamento é uma regra de operação oficial e não proteção inviolável contra quem controla a VM/root. A licença não é kill switch remoto instantâneo: depende do próximo heartbeat ou do fim da validade local.
+
+### Diagrama de Sequência: Ativação e Heartbeat Diário
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Operador as 👨‍💼 Operador Pepius
+    participant Portal as 💻 Portal de Licenças Central
+    actor Imobiliaria as 🏢 Responsável Imobiliária
+    participant WebApp as ⚡ Next.js (Painel Local)
+    participant DBLocal as 🐘 PostgreSQL Local (VM)
+    participant APICentral as ☁️ API Central de Licenciamento
+    participant DBCentral as 🔒 DB Central de Licenças
+
+    Note over Operador, DBCentral: FASE 1: EMISSÃO DO CÓDIGO DE ATIVAÇÃO
+    Operador->>Portal: Cadastra conta da imobiliária e plano contratado
+    Portal->>DBCentral: Gera código de ativação criptográfico (32 hex) com hash SHA-256
+    DBCentral-->>Portal: Código emitido (válido por 7 dias para resgate)
+    Operador->>Imobiliaria: Envia código de ativação (ex: WhatsApp / E-mail / Onboarding)
+
+    Note over Imobiliaria, DBLocal: FASE 2: ATIVAÇÃO VIA PAINEL DA IMOBILIÁRIA (/dashboard/licenca)
+    Imobiliaria->>WebApp: Acessa /dashboard/licenca e cola o código de ativação
+    WebApp->>DBLocal: Verifica se par de chaves Ed25519 local existe (gera se necessário)
+    DBLocal-->>WebApp: Chave pública local da instalação obtida
+    WebApp->>APICentral: POST /api/licensing/v1/activate (code, installation_id, public_key)
+    APICentral->>DBCentral: Valida hash do código, status financeiro e vincula chave pública
+    DBCentral-->>APICentral: Licença vinculada à instalação com sucesso
+    APICentral->>APICentral: Monta Lease (status="active", features, expira em 7 dias)<br/>e assina digitalmente com a Chave Privada Central (Ed25519)
+    APICentral-->>WebApp: Retorna Lease Assinado + Chave Pública Central Pepius
+    WebApp->>WebApp: Valida assinatura criptográfica Ed25519 do lease recebido
+    WebApp->>DBLocal: Salva lease assinado na tabela local_license_state
+    WebApp-->>Imobiliaria: Exibe badge "Licença Ativa", data de renovação e recursos liberados
+
+    Note over WebApp, DBCentral: FASE 3: CICLO DE HEARTBEAT CONTÍNUO (A CADA 24 HORAS)
+    loop A cada 24 Horas (Cron / Background Sync)
+        WebApp->>DBLocal: Lê lease local e par de chaves da instalação
+        WebApp->>WebApp: Gera payload de heartbeat assinado com chave privada local
+        WebApp->>APICentral: POST /api/licensing/v1/heartbeat (lease_id, signature, timestamp)
+        APICentral->>DBCentral: Consulta situação financeira e status da conta
+        alt Pagamento em dia ou carência < 15 dias
+            APICentral->>APICentral: Emite novo Lease assinado renovando validade por +7 dias
+            APICentral-->>WebApp: 200 OK + Novo Lease Assinado
+            WebApp->>DBLocal: Atualiza local_license_state com novo vencimento
+        else Inadimplência > 15 dias ou suspensão manual
+            APICentral->>APICentral: Emite Lease assinado com status="suspended"
+            APICentral-->>WebApp: 200 OK + Lease Suspenso Assinado
+            WebApp->>DBLocal: Grava status="suspended" (ativa Modo Leitura/Exportação)
+        end
+    end
+```
+
+### Diagrama de Estados: Ciclo de Vida da Instalação e Licença
+
+```mermaid
+stateDiagram-v2
+    [*] --> AguardandoAtivacao: Nova VM provisionada via Docker
+
+    state AguardandoAtivacao {
+        [*] --> CodigoPendente
+        CodigoPendente: Vitrine pública bloqueada
+        CodigoPendente: Painel exibe tela de ativação (/dashboard/licenca)
+        CodigoPendente: Imóveis e leads bloqueados para gravação
+    }
+
+    AguardandoAtivacao --> OperacaoNormal: Código de 32 hex validado na API Central
+
+    state Ativa {
+        [*] --> OperacaoNormal
+        
+        state OperacaoNormal {
+            description1: Vitrine pública liberada para visitantes
+            description2: CRUD completo de imóveis e fotos
+            description3: Captura de novos leads ativa
+            description4: Heartbeat sincroniza a cada 24 horas
+        }
+
+        OperacaoNormal --> ToleranciaOffline: Falha de conexão de internet ou indisponibilidade temporária
+        
+        state ToleranciaOffline {
+            offline1: Instalação opera localmente por até 7 dias
+            offline2: Vitrine e painel 100% funcionais
+            offline3: Tentativas periódicas de reconexão
+        }
+
+        ToleranciaOffline --> OperacaoNormal: Internet restabelecida e heartbeat sincronizado
+        
+        OperacaoNormal --> CarenciaPagamento: Mensalidade em aberto (Dia 1 ao Dia 15)
+        
+        state CarenciaPagamento {
+            carencia1: Tolerância amigável de 15 dias completos
+            carencia2: Sistema continua 100% funcional sem travar
+            carencia3: Aviso sutil de renovação pendente no painel
+        }
+
+        CarenciaPagamento --> OperacaoNormal: Pagamento registrado no Portal Central
+    }
+
+    ToleranciaOffline --> Expirada: Mais de 7 dias sem qualquer conexão à rede
+    CarenciaPagamento --> Suspensa: Mais de 15 dias de atraso ou suspensão manual pelo operador
+
+    state Expirada {
+        exp1: Lease local venceu sem renovação
+        exp2: Vitrine oculta para visitantes
+        exp3: Gravações bloqueadas
+    }
+
+    state Suspensa {
+        susp1: Status assinado="suspended" recebido no heartbeat
+        susp2: Vitrine pública temporariamente oculta
+        susp3: Gravação de novos imóveis e fotos bloqueada
+        susp4: SOBERANIA PRESERVADA: Painel em modo leitura liberado
+        susp5: EXPORTAÇÃO COMPLETA: Download de JSON e links assinados de fotos
+        susp6: Dados do cliente NUNCA são apagados
+    }
+
+    Expirada --> OperacaoNormal: Conexão restabelecida e heartbeat validado
+    Suspensa --> OperacaoNormal: Pagamento regularizado no Portal Central (reativação no próximo heartbeat)
+```
+
+### Como Explicar a Estrutura e Licenciamento para Qualquer Pessoa (Pitch de 2 Minutos)
+
+Seja para clientes imobiliários, parceiros técnicos, investidores ou operadores de suporte, a arquitetura do **Pepius Imob** pode ser explicada através de 4 pilares fundamentais:
+
+1. **Soberania Absoluta de Dados (On-Premise vs SaaS Convencional):**
+   - *O Problema do SaaS:* No modelo SaaS tradicional, os dados de centenas de imobiliárias ficam misturados no mesmo banco de dados na nuvem da empresa fornecedora. Se a empresa vazar dados ou sofrer bloqueio judicial, todos são afetados.
+   - *A Solução Pepius:* O Pepius Imob roda em uma Máquina Virtual (VM) isolada e dedicada exclusivamente àquela imobiliária. O banco de dados PostgreSQL, os leads de compradores e as fotos em alta resolução ficam fisicamente sob custódia da própria imobiliária. A Pepius **não tem acesso** aos imóveis nem aos contatos de clientes.
+
+2. **Licenciamento Criptográfico Assinado (Sem Espionagem):**
+   - Para garantir o modelo comercial de licenciamento de software sem precisar ler os dados do cliente, utilizamos **criptografia assimétrica Ed25519** (o mesmo padrão de alta segurança usado em carteiras digitais e SSH).
+   - A API Central de Licenças apenas emite uma credencial digital matemática (*Lease*) atestando que a instalação tem permissão de operar. A instalação valida essa assinatura localmente de forma offline, sem enviar dados de imóveis, leads ou faturamento para a central.
+
+3. **Resiliência e Tolerância a Falhas de Internet (Até 7 Dias Offline):**
+   - A cada 24 horas, o sistema realiza um *heartbeat* silencioso para renovar a autorização.
+   - Cada autorização concedida tem validade estendida de **7 dias**. Caso o link de internet da imobiliária sofra instabilidade ou a API passe por manutenção, a vitrine e o painel continuam funcionando normalmente por até uma semana ininterrupta.
+
+4. **Segurança Jurídica, Carência e Preservação de Dados:**
+   - *Carência amigável de 15 dias:* Se houver atraso bancário ou troca de cartão, o sistema não é interrompido sumariamente; a imobiliária possui 15 dias de carência operacional total.
+   - *Não destrutividade:* Caso a licença seja suspensa após a carência, os dados da imobiliária **jamais são apagados**. O sistema bloqueia a vitrine pública e novas gravações, mas mantém o painel liberado em **modo somente leitura e exportação**, permitindo à imobiliária baixar um arquivo JSON estruturado com todos os seus imóveis, leads e links de download de fotos a qualquer tempo.
 
 ## Operação e responsabilidades
 
