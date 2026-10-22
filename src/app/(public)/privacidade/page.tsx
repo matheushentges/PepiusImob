@@ -7,9 +7,16 @@ import { ThemeToggle } from '@/components/theme-toggle'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Política de Privacidade & Proteção de Dados (LGPD)',
-  description: 'Transparência sobre como tratamos e protegemos seus dados pessoais em conformidade com a LGPD.',
+export async function generateMetadata(): Promise<Metadata> {
+  const siteConfig = await getPublicSiteConfig()
+  return {
+    title: `Política de Privacidade e LGPD | ${siteConfig.agencyName}`,
+    description: `Conheça como a ${siteConfig.agencyName} trata e protege seus dados pessoais em total conformidade com a LGPD (Lei 13.709/2018).`,
+    openGraph: {
+      title: `Política de Privacidade | ${siteConfig.agencyName}`,
+      description: `Transparência e segurança no tratamento de dados na ${siteConfig.agencyName}.`,
+    },
+  }
 }
 
 export default async function PrivacyPage() {

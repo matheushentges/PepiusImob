@@ -4,11 +4,34 @@ import { Building2, KeyRound, MapPin, Search } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { notFound } from 'next/navigation'
 import { formatPrice, listingPurposeLabel } from '@/lib/listings-data'
+import type { Metadata } from 'next'
 import { getPublicListings, getPublicSiteConfig } from '@/lib/public-listings'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const license = await getLocalLicenseAccess()
+  if (!license.active || !license.features.includes('public-listing')) return {}
+  const siteConfig = await getPublicSiteConfig()
+  const title = siteConfig.heroTitle
+    ? `${siteConfig.agencyName} | ${siteConfig.heroTitle}`
+    : `${siteConfig.agencyName} | Imóveis para Venda e Locação`
+  const description =
+    siteConfig.heroSubtitle ||
+    `Encontre os melhores imóveis para compra, venda e locação com a equipe da ${siteConfig.agencyName}.`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+    },
+  }
+}
 
 export default async function HomePage() {
   const license = await getLocalLicenseAccess()
