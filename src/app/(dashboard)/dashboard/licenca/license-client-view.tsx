@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Info,
   Server,
+  WifiOff,
 } from 'lucide-react'
 import type { LicenseStatusDetails } from '@/lib/licensing/service'
 
@@ -140,9 +141,10 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
         setDetails(updated)
       }
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Falha na checagem de licença'
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Erro ao sincronizar',
+        message: `${errorMsg}. Verifique sua conexão com a internet e tente novamente. Se o problema persistir, entre em contato com o suporte da Pepius.`,
       })
     } finally {
       setIsSyncing(false)
@@ -176,20 +178,20 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
       description: 'Acesso suspenso por pendência comercial. O painel opera em modo de leitura e exportação.',
     },
     expired: {
-      label: 'Licença Expirada',
+      label: 'Validação Pendente',
       badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30',
       dotClass: 'bg-rose-500',
-      icon: Clock,
+      icon: WifiOff,
       iconColor: 'text-rose-500',
-      description: 'O período da licença expirou. Faça uma sincronização ou insira um novo código.',
+      description: 'Não foi possível validar a licença com o servidor. Verifique a conexão com a internet ou contate o suporte.',
     },
     unavailable: {
-      label: 'Indisponível',
+      label: 'Servidor Indisponível',
       badgeClass: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30',
       dotClass: 'bg-slate-400',
       icon: AlertTriangle,
       iconColor: 'text-slate-400',
-      description: 'Estado da licença não pôde ser lido no momento.',
+      description: 'Falha temporária de comunicação com o servidor de licenças. Verifique a internet ou acione o suporte.',
     },
   }[details.status]
 
@@ -231,6 +233,39 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* Alerta de Falha de Conexão com o Servidor de Licenças */}
+      {(details.status === 'expired' || details.status === 'unavailable') && (
+        <div
+          role="alert"
+          className="flex items-start gap-3.5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-5 text-sm text-rose-950 dark:text-rose-200 animate-in fade-in"
+        >
+          <WifiOff className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+          <div className="flex-1 space-y-1.5">
+            <h4 className="font-semibold text-rose-900 dark:text-rose-100">
+              Não foi possível validar a licença com o servidor
+            </h4>
+            <p className="text-xs text-rose-800/90 dark:text-rose-300 leading-relaxed">
+              O sistema não conseguiu se comunicar com o servidor central de licenciamento.
+              Por favor, verifique se esta máquina ou servidor possui conexão com a internet.
+              Se a sua conexão estiver funcionando normalmente e este aviso persistir, entre em contato com o <strong>suporte da Pepius</strong> para assistência imediata.
+            </p>
+            {isOwner && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleSync}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white shadow-xs hover:bg-rose-700 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>{isSyncing ? 'Verificando conexão...' : 'Tentar Validar Novamente'}</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -336,12 +371,6 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
                   </p>
                 </div>
               )}
-              <div>
-                <span className="text-muted-foreground">Validação Offline Local (Token):</span>
-                <p className="mt-0.5 font-medium text-foreground">
-                  {formatDate(details.expiresAt)}
-                </p>
-              </div>
               <div>
                 <span className="text-muted-foreground">Última Sincronização:</span>
                 <p className="mt-0.5 font-medium text-foreground">{formatDate(details.lastHeartbeatAt)}</p>
