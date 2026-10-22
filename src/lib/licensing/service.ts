@@ -80,15 +80,34 @@ function resolveControlPlaneUrl(): string {
 export async function readInstallation(): Promise<LocalInstallation | null> {
   if (memoryInstallation) return memoryInstallation
 
+  // Prioridade 1: Arquivo local em disco (On-Premise VM em /var/lib/pepius/license-state/)
   try {
     const raw = await readFile(stateFile, 'utf8')
     const parsed = JSON.parse(raw) as LocalInstallation
-    if (parsed && typeof parsed.installationId === 'string') {
+    if (parsed && typeof parsed.installationId === 'string' && parsed.privateKey) {
       memoryInstallation = parsed
       return parsed
     }
   } catch {
-    // Arquivo não existe ainda ou filesystem não permite leitura
+    // Arquivo não existe ainda no disco ou filesystem é read-only
+  }
+
+  // Prioridade 2: Fallback no banco local_license_state (Serverless Vercel)
+  try {
+    const admin = createAdminClient()
+    const { data } = await admin
+      .from('local_license_state')
+      .select('installation_id, signed_lease')
+      .eq('id', 1)
+      .maybeSingle()
+
+    const creds = (data?.signed_lease as Record<string, unknown> | null)?._local_credentials as LocalInstallation | undefined
+    if (creds && typeof creds.installationId === 'string' && creds.privateKey) {
+      memoryInstallation = creds
+      return creds
+    }
+  } catch {
+    // Banco indisponível ou tabela ainda vazia
   }
 
   return null
@@ -107,26 +126,47 @@ export async function getOrCreateInstallation(): Promise<LocalInstallation> {
   }
 
   memoryInstallation = installation
-
-  try {
-    await mkdir(stateDirectory, { recursive: true, mode: 0o700 })
-    await writeFile(stateFile, `${JSON.stringify(installation, null, 2)}\n`, { mode: 0o600 })
-    await chmod(stateFile, 0o600)
-  } catch {
-    // Em ambientes serverless somente-leitura, a chave permanece em memória
-  }
+  await saveInstallation(installation)
 
   return installation
 }
 
 export async function saveInstallation(installation: LocalInstallation): Promise<void> {
   memoryInstallation = installation
+  let diskSaved = false
+
   try {
     await mkdir(stateDirectory, { recursive: true, mode: 0o700 })
     await writeFile(stateFile, `${JSON.stringify(installation, null, 2)}\n`, { mode: 0o600 })
     await chmod(stateFile, 0o600)
+    diskSaved = true
   } catch {
-    // Ignora se o filesystem for read-only
+    // Ignora se o filesystem for read-only (ex: Vercel)
+  }
+
+  // Se o filesystem for read-only, garante persistência no banco local_license_state
+  if (!diskSaved) {
+    try {
+      const admin = createAdminClient()
+      const { data } = await admin
+        .from('local_license_state')
+        .select('signed_lease')
+        .eq('id', 1)
+        .maybeSingle()
+
+      const existingLease = (data?.signed_lease as Record<string, unknown> | null) || {}
+      await admin.from('local_license_state').upsert({
+        id: 1,
+        installation_id: installation.installationId,
+        signed_lease: {
+          ...existingLease,
+          _local_credentials: installation,
+        },
+        updated_at: new Date().toISOString(),
+      })
+    } catch {
+      // Ignora erro de gravação secundária
+    }
   }
 }
 
@@ -322,6 +362,16 @@ export async function activateWithCode(rawCode: string): Promise<{
 
   const admin = createAdminClient()
   const now = new Date().toISOString()
+  const leaseWithCredentials = {
+    ...lease,
+    _local_credentials: {
+      installationId: installation.installationId,
+      publicKey: installation.publicKey,
+      privateKey: installation.privateKey,
+      activated: true,
+    },
+  }
+
   const { error: dbError } = await admin.from('local_license_state').upsert({
     id: 1,
     installation_id: installation.installationId,
@@ -329,7 +379,7 @@ export async function activateWithCode(rawCode: string): Promise<{
     features: lease.features,
     issued_at: lease.issuedAt,
     expires_at: lease.expiresAt,
-    signed_lease: lease,
+    signed_lease: leaseWithCredentials,
     last_heartbeat_at: now,
     updated_at: now,
   })

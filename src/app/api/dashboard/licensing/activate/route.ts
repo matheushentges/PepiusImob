@@ -14,6 +14,15 @@ const activateSchema = z
   })
   .strict()
 
+function cleanActivationCode(input: string): string {
+  let cleaned = input.trim().replace(/^['"]|['"]$/g, '')
+  const match = cleaned.match(/(?:--code\s+|code=)?([a-f0-9]{32,128})/i)
+  if (match) {
+    cleaned = match[1]
+  }
+  return cleaned
+}
+
 export async function POST(request: Request) {
   const agencyResult = await getAgencyContext(request)
   if (agencyResult.response) return agencyResult.response
@@ -36,14 +45,26 @@ export async function POST(request: Request) {
     )
   }
 
+  const sanitizedCode = cleanActivationCode(parsed.data.activationCode)
+
   try {
-    const result = await activateWithCode(parsed.data.activationCode)
+    const result = await activateWithCode(sanitizedCode)
     return NextResponse.json({
       message: 'Licença ativada com sucesso! A vitrine pública e o painel estão operacionais.',
       ...result,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Falha na ativação da licença'
-    return NextResponse.json({ error: message }, { status: 400 })
+    const rawMessage = error instanceof Error ? error.message : 'Falha na ativação da licença'
+    let friendlyMessage = rawMessage
+
+    if (rawMessage.includes('invalid or expired')) {
+      friendlyMessage = 'O código de ativação é inválido, já foi utilizado ou expirou. Gere um novo código no Portal de Licenças.'
+    } else if (rawMessage.includes('Invalid activation request')) {
+      friendlyMessage = 'Formato do código de ativação inválido. O código deve conter entre 32 e 128 caracteres hexadecimais.'
+    } else if (rawMessage.includes('Invalid installation key')) {
+      friendlyMessage = 'A chave criptográfica da instalação é inválida.'
+    }
+
+    return NextResponse.json({ error: friendlyMessage }, { status: 400 })
   }
 }
