@@ -1,9 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import type { CSSProperties } from 'react'
 import { ShieldCheck, Lock, Eye, Database, FileText, ChevronLeft, Cookie, UserCheck } from 'lucide-react'
 import { getPublicSiteConfig } from '@/lib/public-listings'
-import { ThemeToggle } from '@/components/theme-toggle'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,36 +21,7 @@ export default async function PrivacyPage() {
   const siteConfig = await getPublicSiteConfig()
 
   return (
-    <div
-      className="min-h-screen bg-background text-foreground"
-      style={{ '--primary': siteConfig.primaryColor, '--accent': siteConfig.accentColor } as CSSProperties}
-    >
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-sm">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2" aria-label={`${siteConfig.agencyName} — página inicial`}>
-            <span className="font-serif text-xl font-semibold tracking-tight text-foreground">
-              {siteConfig.agencyName}
-            </span>
-            <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent">
-              Privacidade
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="/imoveis"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Ver imóveis
-            </Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto max-w-4xl px-4 py-12 md:px-6 md:py-16">
+    <main className="container mx-auto max-w-4xl px-4 py-12 md:px-6 md:py-16">
         <div className="mb-8">
           <Link
             href="/"
@@ -195,33 +164,5 @@ export default async function PrivacyPage() {
           </Link>
         </div>
       </main>
-
-      {/* Public Footer */}
-      <footer className="border-t border-border bg-card py-10 mt-16">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-5 px-4 text-center md:flex-row md:px-6 md:text-left">
-          <div>
-            <p className="font-serif text-lg font-semibold tracking-tight text-foreground">{siteConfig.agencyName}</p>
-            <p className="mt-1 text-sm text-muted-foreground">Imóveis para venda e locação</p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
-            <Link href="/" className="text-muted-foreground transition-colors hover:text-foreground">
-              Início
-            </Link>
-            <Link href="/imoveis" className="text-muted-foreground transition-colors hover:text-foreground">
-              Vitrine de Imóveis
-            </Link>
-            <Link href="/privacidade" className="font-medium text-foreground">
-              Privacidade
-            </Link>
-            <Link href="/login" className="text-xs text-muted-foreground/60 transition-colors hover:text-muted-foreground">
-              Imobiliária
-            </Link>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {siteConfig.agencyName}. Todos os direitos reservados.
-          </p>
-        </div>
-      </footer>
-    </div>
   )
 }

@@ -9,7 +9,6 @@ import { ImageCarousel } from '@/components/listing/image-carousel'
 import { GalleryDialog } from '@/components/listing/gallery-dialog'
 import { ListingSpecs } from '@/components/listing/listing-specs'
 import { ContactForm } from '@/components/listing/contact-form'
-import { ThemeToggle } from '@/components/theme-toggle'
 
 interface ListingDetailClientProps {
   listing: Listing
@@ -21,25 +20,16 @@ export function ListingDetailClient({ listing, images, agencyName }: ListingDeta
   const [galleryOpen, setGalleryOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-surface-base">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface-base/80 backdrop-blur-sm">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
-          <Link
-            href="/imoveis"
-            className="inline-flex items-center gap-1 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
-          >
-            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar aos imóveis
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-lg font-bold tracking-tight text-accent">{agencyName}</span>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8 lg:px-8">
+    <main className="container mx-auto px-4 py-8 lg:px-8">
+      <div className="mb-4">
+        <Link
+          href="/imoveis"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          Voltar ao catálogo de imóveis
+        </Link>
+      </div>
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-1.5 text-xs text-text-tertiary">
           <Link href="/imoveis" className="hover:text-accent transition-colors">Imóveis</Link>
@@ -140,46 +130,13 @@ export function ListingDetailClient({ listing, images, agencyName }: ListingDeta
             </div>
           </aside>
         </div>
-      </main>
-
-      <GalleryDialog
+        <GalleryDialog
         key={galleryOpen ? 'open' : 'closed'}
         images={images}
         title={listing.title}
         isOpen={galleryOpen}
         onClose={() => setGalleryOpen(false)}
       />
-
-      {/* Public Footer */}
-      <footer className="border-t border-border-subtle bg-surface-raised py-10 mt-20">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-5 px-4 text-center md:flex-row md:px-6 md:text-left">
-          <div>
-            <p className="font-serif text-lg font-semibold tracking-tight text-text-primary">{agencyName}</p>
-            <p className="mt-1 text-sm text-text-secondary">Imóveis para venda e locação</p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
-            <Link href="/" className="text-text-secondary transition-colors hover:text-text-primary">
-              Início
-            </Link>
-            <Link href="/imoveis" className="text-text-secondary transition-colors hover:text-text-primary">
-              Vitrine de Imóveis
-            </Link>
-            <Link href="/privacidade" className="text-text-secondary transition-colors hover:text-text-primary">
-              Privacidade & Cookies
-            </Link>
-            <Link
-              href="/login"
-              className="text-xs text-text-tertiary transition-colors hover:text-text-secondary hover:underline"
-              title="Acesso exclusivo para corretores e equipe da imobiliária"
-            >
-              Imobiliária
-            </Link>
-          </div>
-          <p className="text-xs text-text-tertiary">
-            © {new Date().getFullYear()} {agencyName}. Todos os direitos reservados.
-          </p>
-        </div>
-      </footer>
-    </div>
+    </main>
   )
 }
