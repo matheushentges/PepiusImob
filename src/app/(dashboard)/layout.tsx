@@ -14,6 +14,7 @@ const baseNavItems = [
   { href: '/dashboard/imoveis', label: 'Catálogo de Imóveis' },
   { href: '/dashboard/leads', label: 'Contatos de Clientes' },
   { href: '/dashboard/configuracoes', label: 'Personalização do Site' },
+  { href: '/dashboard/licenca', label: 'Licença do Sistema' },
 ]
 
 export default async function DashboardLayout({
@@ -48,6 +49,7 @@ export default async function DashboardLayout({
     !license.active ||
     item.href === '/dashboard' ||
     item.href === '/dashboard/configuracoes' ||
+    item.href === '/dashboard/licenca' ||
     license.features.includes(item.href === '/dashboard/leads' ? 'leads' : 'properties'),
   )
 

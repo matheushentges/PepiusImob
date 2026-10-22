@@ -281,7 +281,7 @@ export default async function HomePage() {
 
           <div className="mt-8 border-t border-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
             <p>© {new Date().getFullYear()} {siteConfig.agencyName}. Todos os direitos reservados.</p>
-            <p className="text-[11px] text-muted-foreground/60">Tecnologia Pepius Imob On-Premise</p>
+            <p className="text-[11px] text-muted-foreground/60">Tecnologia Pepius Imob</p>
           </div>
         </div>
       </footer>

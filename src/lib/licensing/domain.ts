@@ -179,3 +179,22 @@ export function isPastDue(paidThrough: string, now = Date.now()): boolean {
   suspendAt.setUTCDate(suspendAt.getUTCDate() + 15)
   return now >= suspendAt.getTime()
 }
+
+export function formatRemainingTime(remainingMs: number, expiresAt: string | null): string {
+  if (!expiresAt) return 'Não ativada'
+  if (remainingMs <= 0) return 'Expirada'
+
+  const totalMinutes = Math.floor(remainingMs / (60 * 1000))
+  const days = Math.floor(totalMinutes / (24 * 60))
+  const hours = Math.floor((totalMinutes % (24 * 60)) / 60)
+  const minutes = totalMinutes % 60
+
+  if (days > 0) {
+    return `${days} dia${days > 1 ? 's' : ''} e ${hours} hora${hours !== 1 ? 's' : ''}`
+  }
+  if (hours > 0) {
+    return `${hours} hora${hours !== 1 ? 's' : ''} e ${minutes} min`
+  }
+  return `${minutes} minuto${minutes !== 1 ? 's' : ''}`
+}
+

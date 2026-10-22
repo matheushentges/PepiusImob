@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Building2, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, Building2, Users, Settings, KeyRound } from 'lucide-react'
 
 type NavItem = {
   href: string
@@ -14,6 +14,7 @@ const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   '/dashboard/imoveis': Building2,
   '/dashboard/leads': Users,
   '/dashboard/configuracoes': Settings,
+  '/dashboard/licenca': KeyRound,
 }
 
 export function DashboardNavLinks({ items }: { items: NavItem[] }) {
