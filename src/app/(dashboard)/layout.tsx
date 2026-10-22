@@ -10,11 +10,12 @@ import { DashboardNavLinks } from '@/components/dashboard/dashboard-nav-links'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 const baseNavItems = [
-  { href: '/dashboard', label: 'Visão Geral' },
-  { href: '/dashboard/imoveis', label: 'Catálogo de Imóveis' },
-  { href: '/dashboard/leads', label: 'Contatos de Clientes' },
-  { href: '/dashboard/configuracoes', label: 'Personalização do Site' },
-  { href: '/dashboard/licenca', label: 'Licença do Sistema' },
+  { href: '/dashboard', label: 'Visão Geral', ownerOnly: false },
+  { href: '/dashboard/imoveis', label: 'Catálogo de Imóveis', ownerOnly: false },
+  { href: '/dashboard/leads', label: 'Contatos de Clientes', ownerOnly: false },
+  { href: '/dashboard/equipe', label: 'Equipe e Acessos', ownerOnly: true },
+  { href: '/dashboard/configuracoes', label: 'Personalização do Site', ownerOnly: false },
+  { href: '/dashboard/licenca', label: 'Licença do Sistema', ownerOnly: false },
 ]
 
 export default async function DashboardLayout({
@@ -44,14 +45,19 @@ export default async function DashboardLayout({
     redirect('/login?error=acesso')
   }
 
+  const isOwner = profile.role === 'imobiliaria_owner'
   const license = await getLocalLicenseAccess()
-  const navItems = baseNavItems.filter((item) =>
-    !license.active ||
-    item.href === '/dashboard' ||
-    item.href === '/dashboard/configuracoes' ||
-    item.href === '/dashboard/licenca' ||
-    license.features.includes(item.href === '/dashboard/leads' ? 'leads' : 'properties'),
-  )
+  const navItems = baseNavItems
+    .filter((item) => !item.ownerOnly || isOwner)
+    .filter((item) =>
+      !license.active ||
+      item.href === '/dashboard' ||
+      item.href === '/dashboard/equipe' ||
+      item.href === '/dashboard/configuracoes' ||
+      item.href === '/dashboard/licenca' ||
+      license.features.includes(item.href === '/dashboard/leads' ? 'leads' : 'properties'),
+    )
+
 
   return (
     <div className="flex min-h-screen bg-background">

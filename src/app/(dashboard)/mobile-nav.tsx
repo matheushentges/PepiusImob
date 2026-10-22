@@ -11,6 +11,7 @@ import {
   Menu,
   Settings,
   Users,
+  UserCheck,
   X,
 } from 'lucide-react'
 
@@ -20,6 +21,7 @@ const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   '/dashboard': LayoutDashboard,
   '/dashboard/imoveis': Building2,
   '/dashboard/leads': Users,
+  '/dashboard/equipe': UserCheck,
   '/dashboard/configuracoes': Settings,
   '/dashboard/licenca': KeyRound,
 }
