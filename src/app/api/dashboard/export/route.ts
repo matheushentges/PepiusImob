@@ -5,9 +5,16 @@ import { getSignedPropertyImageUrl } from '@/lib/storage/property-images'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  const result = await getAgencyContext()
+export async function GET(request: Request) {
+  const result = await getAgencyContext(request)
   if (!result.context) return result.response
+
+  if (result.context.role !== 'imobiliaria_owner') {
+    return NextResponse.json(
+      { error: 'Apenas o proprietário/administrador da imobiliária pode exportar a base de dados' },
+      { status: 403 }
+    )
+  }
 
   const admin = createAdminClient()
   const tenantId = result.context.tenantId
