@@ -174,6 +174,13 @@ export function ContactForm({ listingId, listingTitle }: ContactFormProps) {
 
           {submitError && <p className="text-xs text-error" role="alert">{submitError}</p>}
 
+          <p className="text-xs leading-relaxed text-text-tertiary">
+            Ao enviar, você concorda que os dados informados sejam usados pela imobiliária apenas para responder sobre este imóvel.{' '}
+            <a href="/privacidade" className="font-medium text-accent underline-offset-2 hover:underline">
+              Política de Privacidade
+            </a>
+          </p>
+
           <Button
             type="submit"
             className="w-full"

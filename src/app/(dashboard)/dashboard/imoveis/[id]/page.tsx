@@ -17,6 +17,7 @@ interface Property {
   tipo: string
   finalidade: string
   status: string
+  featured: boolean
   preco_venda: number | null
   preco_locacao: number | null
   endereco: string
@@ -54,6 +55,7 @@ export default function EditarImovelPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [uploadWarning, setUploadWarning] = useState<number | null>(null)
   const editable = useLicenseEditable()
 
   const fetchImages = useCallback(async () => {
@@ -84,6 +86,11 @@ export default function EditarImovelPage() {
   useEffect(() => {
     if (!id) return
     const frame = requestAnimationFrame(() => {
+      const warning = sessionStorage.getItem('pepius:upload-warning')
+      if (warning) {
+        sessionStorage.removeItem('pepius:upload-warning')
+        setUploadWarning(Number(warning))
+      }
       void fetchProperty()
       void fetchImages()
     })
@@ -103,6 +110,7 @@ export default function EditarImovelPage() {
       tipo: formData.get('tipo') as string,
       finalidade: formData.get('finalidade') as string,
       status: formData.get('status') as string,
+      featured: formData.get('featured') === 'on',
       preco_venda: formData.get('preco_venda') ? parseFloat(formData.get('preco_venda') as string) : null,
       preco_locacao: formData.get('preco_locacao') ? parseFloat(formData.get('preco_locacao') as string) : null,
       endereco: formData.get('endereco') as string,
@@ -212,6 +220,11 @@ export default function EditarImovelPage() {
       <div className="rounded-lg border border-border bg-card p-6">
         <form onSubmit={handleSubmit}>
           <fieldset disabled={!editable} className="w-full space-y-8 border-0 p-0">
+          {uploadWarning !== null && uploadWarning > 0 && (
+            <div className="rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+              O imóvel foi criado, mas {uploadWarning} {uploadWarning === 1 ? 'foto ficou pendente' : 'fotos ficaram pendentes'} de envio ou definição de capa. Revise as fotos abaixo para concluir o cadastro.
+            </div>
+          )}
           {error && (
             <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
@@ -273,6 +286,24 @@ export default function EditarImovelPage() {
                   <option value="vendido">Vendido</option>
                   <option value="alugado">Alugado</option>
                 </select>
+              </div>
+
+              <div className="flex items-start gap-3 md:col-span-2">
+                <input
+                  id="featured"
+                  name="featured"
+                  type="checkbox"
+                  defaultChecked={property.featured}
+                  className="mt-0.5 h-4 w-4 rounded border-input accent-[var(--accent)]"
+                />
+                <div>
+                  <Label htmlFor="featured" className="text-sm font-medium text-foreground">
+                    Destacar na vitrine
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Aparece primeiro na página inicial e recebe o selo de destaque.
+                  </p>
+                </div>
               </div>
             </div>
           </section>

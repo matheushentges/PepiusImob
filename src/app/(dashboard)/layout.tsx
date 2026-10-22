@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { LayoutDashboard, Building2, Users, Settings, LogOut, Menu } from 'lucide-react'
+import { LayoutDashboard, Building2, Users, Settings, LogOut } from 'lucide-react'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 import { LicenseSuspended } from '@/components/licensing/license-suspended'
 import { LicenseModeProvider } from '@/components/licensing/license-mode-provider'
+import { MobileNav } from './mobile-nav'
 
 const baseNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -94,9 +95,11 @@ export default async function DashboardLayout({
         {/* Mobile header */}
         <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:hidden">
           <span className="font-serif text-base font-semibold text-foreground">Pepius Imob</span>
-          <button className="rounded-md p-2 text-muted-foreground hover:bg-secondary">
-            <Menu className="h-5 w-5" />
-          </button>
+          <MobileNav
+            items={navItems.map((item) => ({ href: item.href, label: item.label }))}
+            userName={profile?.nome || 'Usuário'}
+            userEmail={user.email ?? ''}
+          />
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <div className="mx-auto max-w-6xl">

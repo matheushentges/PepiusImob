@@ -115,10 +115,7 @@ export default function RealtorLoginPage() {
 
           <div className="border-t border-border-subtle pt-4 text-center">
             <p className="text-xs text-text-tertiary">
-              Ainda não é parceiro?{' '}
-              <Link href="/contato" className="font-medium text-accent transition-colors hover:text-accent-hover">
-                Conheça o Pepius Imob
-              </Link>
+              Acesso restrito à equipe da imobiliária. Fale com o responsável pela instalação para receber suas credenciais.
             </p>
           </div>
         </div>

@@ -15,5 +15,3 @@ ON CONFLICT (id) DO UPDATE SET
 DROP POLICY IF EXISTS "Leitura pública de imagens de imóveis" ON storage.objects;
 DROP POLICY IF EXISTS "Upload de imagens por usuários autenticados" ON storage.objects;
 DROP POLICY IF EXISTS "Exclusão de imagens por usuários autenticados" ON storage.objects;
-DROP POLICY IF EXISTS "Upload de imagens por usuÃ¡rios autenticados" ON storage.objects;
-DROP POLICY IF EXISTS "ExclusÃ£o de imagens por usuÃ¡rios autenticados" ON storage.objects;

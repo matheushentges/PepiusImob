@@ -18,6 +18,7 @@ const validProperty = {
 
 test('property input accepts a valid record and refuses client-supplied ownership fields', () => {
   assert.equal(propertyInputSchema.safeParse(validProperty).success, true)
+  assert.equal(propertyInputSchema.safeParse({ ...validProperty, featured: true }).success, true)
   assert.equal(propertyInputSchema.safeParse({ ...validProperty, tenant_id: 'another-agency' }).success, false)
   assert.equal(propertyInputSchema.safeParse({ ...validProperty, role: 'admin' }).success, false)
 })
@@ -27,4 +28,5 @@ test('property input rejects invalid prices, enums and overlong text', () => {
   assert.equal(propertyInputSchema.safeParse({ ...validProperty, tipo: 'unknown' }).success, false)
   assert.equal(propertyInputSchema.safeParse({ ...validProperty, titulo: 'x'.repeat(161) }).success, false)
   assert.equal(propertyInputSchema.safeParse({ ...validProperty, finalidade: 'locacao' }).success, false)
+  assert.equal(propertyInputSchema.safeParse({ ...validProperty, featured: 'yes' }).success, false)
 })

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
+import sharp from 'sharp'
 import { z } from 'zod'
 import { getAgencyContext } from '@/lib/auth/agency'
 import { requireActiveLicense } from '@/lib/licensing/local-state'
@@ -53,6 +54,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Envie uma imagem JPEG, PNG ou WebP válida' }, { status: 400 })
   }
 
+  // Re-encoding drops EXIF/GPS metadata and caps the stored dimensions.
+  let storedImage: Buffer
+  try {
+    const pipeline = sharp(Buffer.from(bytes))
+      .rotate()
+      .resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true })
+    storedImage = file.type === 'image/png'
+      ? await pipeline.png({ compressionLevel: 9 }).toBuffer()
+      : file.type === 'image/webp'
+        ? await pipeline.webp({ quality: 82 }).toBuffer()
+        : await pipeline.jpeg({ quality: 82, mozjpeg: true }).toBuffer()
+  } catch {
+    return NextResponse.json({ error: 'Não foi possível processar a imagem' }, { status: 400 })
+  }
+
   const { data: property } = await result.context.supabase
     .from('properties')
     .select('id')
@@ -65,7 +81,7 @@ export async function POST(request: Request) {
   const objectPath = `${result.context.tenantId}/${propertyId}/${randomUUID()}.${extension}`
   const { error: uploadError } = await result.context.supabase.storage
     .from('property-images')
-    .upload(objectPath, new Blob([bytes], { type: file.type }), {
+    .upload(objectPath, new Blob([new Uint8Array(storedImage).buffer as ArrayBuffer], { type: file.type }), {
       contentType: file.type,
       cacheControl: '300',
       upsert: false,
@@ -163,11 +179,13 @@ export async function DELETE(request: Request) {
   }
 
   const path = getPropertyImagePath(image.url)
-  if (path) {
-    const { error: storageError } = await result.context.supabase.storage.from('property-images').remove([path])
-    if (storageError) return NextResponse.json({ error: 'Não foi possível excluir a imagem' }, { status: 503 })
-  }
   const { error } = await result.context.supabase.from('property_images').delete().eq('id', id)
   if (error) return NextResponse.json({ error: 'Não foi possível excluir a imagem' }, { status: 503 })
+  if (path) {
+    const { error: storageError } = await result.context.supabase.storage.from('property-images').remove([path])
+    if (storageError) {
+      console.error('Property image storage cleanup failed', { code: storageError.name })
+    }
+  }
   return NextResponse.json({ success: true })
 }

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { CSSProperties } from 'react'
-import { getListingImages, formatPrice } from '@/lib/listings-data'
+import { getListingImages, formatPrice, listingPurposeLabel } from '@/lib/listings-data'
 import { getPublicListing, getPublicSiteConfig } from '@/lib/public-listings'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 import { ListingDetailClient } from './listing-detail-client'
@@ -18,9 +18,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!listing) return {}
   const siteConfig = await getPublicSiteConfig()
 
+  const priceSummary = listing.offers
+    .map((offer) => formatPrice(offer.price, offer.type))
+    .join(' ou ')
+
   return {
     title: `${listing.title} | ${siteConfig.agencyName}`,
-    description: `${listing.category} para ${listing.type} em ${listing.neighborhood}, ${listing.city}. ${listing.area}m² por ${formatPrice(listing.price, listing.type)}.`,
+    description: `${listing.category} para ${listingPurposeLabel(listing).toLowerCase()} em ${listing.neighborhood}, ${listing.city}. ${listing.area}m² por ${priceSummary}.`,
   }
 }
 

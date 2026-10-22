@@ -63,8 +63,10 @@ export function ImageUpload({
     if (propertyId) {
       // Upload direto para o Supabase Storage
       setUploading(true)
+      setError(null)
+      const newImages: UploadedImage[] = []
+      let failures = 0
       try {
-        const newImages: UploadedImage[] = []
         for (const file of filesToProcess) {
           const formData = new FormData()
           formData.append('file', file)
@@ -76,8 +78,8 @@ export function ImageUpload({
           })
 
           if (!response.ok) {
-            const err = await response.json()
-            throw new Error(err.error || 'Erro ao fazer upload')
+            failures += 1
+            continue
           }
 
           const data = await response.json()
@@ -88,8 +90,12 @@ export function ImageUpload({
             ordem: data.ordem,
           })
         }
-        updateImages([...images, ...newImages])
+        if (newImages.length > 0) updateImages([...images, ...newImages])
+        if (failures > 0) {
+          setError(`${failures} ${failures === 1 ? 'imagem não foi enviada' : 'imagens não foram enviadas'}. Tente novamente.`)
+        }
       } catch (err) {
+        if (newImages.length > 0) updateImages([...images, ...newImages])
         setError(err instanceof Error ? err.message : 'Erro ao fazer upload')
       } finally {
         setUploading(false)
@@ -134,13 +140,19 @@ export function ImageUpload({
   async function removeImage(index: number) {
     if (!editable) return
     const image = images[index]
+    setError(null)
     if (image.id && propertyId) {
       try {
-        await fetch(`/api/dashboard/properties/upload-image?id=${image.id}`, {
+        const response = await fetch(`/api/dashboard/properties/upload-image?id=${image.id}`, {
           method: 'DELETE',
         })
+        if (!response.ok) {
+          setError('Não foi possível remover a imagem. Tente novamente.')
+          return
+        }
       } catch {
-        // Ignorar erro de exclusão remota
+        setError('Não foi possível remover a imagem. Tente novamente.')
+        return
       }
     }
     // Revogar URL de objeto se for preview local
@@ -153,23 +165,30 @@ export function ImageUpload({
 
   async function setAsCover(index: number) {
     if (!editable) return
+    const previous = images
     const newImages = images.map((img, i) => ({
       ...img,
       is_cover: i === index,
     }))
+    setError(null)
     updateImages(newImages)
 
     // Persistir no banco se já tiver ID
     const image = images[index]
     if (image.id) {
       try {
-        await fetch('/api/dashboard/properties/upload-image', {
+        const response = await fetch('/api/dashboard/properties/upload-image', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: image.id, is_cover: true }),
         })
+        if (!response.ok) {
+          updateImages(previous)
+          setError('Não foi possível definir a capa. Tente novamente.')
+        }
       } catch {
-        // Ignorar erro
+        updateImages(previous)
+        setError('Não foi possível definir a capa. Tente novamente.')
       }
     }
   }

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import { BedDouble, Bath, Maximize, Car, MapPin, Search, X } from 'lucide-react'
-import { formatPrice, type Listing } from '@/lib/listings-data'
+import { formatPrice, listingMatchesPrice, listingPurposeLabel, type Listing } from '@/lib/listings-data'
 import type { PublicSiteConfig } from '@/lib/public-listings'
 
 const TYPE_OPTIONS = [
@@ -41,7 +41,7 @@ export function ListingResults({
 
   const filteredListings = useMemo(() => {
     return listings.filter((listing) => {
-      if (typeFilter && listing.type !== typeFilter) return false
+      if (typeFilter && !listing.offers.some((offer) => offer.type === typeFilter)) return false
       if (categoryFilter && listing.category !== categoryFilter) return false
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
@@ -52,14 +52,11 @@ export function ListingResults({
           listing.address.toLowerCase().includes(query)
         if (!matchesSearch) return false
       }
-      if (minPrice) {
-        const min = Number(minPrice)
-        if (!isNaN(min) && listing.price < min) return false
-      }
-      if (maxPrice) {
-        const max = Number(maxPrice)
-        if (!isNaN(max) && listing.price > max) return false
-      }
+      const min = minPrice ? Number(minPrice) : null
+      const max = maxPrice ? Number(maxPrice) : null
+      const safeMin = min !== null && Number.isFinite(min) ? min : null
+      const safeMax = max !== null && Number.isFinite(max) ? max : null
+      if (!listingMatchesPrice(listing, safeMin, safeMax)) return false
       return true
     })
   }, [listings, typeFilter, categoryFilter, searchQuery, minPrice, maxPrice])
@@ -236,7 +233,7 @@ export function ListingResults({
                     referrerPolicy="no-referrer"
                   />
                   <span className="absolute left-3 top-3 rounded bg-surface-base/90 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-text-primary backdrop-blur-sm">
-                    {listing.type === 'venda' ? 'Venda' : 'Aluguel'}
+                    {listingPurposeLabel(listing)}
                   </span>
                   {listing.featured && (
                     <span className="absolute right-3 top-3 rounded bg-accent px-2 py-0.5 text-xs font-semibold text-accent-text">
@@ -248,9 +245,23 @@ export function ListingResults({
                 {/* Content */}
                 <div className="p-4 space-y-3">
                   <div>
-                    <p className="text-xl font-bold tracking-tight text-accent tabular-nums">
-                      {formatPrice(listing.price, listing.type)}
-                    </p>
+                    <div className="space-y-0.5">
+                      {listing.offers.map((offer, index) => (
+                        <p
+                          key={offer.type}
+                          className={index === 0
+                            ? 'text-xl font-bold tracking-tight text-accent tabular-nums'
+                            : 'text-sm font-semibold tracking-tight text-text-secondary tabular-nums'}
+                        >
+                          {listing.offers.length > 1 && (
+                            <span className="mr-1 text-xs font-medium uppercase tracking-wider text-text-tertiary">
+                              {offer.type === 'venda' ? 'Venda' : 'Locação'}
+                            </span>
+                          )}
+                          {formatPrice(offer.price, offer.type)}
+                        </p>
+                      ))}
+                    </div>
                     <h2 className="mt-1 text-sm font-semibold text-text-primary leading-snug line-clamp-2">
                       {listing.title}
                     </h2>

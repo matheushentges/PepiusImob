@@ -134,13 +134,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-xs text-text-tertiary">
-            Não tem conta?{' '}
-            <a
-              href="/contato"
-              className="font-medium text-accent transition-colors hover:text-accent-hover"
-            >
-              Fale conosco
-            </a>
+            O acesso é criado pelo responsável da imobiliária. Fale com quem administra esta instalação.
           </p>
         </div>
       </main>

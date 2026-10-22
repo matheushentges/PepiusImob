@@ -14,7 +14,7 @@ export async function GET() {
   const [tenantResult, propertiesResult, leadsResult] = await Promise.all([
     admin.from('tenants').select('id, nome').eq('id', tenantId).maybeSingle(),
     admin.from('properties')
-      .select('id, titulo, descricao, tipo, finalidade, status, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
+      .select('id, titulo, descricao, tipo, finalidade, status, featured, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
       .eq('tenant_id', tenantId).order('created_at', { ascending: false }),
     admin.from('leads')
       .select('id, property_id, nome, email, telefone, mensagem, horario_preferido, status, created_at')

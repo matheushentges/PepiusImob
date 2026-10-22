@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { getAgencyContext } from '@/lib/auth/agency'
 import { canReadLicensedFeature, requireActiveLicense } from '@/lib/licensing/local-state'
 import { propertyInputSchema } from '@/lib/properties/validation'
+import { getPropertyImagePath } from '@/lib/storage/property-images'
 import { bodyErrorResponse, readJsonBody } from '@/lib/security/request-body'
 
 type RouteContext = { params: Promise<{ id: string }> }
@@ -21,7 +22,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   const { data, error } = await result.context.supabase
     .from('properties')
-    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
+    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, featured, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
     .eq('id', id)
     .eq('tenant_id', result.context.tenantId)
     .maybeSingle()
@@ -53,7 +54,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
     .update(parsed.data)
     .eq('id', id)
     .eq('tenant_id', result.context.tenantId)
-    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
+    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, featured, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
     .maybeSingle()
 
   if (error || !data) {
@@ -74,6 +75,11 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: 'Imóvel não encontrado' }, { status: 404 })
   }
 
+  const { data: images } = await result.context.supabase
+    .from('property_images')
+    .select('url')
+    .eq('property_id', id)
+
   const { data, error } = await result.context.supabase
     .from('properties')
     .delete()
@@ -86,5 +92,18 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     console.error('Agency property delete failed', { code: error?.code })
     return NextResponse.json({ error: 'Não foi possível excluir o imóvel' }, { status: error ? 503 : 404 })
   }
+
+  const paths = (images ?? [])
+    .map((image) => getPropertyImagePath(image.url))
+    .filter((path): path is string => Boolean(path))
+  if (paths.length > 0) {
+    const { error: storageError } = await result.context.supabase.storage
+      .from('property-images')
+      .remove(paths)
+    if (storageError) {
+      console.error('Property image storage cleanup failed', { name: storageError.name })
+    }
+  }
+
   return NextResponse.json({ success: true })
 }

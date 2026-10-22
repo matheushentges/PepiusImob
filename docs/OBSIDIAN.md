@@ -1,7 +1,7 @@
 ---
 title: Cérebro do produto — Pepius Imob
 type: product-context
-updated: 2026-10-21
+updated: 2026-10-22
 tags: [pepius-imob, on-premise, imobiliárias, licenciamento, segurança]
 ---
 
@@ -47,14 +47,14 @@ Para abrir a vitrine de Preview sem consultar uma licença, configure `LICENSE_D
 
 ## Interface da vitrine
 
-A rota inicial preserva a composição aprovada da marca Linha de Planta: navegação discreta, hero serifado, busca, destaques e rodapé. O conteúdo público é voltado a compradores e locatários; não deve prometer Inbox/IA nem vender cadastro self-service. A busca da home envia texto e finalidade para a listagem. Os tokens Tailwind da interface (`surface-*`, `text-*`, `border-*`, estados de erro/sucesso) são mapeados em `globals.css`; o tema escuro usa a classe `.dark` do `next-themes`.
+A rota inicial preserva a composição aprovada da marca Linha de Planta: navegação discreta, hero serifado, busca, destaques e rodapé. O hero usa título/subtítulo configurados no tenant; a seção de destaques só aparece quando há imóveis marcados. O conteúdo público é voltado a compradores e locatários; não deve prometer Inbox/IA nem vender cadastro self-service. A busca da home envia texto e finalidade para a listagem. Imóveis com finalidade "ambos" exibem preço de venda e de locação juntos na home, na listagem e no detalhe. Os tokens Tailwind da interface (`surface-*`, `text-*`, `border-*`, estados de erro/sucesso) são mapeados em `globals.css`; o tema escuro usa a classe `.dark` do `next-themes`.
 
 ## Segurança e dados
 
 - O navegador recebe apenas a anon key do Supabase. Service-role, pepper, tokens de operadores e chave privada são server-side; a chave privada só existe na Pepius.
 - O público não tem leitura direta das tabelas privadas. O servidor consulta imóveis com projeção explícita e retorna bairro/cidade, sem endereço completo ou CEP.
-- Consultas usam PostgREST parametrizado. Zod valida corpos estritos, UUIDs, limites de texto/preço/imagens; uploads verificam assinatura do conteúdo e tenant proprietário.
-- RLS limita registros à imobiliária; Storage privado guarda fotos por caminho de tenant e entrega URLs assinadas com expiração de cinco minutos (até uma hora para exportação).
+- Consultas usam PostgREST parametrizado. Zod valida corpos estritos, UUIDs, limites de texto/preço/imagens; uploads verificam assinatura do conteúdo e tenant proprietário e são re-encodados com `sharp` (remove EXIF/GPS, limita o lado maior a 2400 px).
+- RLS limita registros à imobiliária; Storage privado guarda fotos por caminho de tenant e entrega URLs assinadas com expiração de cinco minutos (até uma hora para exportação). Excluir um imóvel remove também os objetos correspondentes do Storage.
 - Leads públicos passam por honeypot e limite atômico por IP, cujo hash usa pepper local. O endpoint valida imóvel e licença antes de gravar; nenhum lead vai ao controle central.
 - Autorização é revalidada no servidor e na política RLS; o proxy Next 16 é apenas uma ajuda de navegação. Campos devolvidos por APIs públicas são whitelisted.
 - Operações comerciais são auditadas centralmente. Limites e resposta a incidentes estão em [[SEGURANCA]].
@@ -80,24 +80,29 @@ O licenciamento é uma regra de operação oficial e não proteção inviolável
 
 - Vitrine usa dados do banco local; busca/lista/detalhe não usam mais mocks.
 - Lead público é gravado e associado ao imóvel no tenant configurado.
+- Painel de leads permite buscar, filtrar por status, abrir detalhe e alterar status; painel de imóveis oferece busca, filtros reais de tipo/status e indicador de destaque.
+- Venda e locação simultâneas são exibidas com preços separados; destaque é uma coluna `featured` configurável no painel.
 - APIs gerenciais incluem CRUD de imóvel, imagens, status de lead, configurações whitelisted e exportação.
-- As configurações de título, descrição e cores validadas são aplicadas na lista e nos detalhes públicos; a identidade da imobiliária vem do tenant local.
+- As configurações de título, descrição e cores validadas são aplicadas na home, na lista e nos detalhes públicos; a identidade da imobiliária vem do tenant local.
+- Falhas de upload/capa/exclusão de foto são exibidas ao usuário; uploads passam por re-encode que remove metadados e o delete do imóvel limpa o Storage.
+- Navegação mobile do painel funciona por drawer; login não referencia rota inexistente; contato público linka a política de privacidade local.
 - Controle de licença inclui geração/administração CLI, código de ativação, assinatura, heartbeat e estado local.
 - Admin global e Inbox foram removidos da instalação da imobiliária; API central de licença fica desabilitada nela.
-- Dockerfiles/Compose de app e agente, Caddy e migrations separados foram adicionados.
-- Testes locais cobrem assinatura, adulteração/validade, limite de atraso e heartbeat; validar RLS/SQL, provisionamento, instalação e restore em instância Supabase self-hosted antes de liberar cliente.
+- Dockerfiles/Compose de app e agente, Caddy e migrations separados foram adicionados; `DEPLOY.md` aponta para o fluxo on-premise e trata Vercel apenas como preview.
+- Testes locais cobrem assinatura, adulteração/validade, limite de atraso, heartbeat, preços por oferta e validação de imóvel; validar RLS/SQL, provisionamento, instalação e restore em instância Supabase self-hosted antes de liberar cliente.
 
 ## Verificação desta entrega
 
-- `npm run type-check`, `npm run lint`, `npm test` (7 testes) e `npm run build` passaram. O lint mantém cinco avisos de `<img>` em previews/URLs assinadas.
-- `docker compose config` passou com o arquivo de exemplo. O daemon Docker não está disponível para validar Supabase self-hosted, RLS/pgTAP ou restore em VM. As migrations foram aplicadas com sucesso ao Supabase Cloud usado temporariamente para avaliação.
+- `npm run type-check`, `npm run lint`, `npm test` (9 testes) e `npm run build` passaram em 22/10. O lint mantém cinco avisos de `<img>` em previews/URLs assinadas.
+- A migration `20261022000001_property_featured.sql` foi validada com `npx supabase db push --dry-run`, aplicada ao Supabase Cloud de avaliação em 22/10 após backup/export das tabelas e verificada por consulta à coluna `featured`.
+- `docker compose config` passou com o arquivo de exemplo. O daemon Docker não está disponível para validar Supabase self-hosted, RLS/pgTAP ou restore em VM. As migrations anteriores foram aplicadas com sucesso ao Supabase Cloud usado temporariamente para avaliação.
 - `npm audit --omit=dev` não encontrou vulnerabilidades de runtime. O audit completo sinaliza cinco ocorrências high do advisory de `braces` no encadeamento de lint; atualizar forçando rebaixaria Next e não foi aplicado.
 
 ## Ambiente temporário de avaliação (21/10/2026)
 
 Após autorização do proprietário, o Supabase Cloud atualmente associado ao Vercel Production está sendo usado temporariamente para avaliar a vitrine. Foi criado o tenant Linha de Planta, slug linha-de-planta-demonstracao, UUID 64377038-0f9c-40fa-bdac-cd928924f624. Ele contém 10 anúncios fictícios disponíveis em 10 cidades, distribuídos entre venda (4), locação (4) e ambas as finalidades (2). As descrições identificam os anúncios como demonstrativos. Não foram adicionadas imagens, então a vitrine usa o placeholder.
 
-As variáveis de Production no Vercel foram atualizadas com URL, chaves Supabase, tenant e pepper. O Supabase CLI 2.121.0 foi autenticado e as nove migrations pendentes foram aplicadas; site_config existe, Storage de imagens está privado e RLS restringe acesso. Os 10 imóveis demonstrativos permanecem. O perfil global existente foi vinculado a esse tenant como imobiliaria_owner. O control plane temporário Pepius License Control usa o projeto Supabase `lwsnunuufkqmursocztg` (organização Free, região sa-east-1); a migration própria foi aplicada e as variáveis de assinatura/operação foram configuradas no ambiente local e em Vercel Production. As chaves legadas desse projeto foram desativadas após aparecerem no retorno do CLI; o serviço usa a chave `sb_secret` nova. O projeto Free pode pausar após período sem atividade e respeita o limite de dois projetos ativos gratuitos. Ainda falta publicar o deployment com essas variáveis e emitir/ativar a lease de avaliação; até isso ocorrer, Production continua fechada. Não apresentar os anúncios como inventário real; são dados temporários para avaliação.
+As variáveis de Production no Vercel foram atualizadas com URL, chaves Supabase, tenant e pepper. O Supabase CLI 2.121.0 foi autenticado e as dez migrations então existentes foram aplicadas; site_config existe, Storage de imagens está privado e RLS restringe acesso. A migration de destaque `20261022000001_property_featured.sql` foi criada depois, passou em `db push --dry-run` e foi aplicada em 22/10 após backup/export das tabelas. Os 10 imóveis demonstrativos permanecem. O perfil global existente foi vinculado a esse tenant como imobiliaria_owner. O control plane temporário Pepius License Control usa o projeto Supabase `lwsnunuufkqmursocztg` (organização Free, região sa-east-1); a migration própria foi aplicada e as variáveis de assinatura/operação foram configuradas no ambiente local e em Vercel Production. As chaves legadas desse projeto foram desativadas após aparecerem no retorno do CLI; o serviço usa a chave `sb_secret` nova. O projeto Free pode pausar após período sem atividade e respeita o limite de dois projetos ativos gratuitos. Ainda falta publicar o deployment com essas variáveis e emitir/ativar a lease de avaliação; até isso ocorrer, Production continua fechada. Não apresentar os anúncios como inventário real; são dados temporários para avaliação.
 
 ## Manutenção do cérebro
 

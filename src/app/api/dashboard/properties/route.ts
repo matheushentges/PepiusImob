@@ -15,7 +15,7 @@ export async function GET() {
 
   const { data, error } = await result.context.supabase
     .from('properties')
-    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
+    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, featured, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
     .eq('tenant_id', result.context.tenantId)
     .order('created_at', { ascending: false })
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   const { data, error } = await result.context.supabase
     .from('properties')
     .insert({ ...parsed.data, tenant_id: result.context.tenantId })
-    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
+    .select('id, tenant_id, titulo, descricao, tipo, finalidade, status, featured, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
     .single()
 
   if (error || !data) {

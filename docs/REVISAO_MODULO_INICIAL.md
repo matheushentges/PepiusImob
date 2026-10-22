@@ -118,4 +118,19 @@ O [`DEPLOY.md`](../DEPLOY.md) na raiz ainda ensina deploy de produção na Verce
 
 ## Critério de pronto do módulo inicial
 
-Uma equipe consegue entrar, cadastrar/editar/publicar imóveis e fotos, acompanhar contatos, atualizar status e personalizar a home em desktop e celular. Um cliente final encontra imóveis, vê todas as opções de venda/locação e envia contato sem receber dados privados. Uma instalação Supabase self-hosted limpa consegue ser instalada, suspensa/reativada por licença, atualizada e restaurada a partir de backup criptografado, com as políticas testadas em sessão real.\n
+Uma equipe consegue entrar, cadastrar/editar/publicar imóveis e fotos, acompanhar contatos, atualizar status e personalizar a home em desktop e celular. Um cliente final encontra imóveis, vê todas as opções de venda/locação e envia contato sem receber dados privados. Uma instalação Supabase self-hosted limpa consegue ser instalada, suspensa/reativada por licença, atualizada e restaurada a partir de backup criptografado, com as políticas testadas em sessão real.
+
+## Progresso em 2026-10-22
+
+Correções de código aplicadas após esta revisão:
+
+- **P0.1 resolvido no código:** leads têm busca, filtro por status, estatísticas, modal de detalhe e alteração de status, com estados de erro/sucesso e modo somente leitura sob licença inativa.
+- **P0.2 resolvido no código:** imóveis "ambos" exibem venda e locação com preços separados na home, listagem, detalhe e exportação; destaques passam a usar a coluna `featured`, configurável no cadastro/edição. A migration `20261022000001_property_featured.sql` validou em `db push --dry-run` e foi aplicada ao banco conectado em 22/10 após backup/export das tabelas.
+- **P1.1 parcial:** filtros de imóveis e leads funcionam; paginação da vitrine continua pendente.
+- **P1.2 parcial:** menu mobile do painel implementado; home/listagem/detalhe ainda não compartilham cabeçalho/rodapé únicos.
+- **P1.3 parcial:** home usa título/subtítulo configurados; onboarding, recuperação e gestão de usuários continuam pendentes.
+- **P1.4 resolvido:** falhas de upload/capa/exclusão são visíveis; uploads são re-encodados com `sharp`; exclusão de imóvel limpa o Storage.
+- **P1.5 parcial:** aviso e página de privacidade publicados e EXIF/GPS removidos no upload; prazo de retenção e procedimento formal de exclusão ainda precisam de definição.
+- **P1.6 resolvido:** `DEPLOY.md` reescrito para on-premise, com Vercel restrito a preview.
+
+Continuam pendentes: implantação/ensaio do control plane (P0.3), instalação limpa e ensaio de RLS/Storage (P0.4/segurança 1), backup/restore com evidência (P0.5/segurança 4), paginação, harmonização visual completa, onboarding de usuários, CSP, fixação de imagens por digest e testes de rotas/fim a fim.

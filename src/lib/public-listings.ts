@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getSignedPropertyImageUrl } from '@/lib/storage/property-images'
-import type { Listing } from '@/lib/listings-data'
+import type { Listing, ListingOffer } from '@/lib/listings-data'
 
 type PropertyRecord = {
   id: string
@@ -13,6 +13,7 @@ type PropertyRecord = {
   status: string
   preco_venda: number | null
   preco_locacao: number | null
+  featured: boolean
   cidade: string
   estado: string
   bairro: string
@@ -33,8 +34,8 @@ export type PublicSiteConfig = {
 }
 
 const DEFAULT_SITE_CONFIG: Omit<PublicSiteConfig, 'agencyName'> = {
-  heroTitle: 'Imóveis disponíveis',
-  heroSubtitle: 'Explore os imóveis disponíveis para venda e locação.',
+  heroTitle: 'Encontre seu próximo imóvel',
+  heroSubtitle: 'Explore imóveis para venda e locação e encontre um lugar que combina com seus planos.',
   primaryColor: '#334155',
   accentColor: '#E07A5F',
 }
@@ -89,14 +90,24 @@ export async function getPublicSiteConfig(): Promise<PublicSiteConfig> {
   }
 }
 
+function toOffer(type: ListingOffer['type'], value: number | null): ListingOffer | null {
+  if (value === null || value === undefined) return null
+  const price = Number(value)
+  return Number.isFinite(price) ? { type, price } : null
+}
+
 async function toListing(row: PropertyRecord): Promise<Listing | null> {
-  const type =
-    row.finalidade === 'locacao' ||
-    (row.finalidade === 'ambos' && row.preco_venda === null && row.preco_locacao !== null)
-      ? 'aluguel'
-      : 'venda'
-  const price = type === 'aluguel' ? row.preco_locacao : row.preco_venda
-  if (price === null || price === undefined) return null
+  const offers = [
+    row.finalidade === 'venda' || row.finalidade === 'ambos'
+      ? toOffer('venda', row.preco_venda)
+      : null,
+    row.finalidade === 'locacao' || row.finalidade === 'ambos'
+      ? toOffer('aluguel', row.preco_locacao)
+      : null,
+  ].filter((offer): offer is ListingOffer => offer !== null)
+
+  if (offers.length === 0) return null
+  const primaryOffer = offers[0]
 
   const images = await Promise.all(
     [...(row.property_images ?? [])]
@@ -110,9 +121,10 @@ async function toListing(row: PropertyRecord): Promise<Listing | null> {
   return {
     id: row.id,
     title: row.titulo,
-    type,
+    type: primaryOffer.type,
+    price: primaryOffer.price,
+    offers,
     category: row.tipo,
-    price,
     address: row.bairro,
     neighborhood: row.bairro,
     city: row.cidade,
@@ -124,7 +136,7 @@ async function toListing(row: PropertyRecord): Promise<Listing | null> {
     image: safeImages[0] ?? '/placeholder-property.svg',
     images: safeImages,
     description: row.descricao,
-    featured: false,
+    featured: row.featured === true,
     createdAt: row.created_at,
   }
 }
@@ -137,7 +149,7 @@ export async function getPublicListings(): Promise<Listing[]> {
   const { data, error } = await admin
     .from('properties')
     .select(
-      'id,titulo,descricao,tipo,finalidade,status,preco_venda,preco_locacao,cidade,estado,bairro,area_total,quartos,banheiros,vagas_garagem,created_at,property_images(url,ordem,is_cover)',
+      'id,titulo,descricao,tipo,finalidade,status,preco_venda,preco_locacao,featured,cidade,estado,bairro,area_total,quartos,banheiros,vagas_garagem,created_at,property_images(url,ordem,is_cover)',
     )
     .eq('tenant_id', tenantId)
     .eq('status', 'disponivel')
@@ -160,7 +172,7 @@ export async function getPublicListing(id: string): Promise<Listing | null> {
   const { data, error } = await admin
     .from('properties')
     .select(
-      'id,titulo,descricao,tipo,finalidade,status,preco_venda,preco_locacao,cidade,estado,bairro,area_total,quartos,banheiros,vagas_garagem,created_at,property_images(url,ordem,is_cover)',
+      'id,titulo,descricao,tipo,finalidade,status,preco_venda,preco_locacao,featured,cidade,estado,bairro,area_total,quartos,banheiros,vagas_garagem,created_at,property_images(url,ordem,is_cover)',
     )
     .eq('id', id)
     .eq('tenant_id', tenantId)

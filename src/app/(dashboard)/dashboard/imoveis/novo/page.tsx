@@ -40,6 +40,7 @@ export default function NovoImovelPage() {
       tipo: formData.get('tipo') as string,
       finalidade: formData.get('finalidade') as string,
       status: formData.get('status') as string,
+      featured: formData.get('featured') === 'on',
       preco_venda: formData.get('preco_venda') ? parseFloat(formData.get('preco_venda') as string) : null,
       preco_locacao: formData.get('preco_locacao') ? parseFloat(formData.get('preco_locacao') as string) : null,
       endereco: formData.get('endereco') as string,
@@ -69,31 +70,40 @@ export default function NovoImovelPage() {
       const createdProperty = await response.json()
 
       // Upload das imagens pendentes (preview local) após criação do imóvel
-      if (pendingImages.length > 0) {
-        for (let i = 0; i < pendingImages.length; i++) {
-          const img = pendingImages[i]
-          if (img.file) {
-            const formData = new FormData()
-            formData.append('file', img.file)
-            formData.append('property_id', createdProperty.id)
-            try {
-              const uploadRes = await fetch('/api/dashboard/properties/upload-image', {
-                method: 'POST',
-                body: formData,
-              })
-              if (uploadRes.ok && img.is_cover) {
-                const uploaded = await uploadRes.json()
-                await fetch('/api/dashboard/properties/upload-image', {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ id: uploaded.id, is_cover: true }),
-                })
-              }
-            } catch {
-              // Continuar mesmo se uma imagem falhar
-            }
+      let failedUploads = 0
+      for (const img of pendingImages) {
+        if (!img.file) continue
+        const uploadData = new FormData()
+        uploadData.append('file', img.file)
+        uploadData.append('property_id', createdProperty.id)
+        try {
+          const uploadRes = await fetch('/api/dashboard/properties/upload-image', {
+            method: 'POST',
+            body: uploadData,
+          })
+          if (!uploadRes.ok) {
+            failedUploads += 1
+            continue
           }
+          if (img.is_cover) {
+            const uploaded = await uploadRes.json()
+            const coverRes = await fetch('/api/dashboard/properties/upload-image', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: uploaded.id, is_cover: true }),
+            })
+            if (!coverRes.ok) failedUploads += 1
+          }
+        } catch {
+          failedUploads += 1
         }
+      }
+
+      if (failedUploads > 0) {
+        sessionStorage.setItem('pepius:upload-warning', String(failedUploads))
+        router.push(`/dashboard/imoveis/${createdProperty.id}`)
+        router.refresh()
+        return
       }
 
       router.push('/dashboard/imoveis')
@@ -203,6 +213,23 @@ export default function NovoImovelPage() {
                   <option value="vendido">Vendido</option>
                   <option value="alugado">Alugado</option>
                 </select>
+              </div>
+
+              <div className="flex items-start gap-3 md:col-span-2">
+                <input
+                  id="featured"
+                  name="featured"
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 rounded border-input accent-[var(--accent)]"
+                />
+                <div>
+                  <Label htmlFor="featured" className="text-sm font-medium text-foreground">
+                    Destacar na vitrine
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Aparece primeiro na página inicial e recebe o selo de destaque.
+                  </p>
+                </div>
               </div>
             </div>
           </section>

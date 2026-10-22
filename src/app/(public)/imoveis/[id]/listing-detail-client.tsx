@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { MapPin, ChevronLeft } from 'lucide-react'
 import type { Listing } from '@/lib/listings-data'
-import { formatPrice } from '@/lib/listings-data'
+import { formatPrice, listingPurposeLabel } from '@/lib/listings-data'
 import { ImageCarousel } from '@/components/listing/image-carousel'
 import { GalleryDialog } from '@/components/listing/gallery-dialog'
 import { ListingSpecs } from '@/components/listing/listing-specs'
@@ -51,9 +51,21 @@ export function ListingDetailClient({ listing, images, agencyName }: ListingDeta
             {listing.title}
           </h1>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <p className="text-3xl font-bold tracking-tight text-accent tabular-nums">
-              {formatPrice(listing.price, listing.type)}
-            </p>
+            {listing.offers.map((offer, index) => (
+              <p
+                key={offer.type}
+                className={index === 0
+                  ? 'text-3xl font-bold tracking-tight text-accent tabular-nums'
+                  : 'text-lg font-semibold tracking-tight text-text-secondary tabular-nums'}
+              >
+                {listing.offers.length > 1 && (
+                  <span className="mr-1.5 text-xs font-medium uppercase tracking-wider text-text-tertiary">
+                    {offer.type === 'venda' ? 'Venda' : 'Locação'}
+                  </span>
+                )}
+                {formatPrice(offer.price, offer.type)}
+              </p>
+            ))}
             <div className="flex items-center gap-1 text-sm text-text-secondary">
               <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>{listing.neighborhood}, {listing.city}</span>
@@ -105,8 +117,8 @@ export function ListingDetailClient({ listing, images, agencyName }: ListingDeta
               <h3 className="mb-3 text-sm font-semibold text-text-primary">Detalhes rápidos</h3>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-text-secondary">Tipo</dt>
-                  <dd className="font-medium capitalize text-text-primary">{listing.type}</dd>
+                  <dt className="text-text-secondary">Finalidade</dt>
+                  <dd className="font-medium capitalize text-text-primary">{listingPurposeLabel(listing)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-text-secondary">Categoria</dt>

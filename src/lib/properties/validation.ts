@@ -21,6 +21,7 @@ export const propertyInputSchema = z.object({
   tipo: z.enum(['casa', 'apartamento', 'terreno', 'comercial', 'rural']),
   finalidade: z.enum(['venda', 'locacao', 'ambos']),
   status: z.enum(['disponivel', 'vendido', 'alugado', 'reservado']).default('disponivel'),
+  featured: z.boolean().default(false),
   preco_venda: optionalAmount,
   preco_locacao: optionalAmount,
   endereco: z.string().trim().min(3).max(240),

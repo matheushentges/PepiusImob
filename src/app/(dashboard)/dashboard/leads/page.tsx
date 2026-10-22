@@ -1,35 +1,29 @@
 import { createClient } from '@/lib/supabase/server'
-import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Users, Phone, Mail } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
+import { LeadsClient, type AgencyLead } from './leads-client'
 
 export const dynamic = 'force-dynamic'
 
-const statusLabels: Record<string, string> = {
-  novo: 'Novo',
-  em_contato: 'Em Contato',
-  convertido: 'Convertido',
-  perdido: 'Perdido',
+type PropertyRelation = { titulo: string } | Array<{ titulo: string }> | null
+
+type LeadQueryRow = {
+  id: string
+  property_id: string | null
+  nome: string
+  email: string | null
+  telefone: string | null
+  mensagem: string | null
+  horario_preferido: string | null
+  status: string
+  created_at: string
+  properties: PropertyRelation
 }
 
-const statusColors: Record<string, string> = {
-  novo: 'bg-blue-50 text-blue-700 ring-blue-600/20',
-  em_contato: 'bg-orange-50 text-orange-700 ring-orange-600/20',
-  convertido: 'bg-green-50 text-green-700 ring-green-600/20',
-  perdido: 'bg-red-50 text-red-700 ring-red-600/20',
-}
-
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString('pt-BR')
+function propertyTitle(value: PropertyRelation): string {
+  if (!value) return ''
+  if (Array.isArray(value)) return value[0]?.titulo ?? ''
+  return value.titulo ?? ''
 }
 
 export default async function LeadsPage() {
@@ -43,7 +37,7 @@ export default async function LeadsPage() {
     : { data: null }
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('id, property_id, nome, email, telefone, mensagem, status, created_at, properties(titulo)')
+    .select('id, property_id, nome, email, telefone, mensagem, horario_preferido, status, created_at, properties(titulo)')
     .eq('tenant_id', profile?.tenant_id ?? '00000000-0000-0000-0000-000000000000')
     .order('created_at', { ascending: false })
 
@@ -51,146 +45,18 @@ export default async function LeadsPage() {
     console.error('Agency lead page query failed', { code: error.code })
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header - Linha de Planta */}
-      <div>
-        <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">
-          Leads
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Acompanhe e gerencie os leads da sua imobiliária
-        </p>
-      </div>
+  const rows: AgencyLead[] = ((leads ?? []) as unknown as LeadQueryRow[]).map((lead) => ({
+    id: lead.id,
+    propertyId: lead.property_id,
+    propertyTitle: propertyTitle(lead.properties),
+    nome: lead.nome,
+    email: lead.email,
+    telefone: lead.telefone,
+    mensagem: lead.mensagem,
+    horarioPreferido: lead.horario_preferido,
+    status: lead.status,
+    createdAt: lead.created_at,
+  }))
 
-      {/* Stats Row - Linha de Planta: cards compactos com border precisa */}
-      <div className="grid gap-4 md:grid-cols-4">
-        {[
-          { label: 'Total', value: leads?.length || 0, accent: false },
-          { label: 'Novos', value: leads?.filter(l => l.status === 'novo').length || 0, accent: false },
-          { label: 'Em Contato', value: leads?.filter(l => l.status === 'em_contato').length || 0, accent: false },
-          { label: 'Convertidos', value: leads?.filter(l => l.status === 'convertido').length || 0, accent: true },
-        ].map((stat) => (
-          <div key={stat.label} className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {stat.label}
-            </p>
-            <p className={`mt-1 text-xl font-semibold ${stat.accent ? 'text-accent' : 'text-foreground'}`}>
-              {stat.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Filter Bar - Linha de Planta: border precisa, inputs bg-input */}
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-4">
-        <input
-          type="text"
-          placeholder="Buscar por nome, email..."
-          className="h-9 flex-1 min-w-[200px] rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        />
-        <select className="h-9 rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-          <option value="">Todos os status</option>
-          <option value="novo">Novo</option>
-          <option value="em_contato">Em Contato</option>
-          <option value="convertido">Convertido</option>
-          <option value="perdido">Perdido</option>
-        </select>
-      </div>
-
-      {/* Table Card - Linha de Planta: border precisa, header separado por linha fina */}
-      <div className="rounded-lg border border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b border-border hover:bg-transparent">
-              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Lead
-              </TableHead>
-              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Contato
-              </TableHead>
-              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Imóvel Interesse
-              </TableHead>
-              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Status
-              </TableHead>
-              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Data
-              </TableHead>
-              <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Ações
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {leads && leads.length > 0 ? (
-              leads.map((lead) => (
-                <TableRow key={lead.id} className="border-b border-border last:border-0">
-                  <TableCell>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {lead.nome}
-                      </p>
-                      {lead.mensagem && (
-                        <p className="truncate text-xs text-muted-foreground max-w-[200px]">
-                          {lead.mensagem}
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {lead.email && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Mail className="h-3 w-3" />
-                          <span className="truncate max-w-[150px]">{lead.email}</span>
-                        </div>
-                      )}
-                      {lead.telefone && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Phone className="h-3 w-3" />
-                          <span>{lead.telefone}</span>
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {lead.properties?.[0]?.titulo || '—'}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${statusColors[lead.status] || 'bg-gray-50 text-gray-700 ring-gray-600/20'}`}
-                    >
-                      {statusLabels[lead.status] || lead.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="tabular-nums text-muted-foreground">
-                    {formatDate(lead.created_at)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="h-8">
-                      Ver Detalhes
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <p className="mt-3 text-sm font-medium text-foreground">Nenhum lead registrado</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Os leads aparecerão aqui quando clientes entrarem em contato
-                  </p>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  )
+  return <LeadsClient leads={rows} canEdit={license.active} />
 }

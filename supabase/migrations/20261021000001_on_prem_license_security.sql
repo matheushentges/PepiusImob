@@ -351,8 +351,6 @@ UPDATE storage.buckets SET public = FALSE WHERE id = 'property-images';
 DROP POLICY IF EXISTS "Leitura pública de imagens de imóveis" ON storage.objects;
 DROP POLICY IF EXISTS "Upload de imagens por usuários autenticados" ON storage.objects;
 DROP POLICY IF EXISTS "Exclusão de imagens por usuários autenticados" ON storage.objects;
-DROP POLICY IF EXISTS "Upload de imagens por usuÃ¡rios autenticados" ON storage.objects;
-DROP POLICY IF EXISTS "ExclusÃ£o de imagens por usuÃ¡rios autenticados" ON storage.objects;
 
 CREATE POLICY "Tenant users can read their property image objects"
 ON storage.objects FOR SELECT TO authenticated
@@ -375,4 +373,4 @@ USING (
   bucket_id = 'property-images'
   AND public.license_has_feature('properties')
   AND (storage.foldername(name))[1] = public.current_user_tenant_id()::TEXT
-);\n
+);
