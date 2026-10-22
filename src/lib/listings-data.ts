@@ -56,3 +56,53 @@ export function listingMatchesPrice(
 export function getListingImages(listing: Listing): string[] {
   return listing.images.length ? listing.images : ['/placeholder-property.svg']
 }
+
+export function getPaginationPages(currentPage: number, totalPages: number): (number | 'ellipsis')[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
+  }
+
+  const pages: (number | 'ellipsis')[] = [1]
+
+  if (currentPage > 3) {
+    pages.push('ellipsis')
+  }
+
+  const start = Math.max(2, currentPage - 1)
+  const end = Math.min(totalPages - 1, currentPage + 1)
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+
+  if (currentPage < totalPages - 2) {
+    pages.push('ellipsis')
+  }
+
+  pages.push(totalPages)
+  return pages
+}
+
+export function paginateItems<T>(items: T[], page: number, pageSize: number): {
+  items: T[]
+  totalItems: number
+  totalPages: number
+  currentPage: number
+  startIndex: number
+  endIndex: number
+} {
+  const totalItems = items.length
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+  const safePage = Math.max(1, Math.min(page, totalPages))
+  const startIndex = (safePage - 1) * pageSize
+  const endIndex = Math.min(startIndex + pageSize, totalItems)
+  return {
+    items: items.slice(startIndex, endIndex),
+    totalItems,
+    totalPages,
+    currentPage: safePage,
+    startIndex,
+    endIndex,
+  }
+}
+

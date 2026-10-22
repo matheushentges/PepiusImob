@@ -1,10 +1,17 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
-import { BedDouble, Bath, Maximize, Car, MapPin, Search, X } from 'lucide-react'
-import { formatPrice, listingMatchesPrice, listingPurposeLabel, type Listing } from '@/lib/listings-data'
+import { BedDouble, Bath, Maximize, Car, MapPin, Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  formatPrice,
+  listingMatchesPrice,
+  listingPurposeLabel,
+  getPaginationPages,
+  paginateItems,
+  type Listing,
+} from '@/lib/listings-data'
 import type { PublicSiteConfig } from '@/lib/public-listings'
 
 const TYPE_OPTIONS = [
@@ -22,6 +29,8 @@ const CATEGORY_OPTIONS = [
   { value: 'terreno', label: 'Terreno' },
 ] as const
 
+const DEFAULT_PAGE_SIZE = 12
+
 export function ListingResults({
   listings,
   siteConfig,
@@ -38,6 +47,10 @@ export function ListingResults({
   const [searchQuery, setSearchQuery] = useState(initialSearch)
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+
+  const resultsRef = useRef<HTMLDivElement>(null)
 
   const filteredListings = useMemo(() => {
     return listings.filter((listing) => {
@@ -61,18 +74,43 @@ export function ListingResults({
     })
   }, [listings, typeFilter, categoryFilter, searchQuery, minPrice, maxPrice])
 
+  const pagination = useMemo(() => {
+    return paginateItems(filteredListings, currentPage, pageSize)
+  }, [filteredListings, currentPage, pageSize])
+
+  const {
+    items: paginatedListings,
+    totalItems,
+    totalPages,
+    currentPage: safeCurrentPage,
+    startIndex,
+    endIndex,
+  } = pagination
+
+
   const activeFilterCount = [typeFilter, categoryFilter, searchQuery, minPrice, maxPrice].filter(Boolean).length
 
-  function clearFilters() {
+  function handlePageChange(newPage: number) {
+    if (newPage < 1 || newPage > totalPages) return
+    setCurrentPage(newPage)
+    if (resultsRef.current) {
+      const topOffset = resultsRef.current.getBoundingClientRect().top + window.scrollY - 80
+      window.scrollTo({ top: Math.max(0, topOffset), behavior: 'smooth' })
+    }
+  }
+
+  function handleFilterReset() {
     setTypeFilter('')
     setCategoryFilter('')
     setSearchQuery('')
     setMinPrice('')
     setMaxPrice('')
+    setCurrentPage(1)
   }
 
   return (
     <div
+      ref={resultsRef}
       className="space-y-8"
       style={{ '--primary': siteConfig.primaryColor, '--accent': siteConfig.accentColor } as CSSProperties}
     >
@@ -100,14 +138,20 @@ export function ListingResults({
                 id="search-listings"
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setCurrentPage(1)
+                }}
                 placeholder="Bairro, cidade ou título..."
                 className="w-full rounded-lg border border-border-default bg-surface-base py-2.5 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => {
+                    setSearchQuery('')
+                    setCurrentPage(1)
+                  }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded text-text-tertiary hover:text-text-primary"
                   aria-label="Limpar busca"
                 >
@@ -125,7 +169,10 @@ export function ListingResults({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setTypeFilter(option.value)}
+                  onClick={() => {
+                    setTypeFilter(option.value)
+                    setCurrentPage(1)
+                  }}
                   className={`min-h-[40px] rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                     typeFilter === option.value
                       ? 'bg-accent text-accent-text'
@@ -149,7 +196,10 @@ export function ListingResults({
             <select
               id="category-filter"
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value)
+                setCurrentPage(1)
+              }}
               className="flex h-10 w-full rounded-lg border border-border-default bg-surface-base px-3 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               {CATEGORY_OPTIONS.map((option) => (
@@ -170,7 +220,10 @@ export function ListingResults({
                 id="min-price"
                 type="number"
                 value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
+                onChange={(e) => {
+                  setMinPrice(e.target.value)
+                  setCurrentPage(1)
+                }}
                 placeholder="R$ 0"
                 min={0}
                 className="flex h-10 w-full rounded-lg border border-border-default bg-surface-base px-3 text-sm tabular-nums text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
@@ -185,7 +238,10 @@ export function ListingResults({
                 id="max-price"
                 type="number"
                 value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
+                onChange={(e) => {
+                  setMaxPrice(e.target.value)
+                  setCurrentPage(1)
+                }}
                 placeholder="Sem limite"
                 min={0}
                 className="flex h-10 w-full rounded-lg border border-border-default bg-surface-base px-3 text-sm tabular-nums text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
@@ -197,7 +253,7 @@ export function ListingResults({
           {activeFilterCount > 0 && (
             <button
               type="button"
-              onClick={clearFilters}
+              onClick={handleFilterReset}
               className="inline-flex h-10 w-full sm:w-auto items-center justify-center gap-1.5 rounded-lg border border-border-default bg-surface-base px-4 text-sm font-medium text-text-secondary transition-colors hover:border-error hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -206,100 +262,200 @@ export function ListingResults({
           )}
         </div>
 
-        {/* Results count */}
-        <p className="mt-4 text-xs text-text-tertiary">
-          {filteredListings.length} {filteredListings.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}
-          {activeFilterCount > 0 && ` · ${activeFilterCount} ${activeFilterCount === 1 ? 'filtro ativo' : 'filtros ativos'}`}
-        </p>
+        {/* Results count & page size info */}
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-border-subtle pt-3 text-xs text-text-tertiary">
+          <p>
+            {totalItems > 0 ? (
+              <>
+                Exibindo <span className="font-semibold text-text-primary">{startIndex + 1}–{endIndex}</span> de{' '}
+                <span className="font-semibold text-text-primary">{totalItems}</span> {totalItems === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}
+              </>
+            ) : (
+              'Nenhum imóvel encontrado'
+            )}
+            {activeFilterCount > 0 && ` · ${activeFilterCount} ${activeFilterCount === 1 ? 'filtro ativo' : 'filtros ativos'}`}
+          </p>
+
+          {totalItems > DEFAULT_PAGE_SIZE && (
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <label htmlFor="items-per-page" className="text-text-secondary">
+                Por página:
+              </label>
+              <select
+                id="items-per-page"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value))
+                  setCurrentPage(1)
+                }}
+                className="h-8 rounded-md border border-border-default bg-surface-base px-2 text-xs text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value={12}>12</option>
+                <option value={24}>24</option>
+                <option value={48}>48</option>
+              </select>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Listings grid */}
-      {filteredListings.length > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredListings.map((listing) => (
-            <Link
-              key={listing.id}
-              href={`/imoveis/${listing.id}`}
-              className="group block overflow-hidden rounded-lg border border-border-subtle bg-surface-raised transition-all hover:border-accent/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      {paginatedListings.length > 0 ? (
+        <div className="space-y-10">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {paginatedListings.map((listing) => (
+              <Link
+                key={listing.id}
+                href={`/imoveis/${listing.id}`}
+                className="group block overflow-hidden rounded-lg border border-border-subtle bg-surface-raised transition-all hover:border-accent/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <article>
+                  {/* Image */}
+                  <div className="relative aspect-[4/3] overflow-hidden bg-surface-overlay">
+                    <img
+                      src={listing.image}
+                      alt={listing.title}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="absolute left-3 top-3 rounded bg-surface-base/90 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-text-primary backdrop-blur-sm">
+                      {listingPurposeLabel(listing)}
+                    </span>
+                    {listing.featured && (
+                      <span className="absolute right-3 top-3 rounded bg-accent px-2 py-0.5 text-xs font-semibold text-accent-text">
+                        Destaque
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4 space-y-3">
+                    <div>
+                      <div className="space-y-0.5">
+                        {listing.offers.map((offer, index) => (
+                          <p
+                            key={offer.type}
+                            className={index === 0
+                              ? 'text-xl font-bold tracking-tight text-accent tabular-nums'
+                              : 'text-sm font-semibold tracking-tight text-text-secondary tabular-nums'}
+                          >
+                            {listing.offers.length > 1 && (
+                              <span className="mr-1 text-xs font-medium uppercase tracking-wider text-text-tertiary">
+                                {offer.type === 'venda' ? 'Venda' : 'Locação'}
+                              </span>
+                            )}
+                            {formatPrice(offer.price, offer.type)}
+                          </p>
+                        ))}
+                      </div>
+                      <h2 className="mt-1 text-sm font-semibold text-text-primary leading-snug line-clamp-2">
+                        {listing.title}
+                      </h2>
+                      <div className="mt-1 flex items-center gap-1 text-xs text-text-tertiary">
+                        <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+                        <span className="truncate">{listing.neighborhood}, {listing.city}</span>
+                      </div>
+                    </div>
+
+                    {/* Specs row */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border-subtle pt-3 text-xs text-text-secondary">
+                      {listing.bedrooms > 0 && (
+                        <span className="flex items-center gap-1">
+                          <BedDouble className="h-3.5 w-3.5" aria-hidden="true" />
+                          {listing.bedrooms} {listing.bedrooms === 1 ? 'quarto' : 'quartos'}
+                        </span>
+                      )}
+                      {listing.bathrooms > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Bath className="h-3.5 w-3.5" aria-hidden="true" />
+                          {listing.bathrooms} {listing.bathrooms === 1 ? 'banheiro' : 'banheiros'}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Maximize className="h-3.5 w-3.5" aria-hidden="true" />
+                        {listing.area} m²
+                      </span>
+                      {listing.parking > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Car className="h-3.5 w-3.5" aria-hidden="true" />
+                          {listing.parking} {listing.parking === 1 ? 'vaga' : 'vagas'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              </Link>
+            ))}
+          </div>
+
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <nav
+              aria-label="Paginação do catálogo de imóveis"
+              className="flex flex-col items-center justify-between gap-4 sm:flex-row border-t border-border-subtle pt-6"
             >
-              <article>
-                {/* Image */}
-                <div className="relative aspect-[4/3] overflow-hidden bg-surface-overlay">
-                  <img
-                    src={listing.image}
-                    alt={listing.title}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                  />
-                  <span className="absolute left-3 top-3 rounded bg-surface-base/90 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-text-primary backdrop-blur-sm">
-                    {listingPurposeLabel(listing)}
-                  </span>
-                  {listing.featured && (
-                    <span className="absolute right-3 top-3 rounded bg-accent px-2 py-0.5 text-xs font-semibold text-accent-text">
-                      Destaque
-                    </span>
-                  )}
+              <p className="text-xs text-text-secondary order-2 sm:order-1">
+                Página <span className="font-semibold text-text-primary">{safeCurrentPage}</span> de{' '}
+                <span className="font-semibold text-text-primary">{totalPages}</span>
+              </p>
+
+              <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                {/* Previous page button */}
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(safeCurrentPage - 1)}
+                  disabled={safeCurrentPage === 1}
+                  className="inline-flex h-9 items-center gap-1 rounded-md border border-border-default bg-surface-base px-3 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-text-primary disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  aria-label="Ir para a página anterior"
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">Anterior</span>
+                </button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {getPaginationPages(safeCurrentPage, totalPages).map((pageNum, idx) => {
+                    if (pageNum === 'ellipsis') {
+                      return (
+                        <span key={`ellipsis-${idx}`} className="px-1.5 text-xs text-text-tertiary select-none">
+                          …
+                        </span>
+                      )
+                    }
+                    const isCurrent = pageNum === safeCurrentPage
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => handlePageChange(pageNum)}
+                        aria-current={isCurrent ? 'page' : undefined}
+                        className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                          isCurrent
+                            ? 'bg-accent text-accent-text shadow-xs'
+                            : 'border border-border-default bg-surface-base text-text-secondary hover:border-accent hover:text-text-primary'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
                 </div>
 
-                {/* Content */}
-                <div className="p-4 space-y-3">
-                  <div>
-                    <div className="space-y-0.5">
-                      {listing.offers.map((offer, index) => (
-                        <p
-                          key={offer.type}
-                          className={index === 0
-                            ? 'text-xl font-bold tracking-tight text-accent tabular-nums'
-                            : 'text-sm font-semibold tracking-tight text-text-secondary tabular-nums'}
-                        >
-                          {listing.offers.length > 1 && (
-                            <span className="mr-1 text-xs font-medium uppercase tracking-wider text-text-tertiary">
-                              {offer.type === 'venda' ? 'Venda' : 'Locação'}
-                            </span>
-                          )}
-                          {formatPrice(offer.price, offer.type)}
-                        </p>
-                      ))}
-                    </div>
-                    <h2 className="mt-1 text-sm font-semibold text-text-primary leading-snug line-clamp-2">
-                      {listing.title}
-                    </h2>
-                    <div className="mt-1 flex items-center gap-1 text-xs text-text-tertiary">
-                      <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-                      <span className="truncate">{listing.neighborhood}, {listing.city}</span>
-                    </div>
-                  </div>
-
-                  {/* Specs row */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border-subtle pt-3 text-xs text-text-secondary">
-                    {listing.bedrooms > 0 && (
-                      <span className="flex items-center gap-1">
-                        <BedDouble className="h-3.5 w-3.5" aria-hidden="true" />
-                        {listing.bedrooms} {listing.bedrooms === 1 ? 'quarto' : 'quartos'}
-                      </span>
-                    )}
-                    {listing.bathrooms > 0 && (
-                      <span className="flex items-center gap-1">
-                        <Bath className="h-3.5 w-3.5" aria-hidden="true" />
-                        {listing.bathrooms} {listing.bathrooms === 1 ? 'banheiro' : 'banheiros'}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <Maximize className="h-3.5 w-3.5" aria-hidden="true" />
-                      {listing.area} m²
-                    </span>
-                    {listing.parking > 0 && (
-                      <span className="flex items-center gap-1">
-                        <Car className="h-3.5 w-3.5" aria-hidden="true" />
-                        {listing.parking} {listing.parking === 1 ? 'vaga' : 'vagas'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </article>
-            </Link>
-          ))}
+                {/* Next page button */}
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(safeCurrentPage + 1)}
+                  disabled={safeCurrentPage === totalPages}
+                  className="inline-flex h-9 items-center gap-1 rounded-md border border-border-default bg-surface-base px-3 text-xs font-medium text-text-secondary transition-colors hover:border-accent hover:text-text-primary disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  aria-label="Ir para a próxima página"
+                >
+                  <span className="hidden sm:inline">Próxima</span>
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+            </nav>
+          )}
         </div>
       ) : (
         /* Empty state */
@@ -313,8 +469,8 @@ export function ListingResults({
           </p>
           <button
             type="button"
-            onClick={clearFilters}
-            className="mt-6 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-accent-text transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={handleFilterReset}
+            className="mt-6 rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-accent-text transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
           >
             Limpar todos os filtros
           </button>
