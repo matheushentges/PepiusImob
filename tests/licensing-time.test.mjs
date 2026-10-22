@@ -20,6 +20,9 @@ test('formatRemainingTime formats days and hours accurately', () => {
 
   const oneDayOneHourMs = (1 * 24 + 1) * 60 * 60 * 1000
   assert.equal(formatRemainingTime(oneDayOneHourMs, futureDate), '1 dia e 1 hora')
+
+  const fortyNineDaysSixHoursMs = (49 * 24 + 6) * 60 * 60 * 1000
+  assert.equal(formatRemainingTime(fortyNineDaysSixHoursMs, '2026-12-10T23:59:59.999Z'), '49 dias e 6 horas')
 })
 
 test('formatRemainingTime formats hours and minutes when less than a day', () => {

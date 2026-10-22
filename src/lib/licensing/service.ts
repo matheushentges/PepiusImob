@@ -13,6 +13,7 @@ import {
   type LicenseStatus,
   type SignedLicenseLease,
 } from './domain'
+import { controlPlaneEnabled, createControlPlaneClient } from './control-plane'
 
 export interface LicenseStatusDetails {
   active: boolean
@@ -224,16 +225,58 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
     const expiresAt = data.expires_at
     const issuedAt = data.issued_at
     const lastHeartbeatAt = data.last_heartbeat_at
-    const contractPaidThrough = (data.contract_paid_through as string | null) ?? null
+    let contractPaidThrough = (data.contract_paid_through as string | null) ?? null
     const now = Date.now()
-    const expiresAtMs = expiresAt ? Date.parse(expiresAt) : null
-    const remainingMs = expiresAtMs ? Math.max(0, expiresAtMs - now) : 0
-    const totalMinutes = Math.floor(remainingMs / (60 * 1000))
+
+    if (!contractPaidThrough && installationId && controlPlaneEnabled()) {
+      try {
+        const cp = createControlPlaneClient()
+        const { data: inst } = await cp
+          .from('license_installations')
+          .select('license_id')
+          .eq('id', installationId)
+          .maybeSingle()
+        if (inst?.license_id) {
+          const { data: acc } = await cp
+            .from('license_accounts')
+            .select('paid_through')
+            .eq('id', inst.license_id)
+            .maybeSingle()
+          if (acc?.paid_through) {
+            contractPaidThrough = acc.paid_through
+            await admin
+              .from('local_license_state')
+              .update({ contract_paid_through: contractPaidThrough })
+              .eq('id', 1)
+          }
+        }
+      } catch {
+        // Fallback silencioso
+      }
+    }
+
+    const contractExpiresAt = contractPaidThrough ? `${contractPaidThrough}T23:59:59.999Z` : null
+    const contractExpiresAtMs = contractExpiresAt ? Date.parse(contractExpiresAt) : null
+    const tokenExpiresAtMs = expiresAt ? Date.parse(expiresAt) : null
+
+    const effectiveRemainingMs = contractExpiresAtMs
+      ? Math.max(0, contractExpiresAtMs - now)
+      : (tokenExpiresAtMs ? Math.max(0, tokenExpiresAtMs - now) : 0)
+
+    const totalMinutes = Math.floor(effectiveRemainingMs / (60 * 1000))
     const remainingDays = Math.floor(totalMinutes / (24 * 60))
     const remainingHours = Math.floor((totalMinutes % (24 * 60)) / 60)
     const remainingMinutes = totalMinutes % 60
-    const remainingFormatted = formatRemainingTime(remainingMs, expiresAt)
-    const validityPercentage = Math.min(100, Math.max(0, Math.round((remainingMs / MAX_LEASE_AGE_MS) * 100)))
+    const remainingFormatted = formatRemainingTime(effectiveRemainingMs, contractExpiresAt || expiresAt)
+
+    let validityPercentage = 100
+    if (contractExpiresAtMs && issuedAt) {
+      const issuedAtMs = Date.parse(issuedAt)
+      const totalContractMs = Math.max(1, contractExpiresAtMs - issuedAtMs)
+      validityPercentage = Math.min(100, Math.max(0, Math.round((effectiveRemainingMs / totalContractMs) * 100)))
+    } else if (tokenExpiresAtMs) {
+      validityPercentage = Math.min(100, Math.max(0, Math.round((effectiveRemainingMs / MAX_LEASE_AGE_MS) * 100)))
+    }
 
     const lease = data.signed_lease as unknown as SignedLicenseLease | null
     if (!installationId || !lease) {
@@ -266,10 +309,10 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
         lastHeartbeatAt,
         contractPaidThrough,
         features: [],
-        remainingMs,
-        remainingDays,
-        remainingHours,
-        remainingMinutes,
+        remainingMs: 0,
+        remainingDays: 0,
+        remainingHours: 0,
+        remainingMinutes: 0,
         remainingFormatted: 'Suspensa comercialmente',
         validityPercentage: 0,
         isDevBypass: false,
@@ -287,7 +330,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
       lastHeartbeatAt,
       contractPaidThrough,
       features: active ? lease.features : [],
-      remainingMs,
+      remainingMs: effectiveRemainingMs,
       remainingDays,
       remainingHours,
       remainingMinutes,
@@ -466,6 +509,11 @@ export async function syncLicenseHeartbeat(): Promise<{
 
   const admin = createAdminClient()
   const checkedAt = new Date().toISOString()
+  const leaseWithCredentials = {
+    ...lease,
+    _local_credentials: installation,
+  }
+
   const { error: dbError } = await admin.from('local_license_state').upsert({
     id: 1,
     installation_id: installation.installationId,
@@ -473,7 +521,7 @@ export async function syncLicenseHeartbeat(): Promise<{
     features: lease.features,
     issued_at: lease.issuedAt,
     expires_at: lease.expiresAt,
-    signed_lease: lease,
+    signed_lease: leaseWithCredentials,
     last_heartbeat_at: checkedAt,
     updated_at: checkedAt,
     ...(result.paidThrough ? { contract_paid_through: result.paidThrough } : {}),

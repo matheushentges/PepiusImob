@@ -277,24 +277,36 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Tempo Restante
+                  Tempo Restante da Licença
                 </p>
                 <p className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {details.remainingFormatted}
                 </p>
               </div>
-              {details.expiresAt && (
+              {details.contractPaidThrough ? (
                 <div className="text-right">
-                  <span className="text-xs text-muted-foreground">Ciclo atual de validação:</span>
+                  <span className="text-xs text-muted-foreground">Vigência contratada:</span>
+                  <p className="text-sm font-semibold text-foreground">
+                    Até {new Intl.DateTimeFormat('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      timeZone: 'UTC',
+                    }).format(new Date(`${details.contractPaidThrough}T00:00:00.000Z`))}
+                  </p>
+                </div>
+              ) : details.expiresAt ? (
+                <div className="text-right">
+                  <span className="text-xs text-muted-foreground">Ciclo de validação:</span>
                   <p className="text-sm font-semibold tabular-nums text-foreground">
                     {details.validityPercentage}% restante
                   </p>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Barra de Progresso Visual */}
-            {details.expiresAt && (
+            {(details.contractPaidThrough || details.expiresAt) && (
               <div className="space-y-1.5">
                 <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
                   <div
@@ -302,25 +314,18 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
                     style={{ width: `${details.validityPercentage}%` }}
                   />
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  O sistema renova a validade automaticamente.
-                </p>
+                <div className="flex flex-wrap items-center justify-between text-[11px] text-muted-foreground">
+                  <span>O sistema renova a validade automaticamente via rede.</span>
+                  <span className="tabular-nums">{details.validityPercentage}% restante do período</span>
+                </div>
               </div>
             )}
 
             {/* Metadados Técnicos da Instalação */}
             <div className="mt-6 grid gap-4 rounded-lg bg-secondary/40 p-4 text-xs sm:grid-cols-2">
-              <div>
-                <span className="text-muted-foreground">Data de Expiração do Token:</span>
-                <p className="mt-0.5 font-medium text-foreground">{formatDate(details.expiresAt)}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Última Sincronização:</span>
-                <p className="mt-0.5 font-medium text-foreground">{formatDate(details.lastHeartbeatAt)}</p>
-              </div>
               {details.contractPaidThrough && (
-                <div className="sm:col-span-2">
-                  <span className="text-muted-foreground">Contrato vigente até:</span>
+                <div>
+                  <span className="text-muted-foreground">Vigência Contratual:</span>
                   <p className="mt-0.5 font-semibold text-foreground">
                     {new Intl.DateTimeFormat('pt-BR', {
                       day: '2-digit',
@@ -331,6 +336,16 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
                   </p>
                 </div>
               )}
+              <div>
+                <span className="text-muted-foreground">Validação Offline Local (Token):</span>
+                <p className="mt-0.5 font-medium text-foreground">
+                  {formatDate(details.expiresAt)}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Última Sincronização:</span>
+                <p className="mt-0.5 font-medium text-foreground">{formatDate(details.lastHeartbeatAt)}</p>
+              </div>
               <div className="sm:col-span-2">
                 <span className="text-muted-foreground">ID da Instalação:</span>
                 <div className="mt-0.5 flex flex-wrap items-center gap-2">
