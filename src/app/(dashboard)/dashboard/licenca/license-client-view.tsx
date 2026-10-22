@@ -311,13 +311,26 @@ export function LicenseClientView({ initialDetails, userRole }: LicenseClientVie
             {/* Metadados Técnicos da Instalação */}
             <div className="mt-6 grid gap-4 rounded-lg bg-secondary/40 p-4 text-xs sm:grid-cols-2">
               <div>
-                <span className="text-muted-foreground">Data de Expiração:</span>
+                <span className="text-muted-foreground">Data de Expiração do Token:</span>
                 <p className="mt-0.5 font-medium text-foreground">{formatDate(details.expiresAt)}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Última Sincronização:</span>
                 <p className="mt-0.5 font-medium text-foreground">{formatDate(details.lastHeartbeatAt)}</p>
               </div>
+              {details.contractPaidThrough && (
+                <div className="sm:col-span-2">
+                  <span className="text-muted-foreground">Contrato vigente até:</span>
+                  <p className="mt-0.5 font-semibold text-foreground">
+                    {new Intl.DateTimeFormat('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      timeZone: 'UTC',
+                    }).format(new Date(`${details.contractPaidThrough}T00:00:00.000Z`))}
+                  </p>
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <span className="text-muted-foreground">ID da Instalação:</span>
                 <div className="mt-0.5 flex flex-wrap items-center gap-2">

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       account.features,
     )
     return NextResponse.json(
-      { signedLease: lease },
+      { signedLease: lease, paidThrough: account.paid_through },
       { headers: { 'Cache-Control': 'no-store' } },
     )
   } catch (error) {

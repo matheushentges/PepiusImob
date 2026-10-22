@@ -21,6 +21,7 @@ export interface LicenseStatusDetails {
   issuedAt: string | null
   expiresAt: string | null
   lastHeartbeatAt: string | null
+  contractPaidThrough: string | null
   features: string[]
   remainingMs: number
   remainingDays: number
@@ -179,6 +180,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
       issuedAt: new Date().toISOString(),
       expiresAt: null,
       lastHeartbeatAt: new Date().toISOString(),
+      contractPaidThrough: null,
       features: ['public-listing', 'properties', 'leads'],
       remainingMs: MAX_LEASE_AGE_MS,
       remainingDays: 7,
@@ -194,7 +196,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
     const admin = createAdminClient()
     const { data, error } = await admin
       .from('local_license_state')
-      .select('installation_id, status, features, issued_at, expires_at, signed_lease, last_heartbeat_at')
+      .select('installation_id, status, features, issued_at, expires_at, signed_lease, last_heartbeat_at, contract_paid_through')
       .eq('id', 1)
       .maybeSingle()
 
@@ -206,6 +208,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
         issuedAt: null,
         expiresAt: null,
         lastHeartbeatAt: null,
+        contractPaidThrough: null,
         features: [],
         remainingMs: 0,
         remainingDays: 0,
@@ -221,6 +224,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
     const expiresAt = data.expires_at
     const issuedAt = data.issued_at
     const lastHeartbeatAt = data.last_heartbeat_at
+    const contractPaidThrough = (data.contract_paid_through as string | null) ?? null
     const now = Date.now()
     const expiresAtMs = expiresAt ? Date.parse(expiresAt) : null
     const remainingMs = expiresAtMs ? Math.max(0, expiresAtMs - now) : 0
@@ -240,6 +244,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
         issuedAt: null,
         expiresAt: null,
         lastHeartbeatAt: null,
+        contractPaidThrough: null,
         features: [],
         remainingMs: 0,
         remainingDays: 0,
@@ -259,6 +264,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
         issuedAt,
         expiresAt,
         lastHeartbeatAt,
+        contractPaidThrough,
         features: [],
         remainingMs,
         remainingDays,
@@ -279,6 +285,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
       issuedAt,
       expiresAt,
       lastHeartbeatAt,
+      contractPaidThrough,
       features: active ? lease.features : [],
       remainingMs,
       remainingDays,
@@ -296,6 +303,7 @@ export async function getLicenseStatusDetails(): Promise<LicenseStatusDetails> {
       issuedAt: null,
       expiresAt: null,
       lastHeartbeatAt: null,
+      contractPaidThrough: null,
       features: [],
       remainingMs: 0,
       remainingDays: 0,
@@ -382,6 +390,7 @@ export async function activateWithCode(rawCode: string): Promise<{
     signed_lease: leaseWithCredentials,
     last_heartbeat_at: now,
     updated_at: now,
+    ...(result.paidThrough ? { contract_paid_through: result.paidThrough } : {}),
   })
 
   if (dbError) {
@@ -467,6 +476,7 @@ export async function syncLicenseHeartbeat(): Promise<{
     signed_lease: lease,
     last_heartbeat_at: checkedAt,
     updated_at: checkedAt,
+    ...(result.paidThrough ? { contract_paid_through: result.paidThrough } : {}),
   })
 
   if (dbError) {

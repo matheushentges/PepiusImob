@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     const status = resolvedLicenseStatus(account)
     const lease = signedLease(installationId, status, account.features)
     return NextResponse.json(
-      { installationId, signedLease: lease },
+      { installationId, signedLease: lease, paidThrough: account.paid_through },
       { headers: { 'Cache-Control': 'no-store' } },
     )
   } catch (error) {
