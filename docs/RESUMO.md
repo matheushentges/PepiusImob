@@ -35,6 +35,8 @@ A auditoria do que falta para o MVP está em [[REVISAO_MODULO_INICIAL]]. As lacu
 
 A migration `20261022000001_property_featured.sql` foi validada com `npx supabase db push --dry-run` e aplicada ao Supabase Cloud de avaliação em 22/10, após backup/export das tabelas em `.local` (ignorado pelo Git). A coluna `featured` foi conferida por consulta.
 
+A migration `20261022000002_cleanup_legacy_schema.sql` foi criada e aplicada em 22/10 após backup completo em `.local/backup-20261022-cleanup/`. Ela removeu fisicamente as 4 tabelas legadas órfãs de Inbox/IA (`messages`, `conversations`, `channels`, `ai_training_data`, todas com 0 registros) e eliminou as colunas legadas de SaaS de `tenants` (`subdomain`, `custom_domain`, `domain_verified`). O banco `PepiusImob` contém agora unicamente as 7 tabelas necessárias ao produto on-premise: `properties`, `profiles`, `tenants`, `local_license_state`, `leads`, `property_images` e `public_lead_rate_limits`. A pasta `license-control-plane` foi movida para o repositório dedicado do portal.
+
 ## Ainda necessário antes de produção
 
 - Rodar todas as migrations em Supabase self-hosted limpa e validar grants/policies com anon, dois tenants, usuários e service-role.
