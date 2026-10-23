@@ -3,7 +3,7 @@
 -- Date: 2026-10-23
 
 CREATE TABLE IF NOT EXISTS public.calendar_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   enabled BOOLEAN NOT NULL DEFAULT false,
   
