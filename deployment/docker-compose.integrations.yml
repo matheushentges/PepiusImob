@@ -5,19 +5,17 @@ services:
     restart: unless-stopped
     init: true
     environment:
-      - N8N_HOST=${N8N_DOMAIN:-n8n.localhost}
+      - N8N_HOST=${N8N_HOST:-157.151.10.201}
       - N8N_PORT=5678
-      - N8N_PROTOCOL=https
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
       - NODE_ENV=production
-      - WEBHOOK_URL=https://${N8N_DOMAIN:-n8n.localhost}/
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://157.151.10.201:5678/}
       - GENERIC_TIMEZONE=America/Sao_Paulo
       - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
     volumes:
       - n8n-data:/home/node/.n8n
-    networks:
-      - app-private
-    expose:
-      - "5678"
+    ports:
+      - "5678:5678"
 
   evolution-api:
     image: atendai/evolution-api:v2.1.2
@@ -25,21 +23,14 @@ services:
     restart: unless-stopped
     init: true
     environment:
-      - SERVER_URL=https://${EVOLUTION_DOMAIN:-evolution.localhost}
-      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-pepius_secret_key_change_me}
+      - SERVER_URL=${SERVER_URL:-http://157.151.10.201:8080}
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-pepius_secret_token_2026}
       - DATABASE_ENABLED=false
       - DEL_INSTANCE=false
     volumes:
       - evolution-instances:/evolution/instances
-    networks:
-      - app-private
-    expose:
-      - "8080"
-
-networks:
-  app-private:
-    external: true
-    name: deployment_app-private
+    ports:
+      - "8080:8080"
 
 volumes:
   n8n-data:
