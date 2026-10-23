@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Users, Phone, Mail, Clock, X, Loader2, Search } from 'lucide-react'
+import { Users, Phone, Mail, Clock, X, Loader2, Search, CalendarDays, ExternalLink } from 'lucide-react'
 
 export interface AgencyLead {
   id: string
@@ -23,6 +23,17 @@ export interface AgencyLead {
   horarioPreferido: string | null
   status: string
   createdAt: string
+  visitStartsAt?: string | null
+  visitEndsAt?: string | null
+  googleEventId?: string | null
+  googleEventLink?: string | null
+}
+
+function formatVisitTime(startsAt: string) {
+  const start = new Date(startsAt)
+  const dateStr = start.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  const timeStr = start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return `${dateStr} às ${timeStr}`
 }
 
 const statusLabels: Record<string, string> = {
@@ -229,6 +240,13 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
                 {statusBadge(lead.status)}
               </div>
 
+              {lead.visitStartsAt && (
+                <div className="flex items-center gap-1.5 rounded-md border border-accent/20 bg-accent/10 px-2.5 py-1.5 text-xs font-semibold text-accent">
+                  <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                  <span>Visita: {formatVisitTime(lead.visitStartsAt)}</span>
+                </div>
+              )}
+
               {lead.propertyTitle && (
                 <div className="rounded bg-secondary/50 px-2.5 py-1.5 text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">Interesse: </span>
@@ -330,7 +348,15 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
                       <p className="truncate text-sm font-medium text-foreground">
                         {lead.nome}
                       </p>
-                      {lead.mensagem && (
+                      {lead.visitStartsAt && (
+                        <div className="mt-1">
+                          <span className="inline-flex items-center gap-1 rounded bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent">
+                            <CalendarDays className="h-3 w-3 shrink-0" />
+                            Visita: {formatVisitTime(lead.visitStartsAt)}
+                          </span>
+                        </div>
+                      )}
+                      {lead.mensagem && !lead.visitStartsAt && (
                         <p className="truncate text-xs text-muted-foreground max-w-[200px]">
                           {lead.mensagem}
                         </p>
@@ -427,13 +453,65 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
             <div className="space-y-5 px-4 sm:px-5 py-5">
               <div className="flex flex-wrap items-center gap-2">
                 {statusBadge(selected.status)}
-                {selected.horarioPreferido && (
+                {selected.visitStartsAt ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
+                    <CalendarDays className="h-3 w-3" />
+                    Visita: {formatVisitTime(selected.visitStartsAt)}
+                  </span>
+                ) : selected.horarioPreferido ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     Melhor horário: {preferenceLabels[selected.horarioPreferido] || selected.horarioPreferido}
                   </span>
-                )}
+                ) : null}
               </div>
+
+              {selected.visitStartsAt && (
+                <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 text-xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 font-semibold text-accent">
+                      <CalendarDays className="h-4 w-4" />
+                      Visita Presencial Agendada
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {new Date(selected.visitStartsAt).toLocaleDateString('pt-BR', {
+                        weekday: 'short',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>Horário da visita:</span>
+                    <span className="font-medium text-foreground">
+                      {new Date(selected.visitStartsAt).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      {selected.visitEndsAt &&
+                        ` às ${new Date(selected.visitEndsAt).toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}`}
+                    </span>
+                  </div>
+                  {selected.googleEventLink && (
+                    <div className="pt-1 border-t border-accent/20">
+                      <a
+                        href={selected.googleEventLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-accent hover:underline font-medium"
+                      >
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        <span>Abrir compromisso no Google Agenda</span>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <dl className="space-y-3 text-sm">
                 <div>

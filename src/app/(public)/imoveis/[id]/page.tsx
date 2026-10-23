@@ -43,7 +43,12 @@ export default async function ListingDetailPage({ params }: Props) {
 
   return (
     <div style={{ '--primary': siteConfig.primaryColor, '--accent': siteConfig.accentColor } as CSSProperties}>
-      <ListingDetailClient listing={listing} images={images} agencyName={siteConfig.agencyName} />
+      <ListingDetailClient
+        listing={listing}
+        images={images}
+        agencyName={siteConfig.agencyName}
+        agencyPhone={siteConfig.whatsapp || siteConfig.telefone}
+      />
     </div>
   )
 }

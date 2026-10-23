@@ -8,15 +8,21 @@ import { formatPrice, listingPurposeLabel } from '@/lib/listings-data'
 import { ImageCarousel } from '@/components/listing/image-carousel'
 import { GalleryDialog } from '@/components/listing/gallery-dialog'
 import { ListingSpecs } from '@/components/listing/listing-specs'
-import { ContactForm } from '@/components/listing/contact-form'
+import { VisitSchedulerWidget } from '@/components/listing/visit-scheduler-widget'
 
 interface ListingDetailClientProps {
   listing: Listing
   images: string[]
   agencyName: string
+  agencyPhone?: string
 }
 
-export function ListingDetailClient({ listing, images, agencyName }: ListingDetailClientProps) {
+export function ListingDetailClient({
+  listing,
+  images,
+  agencyName,
+  agencyPhone,
+}: ListingDetailClientProps) {
   const [galleryOpen, setGalleryOpen] = useState(false)
 
   return (
@@ -104,7 +110,13 @@ export function ListingDetailClient({ listing, images, agencyName }: ListingDeta
 
           {/* Right column — sticky sidebar */}
           <aside className="lg:sticky lg:top-24 lg:self-start space-y-6">
-            <ContactForm listingId={listing.id} listingTitle={listing.title} />
+            <VisitSchedulerWidget
+              listingId={listing.id}
+              listingTitle={listing.title}
+              listingCode={listing.id}
+              agencyPhone={agencyPhone}
+              agencyName={agencyName}
+            />
 
             {/* Quick info card */}
             <div className="rounded-lg border border-border-subtle bg-surface-raised p-5">
