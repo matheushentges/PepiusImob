@@ -17,6 +17,10 @@ type LeadQueryRow = {
   horario_preferido: string | null
   status: string
   created_at: string
+  visit_starts_at: string | null
+  visit_ends_at: string | null
+  google_event_id: string | null
+  google_event_link: string | null
   properties: PropertyRelation
 }
 
@@ -37,7 +41,7 @@ export default async function LeadsPage() {
     : { data: null }
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('id, property_id, nome, email, telefone, mensagem, horario_preferido, status, created_at, properties(titulo)')
+    .select('id, property_id, nome, email, telefone, mensagem, horario_preferido, status, created_at, visit_starts_at, visit_ends_at, google_event_id, google_event_link, properties(titulo)')
     .eq('tenant_id', profile?.tenant_id ?? '00000000-0000-0000-0000-000000000000')
     .order('created_at', { ascending: false })
 
@@ -56,6 +60,10 @@ export default async function LeadsPage() {
     horarioPreferido: lead.horario_preferido,
     status: lead.status,
     createdAt: lead.created_at,
+    visitStartsAt: lead.visit_starts_at,
+    visitEndsAt: lead.visit_ends_at,
+    googleEventId: lead.google_event_id,
+    googleEventLink: lead.google_event_link,
   }))
 
   return <LeadsClient leads={rows} canEdit={license.active} />
