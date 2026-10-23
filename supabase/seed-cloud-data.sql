@@ -111,3 +111,28 @@ INSERT INTO public.profiles (
   nome = 'Administrador Pepius',
   email = 'admin@pepius-imob.com';
 
+INSERT INTO public.local_license_state (
+  id,
+  installation_id,
+  status,
+  features,
+  issued_at,
+  expires_at,
+  signed_lease,
+  last_heartbeat_at,
+  updated_at
+) VALUES (
+  1,
+  'dev-onprem-vm-2026',
+  'active',
+  ARRAY['properties', 'leads', 'public-listing', 'calendar'],
+  NOW(),
+  NOW() + INTERVAL '10 years',
+  '{"status": "active", "features": ["properties", "leads", "public-listing", "calendar"]}',
+  NOW(),
+  NOW()
+) ON CONFLICT (id) DO UPDATE SET
+  status = 'active',
+  features = ARRAY['properties', 'leads', 'public-listing', 'calendar'],
+  expires_at = NOW() + INTERVAL '10 years';
+

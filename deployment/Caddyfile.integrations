@@ -2,6 +2,24 @@
 	email {$ACME_EMAIL:matheus@pepius.com}
 }
 
+{$APP_DOMAIN:imob.157.151.10.201.sslip.io} {
+	encode zstd gzip
+	reverse_proxy pepius-app:3000 {
+		header_up X-Real-IP {remote_host}
+		header_up Upgrade {http.upgrade}
+		header_up Connection {http.connection}
+	}
+}
+
+{$SUPABASE_DOMAIN:api.imob.157.151.10.201.sslip.io} {
+	encode zstd gzip
+	reverse_proxy supabase-envoy:8000 {
+		header_up X-Real-IP {remote_host}
+		header_up Upgrade {http.upgrade}
+		header_up Connection {http.connection}
+	}
+}
+
 {$N8N_DOMAIN:n8n.157.151.10.201.sslip.io} {
 	encode zstd gzip
 	reverse_proxy n8n:5678 {

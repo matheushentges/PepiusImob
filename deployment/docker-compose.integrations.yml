@@ -10,9 +10,47 @@ services:
       - ./Caddyfile.integrations:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
+    networks:
+      - default
+      - supabase
     depends_on:
+      - pepius-app
       - n8n
       - evolution-api
+
+  pepius-app:
+    image: pepius-imob:latest
+    container_name: pepius-app
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-https://api.imob.157.151.10.201.sslip.io}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://imob.157.151.10.201.sslip.io}
+    restart: unless-stopped
+    init: true
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://imob.157.151.10.201.sslip.io}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-https://api.imob.157.151.10.201.sslip.io}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE}
+      - SUPABASE_INTERNAL_URL=http://supabase-envoy:8000
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q}
+      - PEPIUS_TENANT_ID=${PEPIUS_TENANT_ID:-64377038-0f9c-40fa-bdac-cd928924f624}
+      - LEAD_RATE_LIMIT_PEPPER=${LEAD_RATE_LIMIT_PEPPER:-pepius_secret_pepper_rate_limit_2026_super_secure}
+      - LICENSE_DEV_BYPASS=true
+      - LICENSE_CONTROL_PLANE_ENABLED=false
+      - EVOLUTION_API_URL=http://evolution-api:8080
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY:-pepius_secret_token_2026}
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook
+    expose:
+      - "3000"
+    networks:
+      - default
+      - supabase
 
   n8n:
     image: n8nio/n8n:latest
@@ -31,6 +69,8 @@ services:
       - n8n-data:/home/node/.n8n
     expose:
       - "5678"
+    networks:
+      - default
 
   postgres-evolution:
     image: postgres:16-alpine
@@ -42,6 +82,8 @@ services:
       POSTGRES_DB: evolution
     volumes:
       - postgres-evo-data:/var/lib/postgresql/data
+    networks:
+      - default
 
   evolution-api:
     image: evoapicloud/evolution-api:latest
@@ -62,6 +104,15 @@ services:
       - "8080"
     depends_on:
       - postgres-evolution
+    networks:
+      - default
+
+networks:
+  default:
+    name: deployment_default
+  supabase:
+    external: true
+    name: supabase_default
 
 volumes:
   n8n-data:
@@ -69,3 +120,4 @@ volumes:
   postgres-evo-data:
   caddy-data:
   caddy-config:
+
