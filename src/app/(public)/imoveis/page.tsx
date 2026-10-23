@@ -1,11 +1,8 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import type { CSSProperties } from 'react'
 import type { Metadata } from 'next'
 import { ListingResults } from './listing-results'
 import { getPublicListings, getPublicSiteConfig } from '@/lib/public-listings'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
-import { ThemeToggle } from '@/components/theme-toggle'
 
 export const dynamic = 'force-dynamic'
 

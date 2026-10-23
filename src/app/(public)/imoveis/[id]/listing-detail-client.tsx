@@ -126,6 +126,12 @@ export function ListingDetailClient({ listing, images, agencyName }: ListingDeta
                   <dt className="text-text-secondary">Código</dt>
                   <dd className="font-mono text-xs text-text-tertiary">#{listing.id.padStart(4, '0')}</dd>
                 </div>
+                {agencyName && (
+                  <div className="flex justify-between border-t border-border-subtle pt-2">
+                    <dt className="text-text-secondary">Anunciante</dt>
+                    <dd className="font-medium text-text-primary truncate max-w-[180px]">{agencyName}</dd>
+                  </div>
+                )}
               </dl>
             </div>
           </aside>

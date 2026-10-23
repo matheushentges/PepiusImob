@@ -26,10 +26,12 @@ export function PublicHeader({ siteConfig }: PublicHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
 
-  // Fecha o menu móvel ao mudar de rota
-  useEffect(() => {
+  // Fecha o menu móvel ao mudar de rota sem disparar efeito síncrono em cascata
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname)
     setMobileMenuOpen(false)
-  }, [pathname])
+  }
 
   // Fecha com a tecla Escape
   useEffect(() => {

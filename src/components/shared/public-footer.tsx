@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import {
-  Building2,
   KeyRound,
   ShieldCheck,
   Mail,
@@ -8,7 +7,6 @@ import {
   Phone,
   MessageCircle,
   Award,
-  Globe,
 } from 'lucide-react'
 import type { PublicSiteConfig } from '@/lib/public-listings'
 
