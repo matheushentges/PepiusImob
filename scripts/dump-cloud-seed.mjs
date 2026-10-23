@@ -29,20 +29,89 @@ ON CONFLICT (id) DO UPDATE SET site_config = EXCLUDED.site_config, nome = EXCLUD
   }
 
   for (const p of properties) {
-    const title = (p.title || '').replace(/'/g, "''")
-    const desc = (p.description || '').replace(/'/g, "''")
-    const addr = (p.address || '').replace(/'/g, "''")
-    const neigh = (p.neighborhood || '').replace(/'/g, "''")
-    const city = (p.city || '').replace(/'/g, "''")
-    const state = (p.state || '').replace(/'/g, "''")
-    const cep = (p.postal_code || '').replace(/'/g, "''")
-    const sale = p.sale_price !== null && p.sale_price !== undefined ? p.sale_price : 'NULL'
-    const rent = p.rent_price !== null && p.rent_price !== undefined ? p.rent_price : 'NULL'
+    const titulo = (p.titulo || '').replace(/'/g, "''")
+    const descricao = (p.descricao || '').replace(/'/g, "''")
+    const endereco = (p.endereco || '').replace(/'/g, "''")
+    const bairro = (p.bairro || '').replace(/'/g, "''")
+    const cidade = (p.cidade || '').replace(/'/g, "''")
+    const estado = (p.estado || '').replace(/'/g, "''")
+    const cep = (p.cep || '').replace(/'/g, "''")
+    const sale = p.preco_venda !== null && p.preco_venda !== undefined ? p.preco_venda : 'NULL'
+    const rent = p.preco_locacao !== null && p.preco_locacao !== undefined ? p.preco_locacao : 'NULL'
+    const carac = JSON.stringify(p.caracteristicas || []).replace(/'/g, "''")
 
-    sql += `INSERT INTO public.properties (id, tenant_id, title, description, category, purpose, sale_price, rent_price, status, bedrooms, bathrooms, suites, parking_spots, total_area, private_area, address, neighborhood, city, state, postal_code, featured)
-VALUES ('${p.id}', '${p.tenant_id}', '${title}', '${desc}', '${p.category}', '${p.purpose}', ${sale}, ${rent}, '${p.status}', ${p.bedrooms || 0}, ${p.bathrooms || 0}, ${p.suites || 0}, ${p.parking_spots || 0}, ${p.total_area || 0}, ${p.private_area || 0}, '${addr}', '${neigh}', '${city}', '${state}', '${cep}', ${p.featured ? 'true' : 'false'})
-ON CONFLICT (id) DO NOTHING;\n\n`
+    sql += `INSERT INTO public.properties (id, tenant_id, titulo, descricao, tipo, finalidade, preco_venda, preco_locacao, status, quartos, banheiros, suites, vagas_garagem, area_total, area_construida, endereco, bairro, cidade, estado, cep, caracteristicas, featured)
+VALUES ('${p.id}', '${p.tenant_id}', '${titulo}', '${descricao}', '${p.tipo}', '${p.finalidade}', ${sale}, ${rent}, '${p.status}', ${p.quartos || 0}, ${p.banheiros || 0}, ${p.suites || 0}, ${p.vagas_garagem || 0}, ${p.area_total || 0}, ${p.area_construida || 0}, '${endereco}', '${bairro}', '${cidade}', '${estado}', '${cep}', '${carac}', ${p.featured ? 'true' : 'false'})
+ON CONFLICT (id) DO UPDATE SET titulo = EXCLUDED.titulo, preco_venda = EXCLUDED.preco_venda, preco_locacao = EXCLUDED.preco_locacao;\n\n`
   }
+
+  // Admin user seed
+  sql += `-- Usuário administrador padrão para testes e acesso ao painel
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+INSERT INTO auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  'ae6aab68-eca5-4333-afe6-aa7e18999029',
+  'authenticated',
+  'authenticated',
+  'admin@pepius-imob.com',
+  crypt('admin123456', gen_salt('bf')),
+  NOW(),
+  '{"provider": "email", "providers": ["email"]}',
+  '{"nome": "Administrador Pepius"}',
+  NOW(),
+  NOW()
+) ON CONFLICT (id) DO UPDATE SET encrypted_password = crypt('admin123456', gen_salt('bf')), email_confirmed_at = NOW();
+
+INSERT INTO auth.identities (
+  id,
+  provider_id,
+  user_id,
+  identity_data,
+  provider,
+  last_sign_in_at,
+  created_at,
+  updated_at
+) VALUES (
+  'ae6aab68-eca5-4333-afe6-aa7e18999029',
+  'ae6aab68-eca5-4333-afe6-aa7e18999029',
+  'ae6aab68-eca5-4333-afe6-aa7e18999029',
+  jsonb_build_object('sub', 'ae6aab68-eca5-4333-afe6-aa7e18999029', 'email', 'admin@pepius-imob.com'),
+  'email',
+  NOW(),
+  NOW(),
+  NOW()
+) ON CONFLICT (provider_id, provider) DO UPDATE SET identity_data = EXCLUDED.identity_data;
+
+INSERT INTO public.profiles (
+  id,
+  tenant_id,
+  role,
+  nome,
+  email
+) VALUES (
+  'ae6aab68-eca5-4333-afe6-aa7e18999029',
+  '64377038-0f9c-40fa-bdac-cd928924f624',
+  'imobiliaria_owner',
+  'Administrador Pepius',
+  'admin@pepius-imob.com'
+) ON CONFLICT (id) DO UPDATE SET
+  tenant_id = '64377038-0f9c-40fa-bdac-cd928924f624',
+  role = 'imobiliaria_owner',
+  nome = 'Administrador Pepius',
+  email = 'admin@pepius-imob.com';\n\n`
 
   writeFileSync('supabase/seed-cloud-data.sql', sql, 'utf-8')
   console.log(`Generated supabase/seed-cloud-data.sql with ${tenants.length} tenants and ${properties.length} properties!`)
