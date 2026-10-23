@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireActiveLicense } from '@/lib/licensing/local-state'
 import { requestIp } from '@/lib/security/request-origin'
 import { bodyErrorResponse, readJsonBody } from '@/lib/security/request-body'
+import { dispatchWebhookEvent } from '@/lib/webhooks/dispatcher'
 
 const contactSchema = z.object({
   propertyId: z.string().uuid(),
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
 
     const { data: property, error: propertyError } = await admin
       .from('properties')
-      .select('id')
+      .select('id, titulo, preco_venda, preco_locacao, bairro, cidade')
       .eq('id', parsed.data.propertyId)
       .eq('tenant_id', tenantId)
       .eq('status', 'disponivel')
@@ -69,17 +70,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Telefone inválido' }, { status: 400 })
     }
 
-    const { error: insertError } = await admin.from('leads').insert({
-      tenant_id: tenantId,
-      property_id: property.id,
-      nome: parsed.data.name,
-      email: parsed.data.email || null,
-      telefone: parsed.data.phone,
-      mensagem: parsed.data.message || null,
-      horario_preferido: parsed.data.preference,
-      status: 'novo',
-    })
+    const { data: insertedLead, error: insertError } = await admin
+      .from('leads')
+      .insert({
+        tenant_id: tenantId,
+        property_id: property.id,
+        nome: parsed.data.name,
+        email: parsed.data.email || null,
+        telefone: parsed.data.phone,
+        mensagem: parsed.data.message || null,
+        horario_preferido: parsed.data.preference,
+        status: 'novo',
+      })
+      .select('id, created_at')
+      .maybeSingle()
+
     if (insertError) throw insertError
+
+    // Dispara webhook assinado de forma não-bloqueante para o n8n/automações
+    dispatchWebhookEvent('lead.created', {
+      leadId: insertedLead?.id ?? null,
+      nome: parsed.data.name,
+      telefone: parsed.data.phone,
+      email: parsed.data.email || null,
+      mensagem: parsed.data.message || null,
+      horarioPreferido: parsed.data.preference,
+      imovel: {
+        id: property.id,
+        titulo: property.titulo,
+        precoVenda: property.preco_venda,
+        precoLocacao: property.preco_locacao,
+        bairro: property.bairro,
+        cidade: property.cidade,
+      },
+      createdAt: insertedLead?.created_at ?? new Date().toISOString(),
+    }).catch(() => {})
 
     return NextResponse.json(
       { success: true },

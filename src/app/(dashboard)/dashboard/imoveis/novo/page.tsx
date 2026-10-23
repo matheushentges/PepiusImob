@@ -9,6 +9,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { ImageUpload } from '@/components/shared/image-upload'
 import { useLicenseEditable } from '@/components/licensing/license-mode-provider'
+import { formatCep, fetchAddressByCep } from '@/lib/cep/viacep'
 
 const selectClassName =
   'flex h-9 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
@@ -26,6 +27,42 @@ export default function NovoImovelPage() {
   const [error, setError] = useState<string | null>(null)
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([])
   const editable = useLicenseEditable()
+
+  // Estados controlados para preenchimento automático por CEP
+  const [cep, setCep] = useState('')
+  const [endereco, setEndereco] = useState('')
+  const [bairro, setBairro] = useState('')
+  const [cidade, setCidade] = useState('')
+  const [estado, setEstado] = useState('')
+  const [cepLoading, setCepLoading] = useState(false)
+  const [cepFeedback, setCepFeedback] = useState<string | null>(null)
+
+  async function handleCepChange(value: string) {
+    const formatted = formatCep(value)
+    setCep(formatted)
+    setCepFeedback(null)
+
+    const raw = formatted.replace(/\D/g, '')
+    if (raw.length === 8) {
+      setCepLoading(true)
+      try {
+        const address = await fetchAddressByCep(raw)
+        if (address) {
+          if (address.endereco) setEndereco(address.endereco)
+          if (address.bairro) setBairro(address.bairro)
+          if (address.cidade) setCidade(address.cidade)
+          if (address.estado) setEstado(address.estado)
+          setCepFeedback('Endereço preenchido automaticamente pelo CEP.')
+        } else {
+          setCepFeedback('CEP não encontrado. Preencha o endereço manualmente.')
+        }
+      } catch {
+        setCepFeedback('Não foi possível consultar o CEP. Preencha manualmente.')
+      } finally {
+        setCepLoading(false)
+      }
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -274,10 +311,47 @@ export default function NovoImovelPage() {
 
           {/* Seção: Localização */}
           <section className="space-y-5">
-            <h2 className="border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Localização
-            </h2>
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Localização
+              </h2>
+              {cepFeedback && (
+                <span className="text-xs font-medium text-accent">
+                  {cepFeedback}
+                </span>
+              )}
+            </div>
+
             <div className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="cep" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    CEP *
+                  </Label>
+                  {cepLoading && (
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin text-accent" />
+                      Consultando CEP...
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    id="cep"
+                    name="cep"
+                    required
+                    value={cep}
+                    onChange={(e) => handleCepChange(e.target.value)}
+                    placeholder="00000-000"
+                    maxLength={9}
+                    className="h-9 bg-input font-mono max-w-xs"
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Digite os 8 números do CEP para autopreencher rua, bairro, cidade e estado.
+                </p>
+              </div>
+
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="endereco" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Endereço *
@@ -286,6 +360,8 @@ export default function NovoImovelPage() {
                   id="endereco"
                   name="endereco"
                   required
+                  value={endereco}
+                  onChange={(e) => setEndereco(e.target.value)}
                   placeholder="Rua Exemplo, 123"
                   className="h-9 bg-input"
                 />
@@ -299,6 +375,8 @@ export default function NovoImovelPage() {
                   id="bairro"
                   name="bairro"
                   required
+                  value={bairro}
+                  onChange={(e) => setBairro(e.target.value)}
                   placeholder="Centro"
                   className="h-9 bg-input"
                 />
@@ -312,6 +390,8 @@ export default function NovoImovelPage() {
                   id="cidade"
                   name="cidade"
                   required
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
                   placeholder="São Paulo"
                   className="h-9 bg-input"
                 />
@@ -321,7 +401,14 @@ export default function NovoImovelPage() {
                 <Label htmlFor="estado" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Estado *
                 </Label>
-                <select id="estado" name="estado" required className={selectClassName}>
+                <select
+                  id="estado"
+                  name="estado"
+                  required
+                  value={estado}
+                  onChange={(e) => setEstado(e.target.value)}
+                  className={selectClassName}
+                >
                   <option value="">UF...</option>
                   <option value="SP">SP</option>
                   <option value="RJ">RJ</option>
@@ -351,20 +438,6 @@ export default function NovoImovelPage() {
                   <option value="AP">AP</option>
                   <option value="RR">RR</option>
                 </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cep" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  CEP *
-                </Label>
-                <Input
-                  id="cep"
-                  name="cep"
-                  required
-                  placeholder="00000-000"
-                  pattern="[0-9]{5}-[0-9]{3}"
-                  className="h-9 bg-input font-mono"
-                />
               </div>
             </div>
           </section>

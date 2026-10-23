@@ -9,6 +9,7 @@ import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { ImageUpload } from '@/components/shared/image-upload'
 import { useLicenseEditable } from '@/components/licensing/license-mode-provider'
+import { formatCep, fetchAddressByCep } from '@/lib/cep/viacep'
 
 interface Property {
   id: string
@@ -58,6 +59,42 @@ export default function EditarImovelPage() {
   const [uploadWarning, setUploadWarning] = useState<number | null>(null)
   const editable = useLicenseEditable()
 
+  // Estados controlados para edição e preenchimento por CEP
+  const [cep, setCep] = useState('')
+  const [endereco, setEndereco] = useState('')
+  const [bairro, setBairro] = useState('')
+  const [cidade, setCidade] = useState('')
+  const [estado, setEstado] = useState('')
+  const [cepLoading, setCepLoading] = useState(false)
+  const [cepFeedback, setCepFeedback] = useState<string | null>(null)
+
+  async function handleCepChange(value: string) {
+    const formatted = formatCep(value)
+    setCep(formatted)
+    setCepFeedback(null)
+
+    const raw = formatted.replace(/\D/g, '')
+    if (raw.length === 8) {
+      setCepLoading(true)
+      try {
+        const address = await fetchAddressByCep(raw)
+        if (address) {
+          if (address.endereco) setEndereco(address.endereco)
+          if (address.bairro) setBairro(address.bairro)
+          if (address.cidade) setCidade(address.cidade)
+          if (address.estado) setEstado(address.estado)
+          setCepFeedback('Endereço atualizado pelo CEP.')
+        } else {
+          setCepFeedback('CEP não encontrado. Preencha o endereço manualmente.')
+        }
+      } catch {
+        setCepFeedback('Não foi possível consultar o CEP. Preencha manualmente.')
+      } finally {
+        setCepLoading(false)
+      }
+    }
+  }
+
   const fetchImages = useCallback(async () => {
     try {
       const response = await fetch(`/api/dashboard/properties/${id}/images`)
@@ -76,6 +113,11 @@ export default function EditarImovelPage() {
       if (!response.ok) throw new Error('Erro ao carregar imóvel')
       const data = await response.json()
       setProperty(data)
+      if (data.cep) setCep(formatCep(data.cep))
+      if (data.endereco) setEndereco(data.endereco)
+      if (data.bairro) setBairro(data.bairro)
+      if (data.cidade) setCidade(data.cidade)
+      if (data.estado) setEstado(data.estado)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido')
     } finally {
@@ -325,23 +367,88 @@ export default function EditarImovelPage() {
 
           {/* Seção: Localização */}
           <section className="space-y-5">
-            <h2 className="border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Localização</h2>
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Localização</h2>
+              {cepFeedback && (
+                <span className="text-xs font-medium text-accent">
+                  {cepFeedback}
+                </span>
+              )}
+            </div>
             <div className="grid gap-5 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="endereco" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Endereço *</Label>
-                <Input id="endereco" name="endereco" required defaultValue={property.endereco} className="h-9 bg-input" />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="cep" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    CEP *
+                  </Label>
+                  {cepLoading && (
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin text-accent" />
+                      Consultando CEP...
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="cep"
+                  name="cep"
+                  required
+                  value={cep}
+                  onChange={(e) => handleCepChange(e.target.value)}
+                  maxLength={9}
+                  placeholder="00000-000"
+                  className="h-9 bg-input font-mono max-w-xs"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Altere o CEP para buscar e atualizar o endereço automaticamente.
+                </p>
               </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="endereco" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Endereço *</Label>
+                <Input
+                  id="endereco"
+                  name="endereco"
+                  required
+                  value={endereco}
+                  onChange={(e) => setEndereco(e.target.value)}
+                  className="h-9 bg-input"
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="bairro" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bairro *</Label>
-                <Input id="bairro" name="bairro" required defaultValue={property.bairro} className="h-9 bg-input" />
+                <Input
+                  id="bairro"
+                  name="bairro"
+                  required
+                  value={bairro}
+                  onChange={(e) => setBairro(e.target.value)}
+                  className="h-9 bg-input"
+                />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="cidade" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Cidade *</Label>
-                <Input id="cidade" name="cidade" required defaultValue={property.cidade} className="h-9 bg-input" />
+                <Input
+                  id="cidade"
+                  name="cidade"
+                  required
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
+                  className="h-9 bg-input"
+                />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="estado" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Estado *</Label>
-                <select id="estado" name="estado" required defaultValue={property.estado} className={selectClassName}>
+                <select
+                  id="estado"
+                  name="estado"
+                  required
+                  value={estado}
+                  onChange={(e) => setEstado(e.target.value)}
+                  className={selectClassName}
+                >
                   <option value="SP">SP</option><option value="RJ">RJ</option><option value="MG">MG</option>
                   <option value="RS">RS</option><option value="PR">PR</option><option value="SC">SC</option>
                   <option value="BA">BA</option><option value="GO">GO</option><option value="DF">DF</option>
@@ -352,10 +459,6 @@ export default function EditarImovelPage() {
                   <option value="PI">PI</option><option value="TO">TO</option><option value="RO">RO</option>
                   <option value="AC">AC</option><option value="AP">AP</option><option value="RR">RR</option>
                 </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cep" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">CEP *</Label>
-                <Input id="cep" name="cep" required defaultValue={property.cep} pattern="[0-9]{5}-[0-9]{3}" className="h-9 bg-input font-mono" />
               </div>
             </div>
           </section>

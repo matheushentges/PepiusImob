@@ -1,0 +1,46 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: pepius-n8n
+    restart: unless-stopped
+    init: true
+    environment:
+      - N8N_HOST=${N8N_DOMAIN:-n8n.localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://${N8N_DOMAIN:-n8n.localhost}/
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
+    volumes:
+      - n8n-data:/home/node/.n8n
+    networks:
+      - app-private
+    expose:
+      - "5678"
+
+  evolution-api:
+    image: atendai/evolution-api:v2.1.2
+    container_name: pepius-evolution
+    restart: unless-stopped
+    init: true
+    environment:
+      - SERVER_URL=https://${EVOLUTION_DOMAIN:-evolution.localhost}
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-pepius_secret_key_change_me}
+      - DATABASE_ENABLED=false
+      - DEL_INSTANCE=false
+    volumes:
+      - evolution-instances:/evolution/instances
+    networks:
+      - app-private
+    expose:
+      - "8080"
+
+networks:
+  app-private:
+    external: true
+    name: deployment_app-private
+
+volumes:
+  n8n-data:
+  evolution-instances:

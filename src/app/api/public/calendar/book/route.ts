@@ -11,6 +11,7 @@ import {
   buildEventPayload,
   createGoogleCalendarEvent,
 } from '@/lib/calendar/google-calendar'
+import { dispatchWebhookEvent } from '@/lib/webhooks/dispatcher'
 
 export async function POST(request: Request) {
   const body = await readJsonBody(request, 8192)
@@ -257,6 +258,25 @@ export async function POST(request: Request) {
       console.error('Erro ao salvar lead de visita:', insertError)
       throw insertError
     }
+
+    // Dispara webhook assinado de forma não-bloqueante para o n8n/automações
+    dispatchWebhookEvent('visit.scheduled', {
+      leadId: newLead.id,
+      nome: parsed.data.name,
+      telefone: parsed.data.phone,
+      email: parsed.data.email,
+      mensagem: parsed.data.message || null,
+      visitStartsAt,
+      visitEndsAt,
+      googleEventLink,
+      imovel: {
+        id: property.id,
+        titulo: property.titulo,
+        codigo: property.codigo,
+        bairro: property.bairro,
+        cidade: property.cidade,
+      },
+    }).catch(() => {})
 
     return NextResponse.json(
       {

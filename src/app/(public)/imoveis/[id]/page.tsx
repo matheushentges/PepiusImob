@@ -22,9 +22,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .map((offer) => formatPrice(offer.price, offer.type))
     .join(' ou ')
 
+  const images = getListingImages(listing)
+  const coverImage = images[0] || '/placeholder-property.svg'
+  const title = `${listing.title} | ${siteConfig.agencyName}`
+  const description = `${listing.category} para ${listingPurposeLabel(listing).toLowerCase()} em ${listing.neighborhood}, ${listing.city}. ${listing.area}m² por ${priceSummary}.`
+
   return {
-    title: `${listing.title} | ${siteConfig.agencyName}`,
-    description: `${listing.category} para ${listingPurposeLabel(listing).toLowerCase()} em ${listing.neighborhood}, ${listing.city}. ${listing.area}m² por ${priceSummary}.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/imoveis/${listing.id}`,
+      siteName: siteConfig.agencyName,
+      images: [
+        {
+          url: coverImage,
+          width: 1200,
+          height: 630,
+          alt: listing.title,
+        },
+      ],
+      locale: 'pt_BR',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [coverImage],
+    },
   }
 }
 

@@ -64,6 +64,7 @@ export function VisitSchedulerWidget({
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
+  const [consentGiven, setConsentGiven] = useState(false)
   const [website, setWebsite] = useState('') // Honeypot
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -162,6 +163,11 @@ export function VisitSchedulerWidget({
     e.preventDefault()
     if (!selectedSlot || !selectedDate) return
 
+    if (!consentGiven) {
+      setSubmitError('É necessário aceitar os termos de privacidade para agendar a visita.')
+      return
+    }
+
     setSubmitError(null)
     setIsSubmitting(true)
 
@@ -208,6 +214,7 @@ export function VisitSchedulerWidget({
 
   function handleReset() {
     setSelectedSlot(null)
+    setConsentGiven(false)
     setStep('pick')
     setSuccessData(null)
     setSubmitError(null)
@@ -447,7 +454,20 @@ export function VisitSchedulerWidget({
                     type="tel"
                     placeholder="(11) 98765-4321"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 11)
+                      let formatted = digits
+                      if (digits.length > 2 && digits.length <= 6) {
+                        formatted = `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+                      } else if (digits.length > 6 && digits.length <= 10) {
+                        formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+                      } else if (digits.length > 10) {
+                        formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`
+                      } else if (digits.length > 0) {
+                        formatted = `(${digits}`
+                      }
+                      setPhone(formatted)
+                    }}
                     className="h-9 text-xs"
                   />
                 </div>
@@ -482,6 +502,30 @@ export function VisitSchedulerWidget({
                     onChange={(e) => setMessage(e.target.value)}
                     className="flex w-full rounded-md border border-border-default bg-surface-raised px-3 py-2 text-xs text-text-primary shadow-xs transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                   />
+                </div>
+
+                {/* Consentimento LGPD */}
+                <div className="flex items-start gap-2 pt-1 pb-1">
+                  <input
+                    type="checkbox"
+                    id="visit-lgpd-consent"
+                    required
+                    checked={consentGiven}
+                    onChange={(e) => setConsentGiven(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border-default text-accent focus:ring-accent accent-accent cursor-pointer"
+                  />
+                  <Label htmlFor="visit-lgpd-consent" className="text-[11px] leading-tight text-text-secondary cursor-pointer">
+                    Concordo com o tratamento dos meus dados para agendamento desta visita, nos termos da{' '}
+                    <a
+                      href="/privacidade"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-accent underline hover:text-accent-hover"
+                    >
+                      Política de Privacidade
+                    </a>
+                    . <span className="text-rose-500">*</span>
+                  </Label>
                 </div>
 
                 <Button
