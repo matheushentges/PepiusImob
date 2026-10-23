@@ -6,9 +6,12 @@ set -euo pipefail
 # Suporta arquiteturas x86_64 e aarch64 (Oracle Cloud Ampere A1 ARM)
 # ==============================================================================
 
+export DEBIAN_FRONTEND=noninteractive
+
 echo "==> [1/5] Atualizando pacotes do sistema..."
-sudo apt-get update -y && sudo apt-get upgrade -y
-sudo apt-get install -y ca-certificates curl gnupg lsb-release ufw
+sudo DEBIAN_FRONTEND=noninteractive apt-get update -y
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl gnupg lsb-release ufw iptables-persistent
 
 echo "==> [2/5] Configurando 4 GB de memória Swap para estabilidade..."
 if [ ! -f /swapfile ]; then
