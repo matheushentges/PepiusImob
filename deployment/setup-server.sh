@@ -11,7 +11,7 @@ export DEBIAN_FRONTEND=noninteractive
 echo "==> [1/5] Atualizando pacotes do sistema..."
 sudo DEBIAN_FRONTEND=noninteractive apt-get update -y
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl gnupg lsb-release ufw iptables-persistent
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl gnupg lsb-release ufw
 
 echo "==> [2/5] Configurando 4 GB de memória Swap para estabilidade..."
 if [ ! -f /swapfile ]; then
