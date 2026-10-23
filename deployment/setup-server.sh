@@ -22,13 +22,21 @@ else
     echo "Swapfile já existe, pulando."
 fi
 
-echo "==> [3/5] Configurando Firewall UFW (SSH, HTTP, HTTPS)..."
+echo "==> [3/5] Configurando Firewall UFW e regras de rede da Oracle Cloud (SSH, HTTP, HTTPS)..."
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
 sudo ufw allow 22/tcp comment 'SSH'
 sudo ufw allow 80/tcp comment 'HTTP'
 sudo ufw allow 443/tcp comment 'HTTPS'
 sudo ufw --force enable
+
+# Regras explícitas de iptables necessárias nas imagens Ubuntu da Oracle Cloud
+sudo iptables -I INPUT 1 -p tcp --dport 22 -j ACCEPT || true
+sudo iptables -I INPUT 1 -p tcp --dport 80 -j ACCEPT || true
+sudo iptables -I INPUT 1 -p tcp --dport 443 -j ACCEPT || true
+if command -v netfilter-persistent >/dev/null 2>&1; then
+    sudo netfilter-persistent save || true
+fi
 
 echo "==> [4/5] Instalando Docker Engine e Docker Compose oficial..."
 sudo install -m 0755 -d /etc/apt/keyrings
