@@ -40,8 +40,8 @@ ON CONFLICT (id) DO UPDATE SET site_config = EXCLUDED.site_config, nome = EXCLUD
     const rent = p.preco_locacao !== null && p.preco_locacao !== undefined ? p.preco_locacao : 'NULL'
     const carac = JSON.stringify(p.caracteristicas || []).replace(/'/g, "''")
 
-    sql += `INSERT INTO public.properties (id, tenant_id, titulo, descricao, tipo, finalidade, preco_venda, preco_locacao, status, quartos, banheiros, suites, vagas_garagem, area_total, area_construida, endereco, bairro, cidade, estado, cep, caracteristicas, featured)
-VALUES ('${p.id}', '${p.tenant_id}', '${titulo}', '${descricao}', '${p.tipo}', '${p.finalidade}', ${sale}, ${rent}, '${p.status}', ${p.quartos || 0}, ${p.banheiros || 0}, ${p.suites || 0}, ${p.vagas_garagem || 0}, ${p.area_total || 0}, ${p.area_construida || 0}, '${endereco}', '${bairro}', '${cidade}', '${estado}', '${cep}', '${carac}', ${p.featured ? 'true' : 'false'})
+    sql += `INSERT INTO public.properties (id, tenant_id, titulo, descricao, tipo, finalidade, preco_venda, preco_locacao, status, quartos, banheiros, vagas_garagem, area_total, area_construida, endereco, bairro, cidade, estado, cep, caracteristicas, featured)
+VALUES ('${p.id}', '${p.tenant_id}', '${titulo}', '${descricao}', '${p.tipo}', '${p.finalidade}', ${sale}, ${rent}, '${p.status}', ${p.quartos || 0}, ${p.banheiros || 0}, ${p.vagas_garagem || 0}, ${p.area_total || 0}, ${p.area_construida || 0}, '${endereco}', '${bairro}', '${cidade}', '${estado}', '${cep}', '${carac}', ${p.featured ? 'true' : 'false'})
 ON CONFLICT (id) DO UPDATE SET titulo = EXCLUDED.titulo, preco_venda = EXCLUDED.preco_venda, preco_locacao = EXCLUDED.preco_locacao;\n\n`
   }
 
