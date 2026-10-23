@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  CalendarDays,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -19,9 +20,10 @@ import { Label } from '@/components/ui/label'
 import { ColorPresets } from '@/components/dashboard/branding/color-presets'
 import { BrandAssetUploader } from '@/components/dashboard/branding/brand-asset-uploader'
 import { FeaturedPropertiesManager } from '@/components/dashboard/branding/featured-properties-manager'
+import { CalendarSettingsTab } from '@/components/dashboard/branding/calendar-settings-tab'
 import type { SiteConfigInput } from '@/lib/tenant/validation'
 
-type TabKey = 'marca' | 'cores' | 'contato' | 'vitrine'
+type TabKey = 'marca' | 'cores' | 'contato' | 'vitrine' | 'agenda'
 
 const defaultSiteConfig: SiteConfigInput = {
   creci: '',
@@ -55,6 +57,12 @@ export default function ConfiguracoesPage() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const tabParam = new URLSearchParams(window.location.search).get('tab')
+      if (tabParam === 'agenda') {
+        setActiveTab('agenda')
+      }
+    }
     void (async () => {
       try {
         const response = await fetch('/api/dashboard/tenant', { cache: 'no-store' })
@@ -206,9 +214,25 @@ export default function ConfiguracoesPage() {
           <Sparkles className="h-4 w-4" />
           <span>Home & Destaques</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('agenda')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-colors border-b-2 whitespace-nowrap ${
+            activeTab === 'agenda'
+              ? 'border-accent text-accent bg-accent/5'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+          }`}
+        >
+          <CalendarDays className="h-4 w-4" />
+          <span>Agendamento & Google</span>
+        </button>
       </div>
 
-      <form onSubmit={submit} className="space-y-6">
+      {activeTab === 'agenda' ? (
+        <CalendarSettingsTab />
+      ) : (
+        <form onSubmit={submit} className="space-y-6">
         {/* Alertas de Feedback */}
         {error && (
           <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/25 p-3.5 text-xs font-medium text-red-700 dark:text-red-400">
@@ -561,6 +585,7 @@ export default function ConfiguracoesPage() {
           </Button>
         </div>
       </form>
+      )}
     </div>
   )
 }
