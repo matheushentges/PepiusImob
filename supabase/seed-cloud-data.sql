@@ -55,6 +55,10 @@ INSERT INTO auth.users (
   email,
   encrypted_password,
   email_confirmed_at,
+  confirmation_token,
+  recovery_token,
+  email_change_token_new,
+  email_change,
   raw_app_meta_data,
   raw_user_meta_data,
   created_at,
@@ -67,11 +71,21 @@ INSERT INTO auth.users (
   'admin@pepius-imob.com',
   crypt('admin123456', gen_salt('bf')),
   NOW(),
+  '',
+  '',
+  '',
+  '',
   '{"provider": "email", "providers": ["email"]}',
   '{"nome": "Administrador Pepius"}',
   NOW(),
   NOW()
-) ON CONFLICT (id) DO UPDATE SET encrypted_password = crypt('admin123456', gen_salt('bf')), email_confirmed_at = NOW();
+) ON CONFLICT (id) DO UPDATE SET
+  encrypted_password = crypt('admin123456', gen_salt('bf')),
+  email_confirmed_at = NOW(),
+  confirmation_token = '',
+  recovery_token = '',
+  email_change_token_new = '',
+  email_change = '';
 
 INSERT INTO auth.identities (
   id,
