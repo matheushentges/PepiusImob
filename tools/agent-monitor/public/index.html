@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pepius // Agent Monitor & Superpowers Mission Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation & Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-radar"></span>
+        <span class="logo-title">PEPIUS</span>
+        <span class="logo-badge">AGENT CONTROL</span>
+      </div>
+      <div class="connection-status connected" id="connectionStatus">
+        <span class="status-dot"></span>
+        <span class="status-text">CONECTADO EM TEMPO REAL</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="session-picker">
+        <label for="sessionSelect">Sessão Ativa:</label>
+        <select id="sessionSelect">
+          <option value="">Carregando sessões...</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button type="button" class="btn-sound" id="btnSound" title="Ativar/Desativar avisos sonoros">
+        <span id="soundIcon">🔊</span> Som: <span id="soundLabel">Ligado</span>
+      </button>
+      <div class="clock" id="liveClock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- Metrics Summary Bar -->
+  <section class="metrics-bar">
+    <div class="metric-card">
+      <span class="metric-label">Passos Executados</span>
+      <span class="metric-value" id="valSteps">0</span>
+      <span class="metric-sub">telemetria da sessão</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Progresso do Plano</span>
+      <div class="metric-progress-wrap">
+        <span class="metric-value" id="valProgress">0%</span>
+        <div class="progress-bar-mini">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+      </div>
+      <span class="metric-sub" id="valTasksSummary">0 de 0 tarefas</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Subagentes Superpowers</span>
+      <span class="metric-value text-accent" id="valSubagents">4</span>
+      <span class="metric-sub">orquestração autônoma</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Última Ação do Agente</span>
+      <span class="metric-value-sm truncate" id="valLastAction">Aguardando atividade...</span>
+      <span class="metric-sub" id="valLastActionTime">—</span>
+    </div>
+  </section>
+
+  <!-- Main Dashboard Grid -->
+  <main class="dashboard-grid">
+    <!-- COLUNA 1: Superpowers Subagents & Plano (task.md) -->
+    <div class="grid-column">
+      <!-- Superpowers Roles Card -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">⚡</span>
+            <span>Subagentes Superpowers</span>
+          </div>
+          <span class="badge badge-purple">Superpowers Plugin</span>
+        </div>
+        <div class="panel-content">
+          <div class="subagents-list" id="subagentsList">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Task Progress Card (task.md) -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">📋</span>
+            <span>Plano de Execução (task.md)</span>
+          </div>
+          <span class="badge badge-cyan" id="taskBadgePercent">0%</span>
+        </div>
+        <div class="panel-content">
+          <div class="task-list" id="taskList">
+            <div class="empty-state">Lendo checklist de tarefas...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA 2: Live Activity Stream (Feed de Ações) -->
+    <div class="grid-column">
+      <div class="panel panel-tall">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">📡</span>
+            <span>Feed de Atividades ao Vivo</span>
+          </div>
+          <div class="panel-actions">
+            <span class="badge badge-live">STREAM AO VIVO</span>
+          </div>
+        </div>
+        <div class="panel-content scrollable" id="activityFeed">
+          <div class="empty-state">Aguardando novos eventos do agente...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA 3: Terminal & Logs de Comandos em Background -->
+    <div class="grid-column">
+      <div class="panel panel-tall">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">💻</span>
+            <span>Terminal & Processos de Fundo</span>
+          </div>
+          <div class="panel-actions">
+            <select id="taskLogSelect" class="log-select">
+              <option value="">Nenhum processo</option>
+            </select>
+            <button type="button" class="btn-xs" id="btnClearTerminal">Limpar</button>
+          </div>
+        </div>
+        <div class="panel-content terminal-wrap">
+          <pre class="terminal-body" id="terminalOutput">Aguardando saída de comandos (npm test, build, migrations)...</pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span>Pepius Imob • Monitoramento em Tempo Real de Agentes Locais</span>
+    <span>Sessão Antigravity: <strong id="footSessionId">—</strong></span>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

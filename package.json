@@ -13,6 +13,7 @@
     "license:agency": "node --experimental-strip-types scripts/license.mjs",
     "license:admin": "node scripts/license-admin.mjs",
     "agency:provision": "node scripts/agency-provision.mjs",
+    "agent:monitor": "node tools/agent-monitor/server.mjs",
     "vercel:deploy": "vercel --prod"
   },
   "dependencies": {
