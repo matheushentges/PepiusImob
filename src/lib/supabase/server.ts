@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import 'server-only'
 
+export const AUTH_COOKIE_NAME = 'sb-pepius-auth-token'
+
 export async function createClient() {
   const cookieStore = await cookies()
   const url = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -15,6 +17,9 @@ export async function createClient() {
     url,
     anonKey,
     {
+      cookieOptions: {
+        name: AUTH_COOKIE_NAME,
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll()

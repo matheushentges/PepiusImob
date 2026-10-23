@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+export const AUTH_COOKIE_NAME = 'sb-pepius-auth-token'
+
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   if (pathname !== '/dashboard' && !pathname.startsWith('/dashboard/')) {
@@ -15,6 +17,9 @@ export async function updateSession(request: NextRequest) {
     process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: {
+        name: AUTH_COOKIE_NAME,
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll()

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,10 +16,11 @@ export async function GET() {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
   }
 
-  // Consulta server-side com cookies de sessão — RLS funciona corretamente
-  const { data: profile, error: profileError } = await supabase
+  // Consulta server-side com service-role para obter o perfil do usuário já autenticado
+  const admin = createAdminClient()
+  const { data: profile, error: profileError } = await admin
     .from('profiles')
-    .select('role')
+    .select('role, tenant_id')
     .eq('id', user.id)
     .single()
 
@@ -29,5 +31,8 @@ export async function GET() {
     )
   }
 
-  return NextResponse.json({ role: profile.role }, { headers: { 'Cache-Control': 'no-store' } })
+  return NextResponse.json(
+    { role: profile.role, tenant_id: profile.tenant_id },
+    { headers: { 'Cache-Control': 'no-store' } }
+  )
 }
