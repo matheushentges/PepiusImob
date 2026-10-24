@@ -407,7 +407,9 @@ export async function activateWithCode(rawCode: string): Promise<{
 
   const lease = result.signedLease as SignedLicenseLease
   const keys = trustedKeys()
+  const leaseKeyId = (result.signedLease as { keyId?: string })?.keyId
   if (!verifyLeaseSignature(lease, keys, installation.installationId)) {
+    console.error('[Licensing] Signature verification failed. Trusted key IDs:', Object.keys(keys), 'Lease key ID:', leaseKeyId)
     throw new Error('A assinatura criptográfica da licença não pôde ser verificada')
   }
 

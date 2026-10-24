@@ -41,11 +41,19 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q}
       - PEPIUS_TENANT_ID=${PEPIUS_TENANT_ID:-64377038-0f9c-40fa-bdac-cd928924f624}
       - LEAD_RATE_LIMIT_PEPPER=${LEAD_RATE_LIMIT_PEPPER:-pepius_secret_pepper_rate_limit_2026_super_secure}
-      - LICENSE_DEV_BYPASS=true
+      - LICENSE_DEV_BYPASS=false
       - LICENSE_CONTROL_PLANE_ENABLED=false
+      - PEPIUS_LICENSE_API_URL=${PEPIUS_LICENSE_API_URL:-https://pepius-imob.vercel.app}
+      - 'LICENSE_TRUSTED_PUBLIC_KEYS_JSON={"pepius-licensing-2026-10":"-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6yy3AffJjAJbzI+9d6FYQoa1XXIFaXDBOa9nlXfME8Y=\n-----END PUBLIC KEY-----\n"}'
+      - LICENSE_STATE_DIR=/app/.local/license-state
       - EVOLUTION_API_URL=http://evolution-api:8080
       - EVOLUTION_API_KEY=${EVOLUTION_API_KEY:-pepius_secret_token_2026}
-      - N8N_WEBHOOK_URL=http://n8n:5678/webhook
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook/pepius-lead
+      - PEPIUS_N8N_WEBHOOK_URL=http://n8n:5678/webhook/pepius-lead
+      - PEPIUS_N8N_LEAD_WEBHOOK_URL=http://n8n:5678/webhook/pepius-lead
+      - PEPIUS_N8N_VISIT_WEBHOOK_URL=http://n8n:5678/webhook/pepius-visit
+    volumes:
+      - pepius-license-data:/app/.local/license-state
     expose:
       - "3000"
     networks:
@@ -63,6 +71,8 @@ services:
       - N8N_PROTOCOL=https
       - NODE_ENV=production
       - WEBHOOK_URL=https://n8n.157.151.10.201.sslip.io/
+      - N8N_EDITOR_BASE_URL=https://n8n.157.151.10.201.sslip.io/
+      - N8N_PROXY_HOPS=1
       - GENERIC_TIMEZONE=America/Sao_Paulo
       - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
     volumes:
@@ -71,6 +81,7 @@ services:
       - "5678"
     networks:
       - default
+      - supabase
 
   postgres-evolution:
     image: postgres:16-alpine
@@ -98,6 +109,10 @@ services:
       - DATABASE_CONNECTION_URI=postgresql://evolution:evolution_password_2026@postgres-evolution:5432/evolution
       - DATABASE_CONNECTION_CLIENT_NAME=evolution_api
       - DEL_INSTANCE=false
+      - N8N_ENABLED=true
+      - EVOAI_ENABLED=true
+      - CACHE_REDIS_ENABLED=false
+      - CACHE_LOCAL_ENABLED=true
     volumes:
       - evolution-instances:/evolution/instances
     expose:
@@ -115,6 +130,7 @@ networks:
     name: supabase_default
 
 volumes:
+  pepius-license-data:
   n8n-data:
   evolution-instances:
   postgres-evo-data:

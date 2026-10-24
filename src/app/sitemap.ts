@@ -5,7 +5,7 @@ import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pepius-imob.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const license = await getLocalLicenseAccess()
 
   if (!license.active || !license.features.includes('public-listing')) {

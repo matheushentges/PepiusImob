@@ -23,9 +23,7 @@
 {$N8N_DOMAIN:n8n.157.151.10.201.sslip.io} {
 	encode zstd gzip
 	reverse_proxy n8n:5678 {
-		header_up X-Real-IP {remote_host}
-		header_up Upgrade {http.upgrade}
-		header_up Connection {http.connection}
+		flush_interval -1
 	}
 }
 

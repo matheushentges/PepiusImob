@@ -68,8 +68,16 @@ export async function dispatchWebhookEvent<K extends WebhookEventName>(
     fetchFn?: typeof fetch
   },
 ): Promise<WebhookDispatchResult> {
+  const eventSpecificUrl =
+    event === 'lead.created'
+      ? process.env.PEPIUS_N8N_LEAD_WEBHOOK_URL
+      : event === 'visit.scheduled'
+        ? process.env.PEPIUS_N8N_VISIT_WEBHOOK_URL
+        : undefined
+
   const webhookUrl =
     options?.webhookUrl ??
+    eventSpecificUrl ??
     process.env.PEPIUS_N8N_WEBHOOK_URL ??
     process.env.PEPIUS_WEBHOOK_URL
 

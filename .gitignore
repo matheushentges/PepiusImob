@@ -49,3 +49,6 @@ supabase/.temp/
 # Documentação interna, arquitetura e cérebro do produto (estritamente local no Obsidian)
 /docs/
 /.claude/
+
+# Fluxos de automação locais (n8n)
+/deployment/workflows/
