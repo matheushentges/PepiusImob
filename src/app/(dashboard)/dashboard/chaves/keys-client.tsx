@@ -223,7 +223,7 @@ export function KeysClient({ initialKeys, canEdit }: KeysClientProps) {
       </div>
 
       {/* Barra de Filtros e Busca */}
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -231,7 +231,7 @@ export function KeysClient({ initialKeys, canEdit }: KeysClientProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por código de chave, imóvel, bairro ou responsável..."
-            className="h-9 pl-9 pr-3 text-sm bg-input"
+            className="h-9 pl-9 pr-3 text-sm bg-card"
           />
         </div>
 

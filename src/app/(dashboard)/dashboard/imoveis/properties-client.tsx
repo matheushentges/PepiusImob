@@ -153,7 +153,7 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
         )}
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-xs sm:flex-row sm:items-center">
         <div className="relative w-full sm:flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <input
@@ -162,7 +162,7 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar por título, cidade ou bairro..."
             aria-label="Buscar imóveis"
-            className="h-10 sm:h-9 w-full rounded-md border border-input bg-input pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-10 sm:h-9 w-full rounded-md border border-input bg-card pl-9 pr-3 text-sm text-foreground shadow-2xs transition-all placeholder:text-muted-foreground hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
           />
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
@@ -170,7 +170,7 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value)}
             aria-label="Filtrar por tipo"
-            className="h-10 sm:h-9 w-full rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-10 sm:h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
           >
             <option value="">Todos os tipos</option>
             <option value="casa">Casa</option>
@@ -183,7 +183,7 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
             aria-label="Filtrar por status"
-            className="h-10 sm:h-9 w-full rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-10 sm:h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
           >
             <option value="">Todos os status</option>
             <option value="disponivel">Disponível</option>
@@ -195,7 +195,7 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
             value={keyFilter}
             onChange={(event) => setKeyFilter(event.target.value)}
             aria-label="Filtrar por chave"
-            className="h-10 sm:h-9 w-full rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring col-span-2 sm:col-span-1"
+            className="h-10 sm:h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25 col-span-2 sm:col-span-1"
           >
             <option value="">Todas as chaves</option>
             <option value="disponivel">No Claviculário</option>

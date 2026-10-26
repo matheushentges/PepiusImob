@@ -184,7 +184,7 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-xs sm:flex-row sm:items-center">
         <div className="relative w-full sm:flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <input
@@ -193,14 +193,14 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar por nome, e-mail, telefone ou imóvel..."
             aria-label="Buscar leads"
-            className="h-10 sm:h-9 w-full rounded-md border border-input bg-input pl-9 pr-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-10 sm:h-9 w-full rounded-md border border-input bg-card pl-9 pr-3 text-sm text-foreground shadow-2xs transition-all placeholder:text-muted-foreground hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
           aria-label="Filtrar por status"
-          className="h-10 sm:h-9 w-full sm:w-auto rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="h-10 sm:h-9 w-full sm:w-auto rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
         >
           <option value="">Todos os status</option>
           <option value="novo">Novo</option>
@@ -557,7 +557,7 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
                     value={draftStatus}
                     onChange={(event) => setDraftStatus(event.target.value)}
                     disabled={!canEdit || saving}
-                    className="h-10 sm:h-9 w-full sm:w-auto rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-10 sm:h-9 w-full sm:w-auto rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/50"
                   >
                     <option value="novo">Novo</option>
                     <option value="em_contato">Em Contato</option>

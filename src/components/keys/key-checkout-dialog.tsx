@@ -269,7 +269,7 @@ export function KeyCheckoutDialog({
                 id="consultor-select"
                 value={selectedConsultorId}
                 onChange={(e) => handleConsultorChange(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-input px-3 py-1.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1.5 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
               >
                 {teamMembers.map((member) => (
                   <option key={member.id} value={member.id}>
@@ -397,7 +397,7 @@ export function KeyCheckoutDialog({
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               placeholder="Ex: Pegou também controle do portão..."
-              className="flex w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-2xs transition-all placeholder:text-muted-foreground hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
             />
           </div>
 

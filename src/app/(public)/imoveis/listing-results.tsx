@@ -125,7 +125,7 @@ export function ListingResults({
       </div>
 
       {/* Dynamic filters panel */}
-      <section className="mx-auto max-w-5xl rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-xs">
+      <section className="mx-auto max-w-5xl rounded-xl border border-border bg-card p-5 shadow-xs">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           {/* Search input */}
           <div className="flex-1 space-y-1.5">
@@ -143,7 +143,7 @@ export function ListingResults({
                   setCurrentPage(1)
                 }}
                 placeholder="Bairro, cidade ou título..."
-                className="w-full rounded-lg border border-border-default bg-surface-base py-2.5 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="w-full rounded-lg border border-border-default bg-card py-2.5 pl-10 pr-4 text-sm text-text-primary shadow-2xs placeholder:text-text-tertiary transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
               {searchQuery && (
                 <button
@@ -200,7 +200,7 @@ export function ListingResults({
                 setCategoryFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="flex h-10 w-full rounded-lg border border-border-default bg-surface-base px-3 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="flex h-10 w-full rounded-lg border border-border-default bg-card px-3 text-sm text-text-primary shadow-2xs transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               {CATEGORY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -226,7 +226,7 @@ export function ListingResults({
                 }}
                 placeholder="R$ 0"
                 min={0}
-                className="flex h-10 w-full rounded-lg border border-border-default bg-surface-base px-3 text-sm tabular-nums text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="flex h-10 w-full rounded-lg border border-border-default bg-card px-3 text-sm tabular-nums text-text-primary shadow-2xs placeholder:text-text-tertiary transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </div>
             <span className="mb-3 text-text-tertiary">–</span>
@@ -244,7 +244,7 @@ export function ListingResults({
                 }}
                 placeholder="Sem limite"
                 min={0}
-                className="flex h-10 w-full rounded-lg border border-border-default bg-surface-base px-3 text-sm tabular-nums text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="flex h-10 w-full rounded-lg border border-border-default bg-card px-3 text-sm tabular-nums text-text-primary shadow-2xs placeholder:text-text-tertiary transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </div>
           </div>

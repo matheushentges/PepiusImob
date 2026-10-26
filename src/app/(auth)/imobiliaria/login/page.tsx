@@ -54,7 +54,7 @@ export default function RealtorLoginPage() {
 
       {/* Login form */}
       <main className="flex flex-1 items-center justify-center px-4 pb-12">
-        <div className="w-full max-w-sm space-y-8">
+        <div className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-card p-6 sm:p-8 shadow-xs">
           <div className="text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-accent-subtle text-accent">
               <Building2 className="h-6 w-6" aria-hidden="true" />
@@ -67,7 +67,7 @@ export default function RealtorLoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="realtor-email" className="text-sm font-medium text-text-primary">
                 E-mail corporativo
@@ -79,7 +79,7 @@ export default function RealtorLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="contato@suaimobiliaria.com.br"
-                className="w-full rounded-md border border-border-default bg-surface-raised px-3 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="w-full rounded-md border border-border-default bg-card px-3 py-2.5 text-sm text-text-primary shadow-2xs placeholder:text-text-tertiary transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </div>
 
@@ -94,7 +94,7 @@ export default function RealtorLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-md border border-border-default bg-surface-raised px-3 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="w-full rounded-md border border-border-default bg-card px-3 py-2.5 text-sm text-text-primary shadow-2xs placeholder:text-text-tertiary transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </div>
 

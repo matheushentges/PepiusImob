@@ -71,7 +71,7 @@ export default function LoginPage() {
 
       {/* Login form */}
       <main className="flex flex-1 items-center justify-center px-4 pb-12">
-        <div className="w-full max-w-sm space-y-8">
+        <div className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-card p-6 sm:p-8 shadow-xs">
           <div className="text-center">
             <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
               Entrar na sua conta
@@ -81,7 +81,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
               <label
                 htmlFor="email"
@@ -96,7 +96,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                className="w-full rounded-md border border-border-default bg-surface-raised px-3 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="w-full rounded-md border border-border-default bg-card px-3 py-2.5 text-sm text-text-primary shadow-2xs placeholder:text-text-tertiary transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </div>
 
@@ -114,7 +114,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-md border border-border-default bg-surface-raised px-3 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+                className="w-full rounded-md border border-border-default bg-card px-3 py-2.5 text-sm text-text-primary shadow-2xs placeholder:text-text-tertiary transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </div>
 

@@ -6,8 +6,8 @@
 - **Signature ("Linha de Planta")**: Uso de linhas finas e precisas (1px) em azul-ardósia para delimitar seções, evocando plantas arquitetônicas. Cantos levemente arredondados (6px) para suavizar, mantendo a precisão técnica.
 
 ## Depth Strategy
-- **Borders-only com leve layering**: Foco em bordas de 1px (`border-border`) para estrutura. Sombras apenas para elevação de popovers/modais (`shadow-sm`).
-- **Inputs**: Fundo ligeiramente diferente do background (`bg-input`) para indicar área de preenchimento, sem bordas pesadas até o focus.
+- **Borders-only com leve layering**: Foco em bordas nítidas de 1px (`border-border`, Slate-300) para estrutura clara. Sombras sutis (`shadow-xs` / `shadow-sm`) para delimitação e elevação de cards, popovers e modais.
+- **Inputs**: Fundo branco sólido (`bg-card`), bordas visíveis (`border-input`, Slate-300) com micro-sombra (`shadow-2xs`), hover destacado (`hover:border-border-strong`) e anel de foco energizado (`focus-visible:border-accent`).
 
 ## Spacing & Density
 - **Base unit**: 8px (0.5rem).
@@ -28,31 +28,31 @@
   - Caption/Meta: 12px / 500 (tracking leve)
 
 ## Palette (Tailwind CSS Variables)
-- `--background`: #FAFAFA (Off-white, papel de planta)
-- `--foreground`: #1E293B (Slate 900, tinta de desenho)
-- `--primary`: #334155 (Slate 700, azul-ardósia, solidez)
+- `--background`: #F8FAFC (Slate 50, levemente frio, contraste natural contra cards brancos)
+- `--foreground`: #0F172A (Slate 900, máxima legibilidade de texto)
+- `--primary`: #1E293B (Slate 800, azul-ardósia escuro)
 - `--primary-foreground`: #F8FAFC (Slate 50)
 - `--secondary`: #F1F5F9 (Slate 100)
-- `--secondary-foreground`: #334155
-- `--muted`: #F8FAFC
-- `--muted-foreground`: #64748B (Slate 500)
+- `--secondary-foreground`: #1E293B
+- `--muted`: #F1F5F9 (Slate 100)
+- `--muted-foreground`: #475569 (Slate 600, contraste > 4.5:1 WCAG AA)
 - `--accent`: #E07A5F (Terracota, calor humano, ação secundária)
 - `--accent-foreground`: #FFFFFF
 - `--destructive`: #EF4444
 - `--destructive-foreground`: #FFFFFF
-- `--border`: #E2E8F0 (Slate 200)
-- `--input`: #F1F5F9 (Slate 100, ligeiramente mais escuro que bg)
+- `--border`: #CBD5E1 (Slate 300, limites estruturais nítidos)
+- `--input`: #CBD5E1 (Slate 300, contorno bem visível de formulários)
 - `--ring`: #E07A5F (Terracota, foco visível e distinto)
 - `--card`: #FFFFFF
-- `--card-foreground`: #1E293B
+- `--card-foreground`: #0F172A
 
 ## Key Component Patterns
 - **Button primary**: `h-9 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium`
-- **Card**: `rounded-lg border bg-card text-card-foreground shadow-sm`
-- **Input**: `h-9 rounded-md border border-input bg-input px-3 text-sm focus-visible:ring-1 focus-visible:ring-ring`
-- **Select**: `flex h-9 w-full rounded-md border border-input bg-input px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`
+- **Card**: `rounded-xl border border-border bg-card text-card-foreground shadow-xs`
+- **Input**: `h-9 rounded-md border border-input bg-card px-3 text-sm shadow-2xs hover:border-border-strong focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25`
+- **Select**: `flex h-9 w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-2xs hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25`
 - **Badge Status**: `inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset` + cores semânticas (green/blue/purple/orange/red)-50/700/600/20
-- **Filter Bar**: `flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-4` com inputs/selects `h-9 bg-input`
+- **Filter Bar**: `flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-xs` com inputs/selects `h-9 bg-card`
 - **Section Divider**: `border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground` para separar seções em formulários
 - **Table Header**: `text-xs font-medium uppercase tracking-wide text-muted-foreground` com `border-b border-border hover:bg-transparent`
 - **Empty State**: Ícone em `h-12 w-12 rounded-full bg-secondary text-muted-foreground` + texto + CTA centralizado

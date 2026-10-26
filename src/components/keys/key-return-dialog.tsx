@@ -145,7 +145,7 @@ export function KeyReturnDialog({
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               placeholder="Ex: Devolvida em perfeito estado no claviculário..."
-              className="flex w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-2xs transition-all placeholder:text-muted-foreground hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
             />
           </div>
 

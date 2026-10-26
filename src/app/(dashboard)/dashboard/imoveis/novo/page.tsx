@@ -12,7 +12,7 @@ import { useLicenseEditable } from '@/components/licensing/license-mode-provider
 import { formatCep, fetchAddressByCep } from '@/lib/cep/viacep'
 
 const selectClassName =
-  'flex h-9 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
+  'flex h-9 w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/50'
 
 interface PendingImage {
   url: string
@@ -196,7 +196,7 @@ export default function NovoImovelPage() {
                   name="titulo"
                   required
                   placeholder="Ex: Casa moderna com piscina"
-                  className="h-9 bg-input"
+                  className="h-9 bg-card"
                 />
               </div>
 
@@ -210,7 +210,7 @@ export default function NovoImovelPage() {
                   required
                   rows={3}
                   placeholder="Descreva o imóvel em detalhes..."
-                  className="w-full rounded-md border border-input bg-input px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
                 />
               </div>
 
@@ -288,7 +288,7 @@ export default function NovoImovelPage() {
                   step="0.01"
                   min="0"
                   placeholder="0,00"
-                  className="h-9 bg-input font-mono tabular-nums"
+                  className="h-9 bg-card font-mono tabular-nums"
                 />
               </div>
 
@@ -303,7 +303,7 @@ export default function NovoImovelPage() {
                   step="0.01"
                   min="0"
                   placeholder="0,00"
-                  className="h-9 bg-input font-mono tabular-nums"
+                  className="h-9 bg-card font-mono tabular-nums"
                 />
               </div>
             </div>
@@ -344,7 +344,7 @@ export default function NovoImovelPage() {
                     onChange={(e) => handleCepChange(e.target.value)}
                     placeholder="00000-000"
                     maxLength={9}
-                    className="h-9 bg-input font-mono max-w-xs"
+                    className="h-9 bg-card font-mono max-w-xs"
                   />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
@@ -363,7 +363,7 @@ export default function NovoImovelPage() {
                   value={endereco}
                   onChange={(e) => setEndereco(e.target.value)}
                   placeholder="Rua Exemplo, 123"
-                  className="h-9 bg-input"
+                  className="h-9 bg-card"
                 />
               </div>
 
@@ -378,7 +378,7 @@ export default function NovoImovelPage() {
                   value={bairro}
                   onChange={(e) => setBairro(e.target.value)}
                   placeholder="Centro"
-                  className="h-9 bg-input"
+                  className="h-9 bg-card"
                 />
               </div>
 
@@ -393,7 +393,7 @@ export default function NovoImovelPage() {
                   value={cidade}
                   onChange={(e) => setCidade(e.target.value)}
                   placeholder="São Paulo"
-                  className="h-9 bg-input"
+                  className="h-9 bg-card"
                 />
               </div>
 
@@ -459,7 +459,7 @@ export default function NovoImovelPage() {
                   step="0.01"
                   min="0"
                   placeholder="0"
-                  className="h-9 bg-input font-mono tabular-nums"
+                  className="h-9 bg-card font-mono tabular-nums"
                 />
               </div>
 
@@ -474,7 +474,7 @@ export default function NovoImovelPage() {
                   step="0.01"
                   min="0"
                   placeholder="0"
-                  className="h-9 bg-input font-mono tabular-nums"
+                  className="h-9 bg-card font-mono tabular-nums"
                 />
               </div>
 
@@ -488,7 +488,7 @@ export default function NovoImovelPage() {
                   type="number"
                   min="0"
                   placeholder="0"
-                  className="h-9 bg-input font-mono tabular-nums"
+                  className="h-9 bg-card font-mono tabular-nums"
                 />
               </div>
 
@@ -502,7 +502,7 @@ export default function NovoImovelPage() {
                   type="number"
                   min="0"
                   placeholder="0"
-                  className="h-9 bg-input font-mono tabular-nums"
+                  className="h-9 bg-card font-mono tabular-nums"
                 />
               </div>
 
@@ -516,7 +516,7 @@ export default function NovoImovelPage() {
                   type="number"
                   min="0"
                   placeholder="0"
-                  className="h-9 bg-input font-mono tabular-nums"
+                  className="h-9 bg-card font-mono tabular-nums"
                 />
               </div>
             </div>

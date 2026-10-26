@@ -44,7 +44,7 @@ interface ExistingImage {
 }
 
 const selectClassName =
-  'flex h-9 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
+  'flex h-9 w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/50'
 
 export default function EditarImovelPage() {
   const router = useRouter()
@@ -286,7 +286,7 @@ export default function EditarImovelPage() {
                 <Label htmlFor="titulo" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Título *
                 </Label>
-                <Input id="titulo" name="titulo" required defaultValue={property.titulo} className="h-9 bg-input" />
+                <Input id="titulo" name="titulo" required defaultValue={property.titulo} className="h-9 bg-card" />
               </div>
 
               <div className="space-y-2 md:col-span-2">
@@ -299,7 +299,7 @@ export default function EditarImovelPage() {
                   required
                   rows={3}
                   defaultValue={property.descricao}
-                  className="w-full rounded-md border border-input bg-input px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-ring/25"
                 />
               </div>
 
@@ -359,11 +359,11 @@ export default function EditarImovelPage() {
             <div className="grid gap-5 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="preco_venda" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Preço de Venda (R$)</Label>
-                <Input id="preco_venda" name="preco_venda" type="number" step="0.01" min="0" defaultValue={property.preco_venda ?? ''} className="h-9 bg-input font-mono tabular-nums" />
+                <Input id="preco_venda" name="preco_venda" type="number" step="0.01" min="0" defaultValue={property.preco_venda ?? ''} className="h-9 bg-card font-mono tabular-nums" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="preco_locacao" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Preço de Locação (R$/mês)</Label>
-                <Input id="preco_locacao" name="preco_locacao" type="number" step="0.01" min="0" defaultValue={property.preco_locacao ?? ''} className="h-9 bg-input font-mono tabular-nums" />
+                <Input id="preco_locacao" name="preco_locacao" type="number" step="0.01" min="0" defaultValue={property.preco_locacao ?? ''} className="h-9 bg-card font-mono tabular-nums" />
               </div>
             </div>
           </section>
@@ -399,7 +399,7 @@ export default function EditarImovelPage() {
                   onChange={(e) => handleCepChange(e.target.value)}
                   maxLength={9}
                   placeholder="00000-000"
-                  className="h-9 bg-input font-mono max-w-xs"
+                  className="h-9 bg-card font-mono max-w-xs"
                 />
                 <p className="text-[11px] text-muted-foreground">
                   Altere o CEP para buscar e atualizar o endereço automaticamente.
@@ -414,7 +414,7 @@ export default function EditarImovelPage() {
                   required
                   value={endereco}
                   onChange={(e) => setEndereco(e.target.value)}
-                  className="h-9 bg-input"
+                  className="h-9 bg-card"
                 />
               </div>
 
@@ -426,7 +426,7 @@ export default function EditarImovelPage() {
                   required
                   value={bairro}
                   onChange={(e) => setBairro(e.target.value)}
-                  className="h-9 bg-input"
+                  className="h-9 bg-card"
                 />
               </div>
 
@@ -438,7 +438,7 @@ export default function EditarImovelPage() {
                   required
                   value={cidade}
                   onChange={(e) => setCidade(e.target.value)}
-                  className="h-9 bg-input"
+                  className="h-9 bg-card"
                 />
               </div>
 
@@ -472,23 +472,23 @@ export default function EditarImovelPage() {
             <div className="grid gap-5 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="area_total" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Área Total (m²)</Label>
-                <Input id="area_total" name="area_total" type="number" step="0.01" min="0" defaultValue={property.area_total ?? ''} className="h-9 bg-input font-mono tabular-nums" />
+                <Input id="area_total" name="area_total" type="number" step="0.01" min="0" defaultValue={property.area_total ?? ''} className="h-9 bg-card font-mono tabular-nums" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="area_construida" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Área Construída (m²)</Label>
-                <Input id="area_construida" name="area_construida" type="number" step="0.01" min="0" defaultValue={property.area_construida ?? ''} className="h-9 bg-input font-mono tabular-nums" />
+                <Input id="area_construida" name="area_construida" type="number" step="0.01" min="0" defaultValue={property.area_construida ?? ''} className="h-9 bg-card font-mono tabular-nums" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="quartos" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Quartos</Label>
-                <Input id="quartos" name="quartos" type="number" min="0" defaultValue={property.quartos ?? ''} className="h-9 bg-input font-mono tabular-nums" />
+                <Input id="quartos" name="quartos" type="number" min="0" defaultValue={property.quartos ?? ''} className="h-9 bg-card font-mono tabular-nums" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="banheiros" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Banheiros</Label>
-                <Input id="banheiros" name="banheiros" type="number" min="0" defaultValue={property.banheiros ?? ''} className="h-9 bg-input font-mono tabular-nums" />
+                <Input id="banheiros" name="banheiros" type="number" min="0" defaultValue={property.banheiros ?? ''} className="h-9 bg-card font-mono tabular-nums" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="vagas_garagem" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Vagas Garagem</Label>
-                <Input id="vagas_garagem" name="vagas_garagem" type="number" min="0" defaultValue={property.vagas_garagem ?? ''} className="h-9 bg-input font-mono tabular-nums" />
+                <Input id="vagas_garagem" name="vagas_garagem" type="number" min="0" defaultValue={property.vagas_garagem ?? ''} className="h-9 bg-card font-mono tabular-nums" />
               </div>
             </div>
           </section>
