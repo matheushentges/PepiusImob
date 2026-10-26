@@ -2,7 +2,7 @@
 	email {$ACME_EMAIL:matheus@pepius.com}
 }
 
-{$APP_DOMAIN:imob.157.151.10.201.sslip.io} {
+{$APP_DOMAIN:imob.example.com} {
 	encode zstd gzip
 	reverse_proxy pepius-app:3000 {
 		header_up X-Real-IP {remote_host}
@@ -11,7 +11,7 @@
 	}
 }
 
-{$SUPABASE_DOMAIN:api.imob.157.151.10.201.sslip.io} {
+{$SUPABASE_DOMAIN:api.example.com} {
 	encode zstd gzip
 	reverse_proxy supabase-envoy:8000 {
 		header_up X-Real-IP {remote_host}
@@ -20,14 +20,14 @@
 	}
 }
 
-{$N8N_DOMAIN:n8n.157.151.10.201.sslip.io} {
+{$N8N_DOMAIN:n8n.example.com} {
 	encode zstd gzip
 	reverse_proxy n8n:5678 {
 		flush_interval -1
 	}
 }
 
-{$EVOLUTION_DOMAIN:evo.157.151.10.201.sslip.io} {
+{$EVOLUTION_DOMAIN:evo.example.com} {
 	encode zstd gzip
 	reverse_proxy evolution-api:8080 {
 		header_up X-Real-IP {remote_host}

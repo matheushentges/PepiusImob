@@ -25,17 +25,17 @@ services:
       context: ..
       dockerfile: deployment/Dockerfile
       args:
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-https://api.imob.157.151.10.201.sslip.io}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-https://api.example.com}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE}
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://imob.157.151.10.201.sslip.io}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://imob.example.com}
     restart: unless-stopped
     init: true
     environment:
       - NODE_ENV=production
       - HOSTNAME=0.0.0.0
       - PORT=3000
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://imob.157.151.10.201.sslip.io}
-      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-https://api.imob.157.151.10.201.sslip.io}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://imob.example.com}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-https://api.example.com}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE}
       - SUPABASE_INTERNAL_URL=http://supabase-envoy:8000
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q}
@@ -67,12 +67,12 @@ services:
     restart: unless-stopped
     init: true
     environment:
-      - N8N_HOST=n8n.157.151.10.201.sslip.io
+      - N8N_HOST=${N8N_HOST:-n8n.example.com}
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - NODE_ENV=production
-      - WEBHOOK_URL=https://n8n.157.151.10.201.sslip.io/
-      - N8N_EDITOR_BASE_URL=https://n8n.157.151.10.201.sslip.io/
+      - WEBHOOK_URL=${WEBHOOK_URL:-https://n8n.example.com/}
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL:-https://n8n.example.com/}
       - N8N_PROXY_HOPS=1
       - GENERIC_TIMEZONE=America/Sao_Paulo
       - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
@@ -103,7 +103,7 @@ services:
     restart: unless-stopped
     init: true
     environment:
-      - SERVER_URL=https://evo.157.151.10.201.sslip.io
+      - SERVER_URL=${EVOLUTION_SERVER_URL:-https://evo.example.com}
       - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-pepius_secret_token_2026}
       - DATABASE_ENABLED=true
       - DATABASE_PROVIDER=postgresql

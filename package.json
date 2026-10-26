@@ -14,7 +14,7 @@
     "license:admin": "node scripts/license-admin.mjs",
     "agency:provision": "node scripts/agency-provision.mjs",
     "agent:monitor": "node tools/agent-monitor/server.mjs",
-    "vercel:deploy": "vercel --prod"
+    "deploy:info": "echo \"Deploy e operado via Docker na VM em producao. Consulte DEPLOY.md.\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
