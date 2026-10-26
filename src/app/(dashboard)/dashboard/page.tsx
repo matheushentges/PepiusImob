@@ -163,7 +163,7 @@ export default async function DashboardPage() {
           { label: 'Imóveis disponíveis', value: availableProperties, desc: 'publicados na vitrine' },
           { label: 'Leads no mês', value: monthlyLeads, desc: 'contatos recebidos' },
           { label: 'Visitas agendadas', value: upcomingVisitsCount, desc: 'próximas visitas' },
-        ].map((stat, i) => (
+        ].map((stat) => (
           <div key={stat.label} className="rounded-lg border border-border bg-card p-4 sm:p-5">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{stat.label}</p>
             <p className="mt-2 text-2xl sm:text-3xl font-semibold font-mono tabular-nums text-foreground">{stat.value}</p>

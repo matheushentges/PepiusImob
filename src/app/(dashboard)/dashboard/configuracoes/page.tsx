@@ -60,7 +60,9 @@ export default function ConfiguracoesPage() {
     if (typeof window !== 'undefined') {
       const tabParam = new URLSearchParams(window.location.search).get('tab')
       if (tabParam === 'agenda') {
-        setActiveTab('agenda')
+        queueMicrotask(() => {
+          setActiveTab('agenda')
+        })
       }
     }
     void (async () => {

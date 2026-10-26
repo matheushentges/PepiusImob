@@ -3,7 +3,6 @@
 import { useState, useEffect, useId } from 'react'
 import {
   CalendarDays,
-  Clock,
   CheckCircle2,
   MessageSquare,
   ChevronRight,
@@ -12,9 +11,8 @@ import {
   ExternalLink,
   Loader2,
   AlertCircle,
-  Sparkles,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,7 +39,6 @@ export function VisitSchedulerWidget({
   listingTitle,
   listingCode,
   agencyPhone,
-  agencyName,
 }: VisitSchedulerWidgetProps) {
   const [activeTab, setActiveTab] = useState<'schedule' | 'message'>('schedule')
   const [isCalendarEnabled, setIsCalendarEnabled] = useState<boolean | null>(null)
@@ -78,11 +75,13 @@ export function VisitSchedulerWidget({
 
   // Inicializa lista dos próximos 3 dias de atendimento a partir de amanhã
   useEffect(() => {
-    const days = getNextOperatingDays(null, new Date(), 3)
-    setAvailableDays(days)
-    if (days[0]) {
-      setSelectedDate(days[0].dateStr)
-    }
+    queueMicrotask(() => {
+      const days = getNextOperatingDays(null, new Date(), 3)
+      setAvailableDays(days)
+      if (days[0]) {
+        setSelectedDate(days[0].dateStr)
+      }
+    })
   }, [])
 
   // Carrega slots ao mudar de data ou ao inicializar
@@ -90,9 +89,13 @@ export function VisitSchedulerWidget({
     if (!selectedDate || !listingId) return
 
     let isCancelled = false
-    setLoadingSlots(true)
-    setSlotsError(null)
-    setSelectedSlot(null)
+    queueMicrotask(() => {
+      if (!isCancelled) {
+        setLoadingSlots(true)
+        setSlotsError(null)
+        setSelectedSlot(null)
+      }
+    })
 
     async function loadSlots() {
       try {

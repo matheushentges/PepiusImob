@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { calculateAvailableSlots, getNextOperatingDays, getNextBusinessDays } from '../src/lib/calendar/slot-calculator.ts'
+import { calculateAvailableSlots, getNextOperatingDays } from '../src/lib/calendar/slot-calculator.ts'
 
 test('calculates slots correctly for a 45min visit with 15min buffer', () => {
   const options = {

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X, CheckCircle2, Clock, Loader2, AlertCircle } from 'lucide-react'
+import { X, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { formatDateTimeBR } from '@/lib/keys/whatsapp'

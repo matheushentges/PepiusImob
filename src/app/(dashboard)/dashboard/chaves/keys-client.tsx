@@ -10,8 +10,6 @@ import {
   Users,
   Wrench,
   AlertCircle,
-  Building,
-  Home,
   Check,
   RefreshCw,
 } from 'lucide-react'
@@ -66,7 +64,7 @@ export function KeysClient({ initialKeys, canEdit }: KeysClientProps) {
 
   // Métricas do Claviculário
   const stats = useMemo(() => {
-    let total = keys.length
+    const total = keys.length
     let disponiveis = 0
     let comConsultor = 0
     let comCliente = 0

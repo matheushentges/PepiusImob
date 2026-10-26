@@ -4,7 +4,7 @@ import { getAgencyContext } from '@/lib/auth/agency'
 import { canReadLicensedFeature, requireActiveLicense } from '@/lib/licensing/local-state'
 import { bodyErrorResponse, readJsonBody } from '@/lib/security/request-body'
 import { upsertKeySchema, isKeyLate, getMinutesLate } from '@/lib/keys/validation'
-import type { KeyOverviewItem } from '@/lib/keys/types'
+import type { KeyOverviewItem, KeyMovement } from '@/lib/keys/types'
 
 const keyWithPropertySchema = upsertKeySchema.extend({
   property_id: z.string().uuid('ID do imóvel inválido'),
@@ -72,12 +72,47 @@ export async function GET() {
     console.error('Open movements query failed', { code: movError.code })
   }
 
-  const openMovementsByKey = new Map<string, NonNullable<typeof openMovements>[number]>()
-  for (const mov of openMovements ?? []) {
+  interface MovementProfile {
+    nome: string
+  }
+  interface MovementRecord {
+    id: string
+    key_id: string
+    tipo_responsavel: KeyMovement['tipo_responsavel']
+    nome_responsavel: string
+    telefone_responsavel: string | null
+    documento_responsavel: string | null
+    motivo: string | null
+    data_saida: string
+    previsao_retorno: string | null
+    consultor_id: string | null
+    profiles: MovementProfile | null
+  }
+
+  interface ApiKeyRow {
+    id: string
+    property_id: string
+    codigo: string
+    status: KeyOverviewItem['status']
+    localizacao: string | null
+    updated_at: string
+    properties: {
+      id: string
+      titulo: string
+      tipo: string
+      finalidade: string
+      cidade: string
+      estado: string
+      bairro: string
+    } | null
+  }
+
+  const openMovementsByKey = new Map<string, MovementRecord>()
+  for (const mov of ((openMovements as unknown as MovementRecord[]) ?? [])) {
     openMovementsByKey.set(mov.key_id, mov)
   }
 
-  const rows: KeyOverviewItem[] = (keys ?? []).map((row: any) => {
+  const rows: KeyOverviewItem[] = ((keys as unknown as ApiKeyRow[]) ?? []).map((row) => {
     const prop = row.properties
     const openMov = openMovementsByKey.get(row.id)
     const isLate = openMov ? isKeyLate(openMov.previsao_retorno) : false
@@ -108,7 +143,7 @@ export async function GET() {
             previsaoRetorno: openMov.previsao_retorno,
             isLate,
             minutesLate,
-            consultorNome: (openMov.profiles as any)?.nome ?? null,
+            consultorNome: openMov.profiles?.nome ?? null,
           }
         : null,
     }

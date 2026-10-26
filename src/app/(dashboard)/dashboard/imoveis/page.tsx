@@ -61,13 +61,26 @@ export default async function ImoveisPage() {
     console.error('Agency property page query failed', { code: propertiesResult.error.code })
   }
 
-  const keysByPropertyId = new Map<string, any>()
-  for (const k of keysResult.data ?? []) {
+  interface PropertyKeySummary {
+    id: string
+    property_id: string
+    codigo: string
+    status: string
+  }
+
+  interface OpenMovementSummary {
+    key_id: string
+    nome_responsavel: string
+    previsao_retorno: string | null
+  }
+
+  const keysByPropertyId = new Map<string, PropertyKeySummary>()
+  for (const k of ((keysResult.data as unknown as PropertyKeySummary[]) ?? [])) {
     keysByPropertyId.set(k.property_id, k)
   }
 
-  const openMovementsByKeyId = new Map<string, any>()
-  for (const m of movementsResult.data ?? []) {
+  const openMovementsByKeyId = new Map<string, OpenMovementSummary>()
+  for (const m of ((movementsResult.data as unknown as OpenMovementSummary[]) ?? [])) {
     openMovementsByKeyId.set(m.key_id, m)
   }
 

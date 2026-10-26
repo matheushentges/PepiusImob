@@ -54,9 +54,14 @@ export function KeyCheckoutDialog({
         if (res.ok) {
           const data = await res.json()
           setTeamMembers(data.members || [])
-          if (data.members?.length > 0 && !selectedConsultorId) {
-            setSelectedConsultorId(data.members[0].id)
-            setNomeResponsavel(data.members[0].nome)
+          if (data.members?.length > 0) {
+            setSelectedConsultorId((prev) => {
+              if (!prev) {
+                setNomeResponsavel(data.members[0].nome)
+                return data.members[0].id
+              }
+              return prev
+            })
           }
         }
       } catch (err) {

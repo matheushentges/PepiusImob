@@ -70,7 +70,23 @@ export async function GET(_request: Request, { params }: RouteContext) {
     console.error('Key history query failed', { code: movErr.code })
   }
 
-  const history = movements ?? []
+  interface MovementWithProfile {
+    id: string
+    tipo_responsavel: string
+    nome_responsavel: string
+    telefone_responsavel: string | null
+    documento_responsavel: string | null
+    motivo: string | null
+    data_saida: string
+    previsao_retorno: string | null
+    data_devolucao: string | null
+    observacoes_saida: string | null
+    observacoes_devolucao: string | null
+    consultor_id: string | null
+    profiles: { id: string; nome: string; email: string } | null
+  }
+
+  const history = (movements as unknown as MovementWithProfile[]) ?? []
   const currentMovementRaw = history.find((m) => m.data_devolucao === null) || null
 
   const currentMovement = currentMovementRaw
@@ -78,7 +94,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
         ...currentMovementRaw,
         isLate: isKeyLate(currentMovementRaw.previsao_retorno),
         minutesLate: getMinutesLate(currentMovementRaw.previsao_retorno),
-        consultor: (currentMovementRaw as any).profiles ?? null,
+        consultor: currentMovementRaw.profiles ?? null,
       }
     : null
 

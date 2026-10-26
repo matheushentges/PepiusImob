@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 import { isKeyLate, getMinutesLate } from '@/lib/keys/validation'
 import { KeysClient } from './keys-client'
-import type { KeyOverviewItem } from '@/lib/keys/types'
+import type { KeyOverviewItem, KeyMovement } from '@/lib/keys/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -85,12 +85,44 @@ export default async function ChavesPage() {
     .eq('tenant_id', tenantId)
     .is('data_devolucao', null)
 
-  const openMovementsByKey = new Map<string, any>()
-  for (const mov of openMovements ?? []) {
+  interface MovementRow {
+    id: string
+    key_id: string
+    tipo_responsavel: KeyMovement['tipo_responsavel']
+    nome_responsavel: string
+    telefone_responsavel: string | null
+    documento_responsavel: string | null
+    motivo: string | null
+    data_saida: string
+    previsao_retorno: string | null
+    consultor_id: string | null
+    profiles: { nome: string } | null
+  }
+
+  interface KeyRow {
+    id: string
+    property_id: string
+    codigo: string
+    status: KeyOverviewItem['status']
+    localizacao: string | null
+    updated_at: string
+    properties: {
+      id: string
+      titulo: string
+      tipo: string
+      finalidade: string
+      cidade: string
+      estado: string
+      bairro: string
+    } | null
+  }
+
+  const openMovementsByKey = new Map<string, MovementRow>()
+  for (const mov of ((openMovements as unknown as MovementRow[]) ?? [])) {
     openMovementsByKey.set(mov.key_id, mov)
   }
 
-  const rows: KeyOverviewItem[] = (keys ?? []).map((row: any) => {
+  const rows: KeyOverviewItem[] = ((keys as unknown as KeyRow[]) ?? []).map((row) => {
     const prop = row.properties
     const openMov = openMovementsByKey.get(row.id)
     const isLate = openMov ? isKeyLate(openMov.previsao_retorno) : false
@@ -121,7 +153,7 @@ export default async function ChavesPage() {
             previsaoRetorno: openMov.previsao_retorno,
             isLate,
             minutesLate,
-            consultorNome: (openMov.profiles as any)?.nome ?? null,
+            consultorNome: openMov.profiles?.nome ?? null,
           }
         : null,
     }

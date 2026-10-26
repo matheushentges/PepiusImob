@@ -5,16 +5,12 @@ import {
   KeyRound,
   Edit2,
   Check,
-  X,
   Plus,
   History,
   ChevronDown,
   ChevronUp,
   Loader2,
-  Calendar,
   User,
-  Phone,
-  FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,6 +20,11 @@ import { KeyReturnDialog } from './key-return-dialog'
 import { KeyWhatsAppButton } from './key-whatsapp-button'
 import { formatDateTimeBR } from '@/lib/keys/whatsapp'
 import type { PropertyKey, KeyMovement } from '@/lib/keys/types'
+
+interface CurrentMovementState extends KeyMovement {
+  isLate?: boolean
+  minutesLate?: number
+}
 
 interface PropertyKeyPanelProps {
   propertyId: string
@@ -37,7 +38,7 @@ export function PropertyKeyPanel({
   canEdit = true,
 }: PropertyKeyPanelProps) {
   const [key, setKey] = useState<PropertyKey | null>(null)
-  const [currentMovement, setCurrentMovement] = useState<any | null>(null)
+  const [currentMovement, setCurrentMovement] = useState<CurrentMovementState | null>(null)
   const [history, setHistory] = useState<KeyMovement[]>([])
   const [loading, setLoading] = useState(true)
   const [savingKey, setSavingKey] = useState(false)
@@ -53,9 +54,11 @@ export function PropertyKeyPanel({
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [returnOpen, setReturnOpen] = useState(false)
 
-  const fetchKeyData = useCallback(async () => {
+  const fetchKeyData = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true)
+      if (showLoading) {
+        setLoading(true)
+      }
       const res = await fetch(`/api/dashboard/properties/${propertyId}/key`)
       if (res.ok) {
         const data = await res.json()
@@ -75,7 +78,9 @@ export function PropertyKeyPanel({
   }, [propertyId])
 
   useEffect(() => {
-    fetchKeyData()
+    queueMicrotask(() => {
+      void fetchKeyData(false)
+    })
   }, [fetchKeyData])
 
   async function handleSaveKey(e: React.FormEvent) {
