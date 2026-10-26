@@ -43,7 +43,7 @@ services:
       - LEAD_RATE_LIMIT_PEPPER=${LEAD_RATE_LIMIT_PEPPER:-pepius_secret_pepper_rate_limit_2026_super_secure}
       - LICENSE_DEV_BYPASS=false
       - LICENSE_CONTROL_PLANE_ENABLED=false
-      - PEPIUS_LICENSE_API_URL=${PEPIUS_LICENSE_API_URL:-https://pepius-imob.vercel.app}
+      - PEPIUS_LICENSE_API_URL=${PEPIUS_LICENSE_API_URL:-}
       - 'LICENSE_TRUSTED_PUBLIC_KEYS_JSON={"pepius-licensing-2026-10":"-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6yy3AffJjAJbzI+9d6FYQoa1XXIFaXDBOa9nlXfME8Y=\n-----END PUBLIC KEY-----\n"}'
       - LICENSE_STATE_DIR=/app/.local/license-state
       - EVOLUTION_API_URL=http://evolution-api:8080

@@ -62,7 +62,7 @@ function trustedKeys(): Record<string, string> {
 
 function developmentLicenseBypassEnabled(): boolean {
   if (process.env.LICENSE_DEV_BYPASS !== 'true') return false
-  if (process.env.VERCEL_ENV === 'production') return false
+  if (process.env.NODE_ENV === 'production') return false
 
   return true
 }
@@ -75,8 +75,9 @@ function resolveControlPlaneUrl(): string {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
   }
 
-  // Fallback canônico para a API do portal Pepius
-  return 'https://pepius-imob.vercel.app'
+  throw new Error(
+    'Servidor de licenças não configurado. Defina a variável de ambiente PEPIUS_LICENSE_API_URL.',
+  )
 }
 
 export async function readInstallation(): Promise<LocalInstallation | null> {
@@ -94,7 +95,7 @@ export async function readInstallation(): Promise<LocalInstallation | null> {
     // Arquivo não existe ainda no disco ou filesystem é read-only
   }
 
-  // Prioridade 2: Fallback no banco local_license_state (Serverless Vercel)
+  // Prioridade 2: Fallback no banco local_license_state (caso o disco esteja inacessível)
   try {
     const admin = createAdminClient()
     const { data } = await admin
@@ -143,7 +144,7 @@ export async function saveInstallation(installation: LocalInstallation): Promise
     await chmod(stateFile, 0o600)
     diskSaved = true
   } catch {
-    // Ignora se o filesystem for read-only (ex: Vercel)
+    // Ignora se o filesystem for read-only ou falhar
   }
 
   // Se o filesystem for read-only, garante persistência no banco local_license_state

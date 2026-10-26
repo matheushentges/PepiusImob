@@ -27,7 +27,7 @@ function trustedKeys(): Record<string, string> {
 
 function developmentLicenseBypassEnabled(): boolean {
   if (process.env.LICENSE_DEV_BYPASS !== 'true') return false
-  if (process.env.VERCEL_ENV === 'production') return false
+  if (process.env.NODE_ENV === 'production') return false
 
   return true
 }
