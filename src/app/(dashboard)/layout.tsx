@@ -13,6 +13,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 const baseNavItems = [
   { href: '/dashboard', label: 'Visão Geral', ownerOnly: false },
   { href: '/dashboard/imoveis', label: 'Catálogo de Imóveis', ownerOnly: false },
+  { href: '/dashboard/chaves', label: 'Controle de Chaves', ownerOnly: false },
   { href: '/dashboard/leads', label: 'Contatos de Clientes', ownerOnly: false },
   { href: '/dashboard/equipe', label: 'Equipe e Acessos', ownerOnly: true },
   { href: '/dashboard/configuracoes', label: 'Personalização do Site', ownerOnly: false },

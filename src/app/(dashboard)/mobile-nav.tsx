@@ -12,6 +12,7 @@ import {
   Settings,
   Users,
   UserCheck,
+  ShieldCheck,
   X,
 } from 'lucide-react'
 
@@ -20,10 +21,11 @@ type NavItem = { href: string; label: string }
 const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   '/dashboard': LayoutDashboard,
   '/dashboard/imoveis': Building2,
+  '/dashboard/chaves': KeyRound,
   '/dashboard/leads': Users,
   '/dashboard/equipe': UserCheck,
   '/dashboard/configuracoes': Settings,
-  '/dashboard/licenca': KeyRound,
+  '/dashboard/licenca': ShieldCheck,
 }
 
 export function MobileNav({

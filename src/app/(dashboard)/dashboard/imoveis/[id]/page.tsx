@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { ImageUpload } from '@/components/shared/image-upload'
 import { useLicenseEditable } from '@/components/licensing/license-mode-provider'
 import { formatCep, fetchAddressByCep } from '@/lib/cep/viacep'
+import { PropertyKeyPanel } from '@/components/keys/property-key-panel'
 
 interface Property {
   id: string
@@ -257,6 +258,8 @@ export default function EditarImovelPage() {
           </div>
         </div>
       </div>
+      {/* Painel de Controle de Chaves e Claviculário */}
+      <PropertyKeyPanel propertyId={id} propertyTitle={property.titulo} canEdit={editable} />
 
       {/* Form Card - Borders-only, bg-card */}
       <div className="rounded-lg border border-border bg-card p-4 sm:p-6">

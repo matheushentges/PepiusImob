@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
+import { isKeyLate } from '@/lib/keys/validation'
+import type { KeyStatus } from '@/lib/keys/types'
 import { PropertiesClient, type AgencyProperty } from './properties-client'
 
 export const dynamic = 'force-dynamic'
@@ -33,32 +35,69 @@ export default async function ImoveisPage() {
     ? await supabase.from('profiles').select('tenant_id').eq('id', user.id).maybeSingle()
     : { data: null }
 
-  const { data: properties, error } = await supabase
-    .from('properties')
-    .select('id, tenant_id, titulo, tipo, finalidade, status, featured, preco_venda, preco_locacao, cidade, estado, bairro, created_at')
-    .eq('tenant_id', profile?.tenant_id ?? '00000000-0000-0000-0000-000000000000')
-    .order('created_at', { ascending: false })
+  const tenantId = profile?.tenant_id ?? '00000000-0000-0000-0000-000000000000'
+
+  const [propertiesResult, keysResult, movementsResult] = await Promise.all([
+    supabase
+      .from('properties')
+      .select('id, tenant_id, titulo, tipo, finalidade, status, featured, preco_venda, preco_locacao, cidade, estado, bairro, created_at')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('property_keys')
+      .select('id, property_id, codigo, status')
+      .eq('tenant_id', tenantId),
+    supabase
+      .from('key_movements')
+      .select('key_id, nome_responsavel, previsao_retorno')
+      .eq('tenant_id', tenantId)
+      .is('data_devolucao', null),
+  ])
+
   const license = await getLocalLicenseAccess()
   if (license.active && !license.features.includes('properties')) notFound()
 
-  if (error) {
-    console.error('Agency property page query failed', { code: error.code })
+  if (propertiesResult.error) {
+    console.error('Agency property page query failed', { code: propertiesResult.error.code })
   }
 
-  const rows: AgencyProperty[] = ((properties ?? []) as unknown as PropertyQueryRow[]).map((property) => ({
-    id: property.id,
-    titulo: property.titulo,
-    tipo: property.tipo,
-    finalidade: property.finalidade,
-    status: property.status,
-    featured: property.featured === true,
-    precoVenda: amount(property.preco_venda),
-    precoLocacao: amount(property.preco_locacao),
-    cidade: property.cidade,
-    estado: property.estado,
-    bairro: property.bairro,
-    createdAt: property.created_at,
-  }))
+  const keysByPropertyId = new Map<string, any>()
+  for (const k of keysResult.data ?? []) {
+    keysByPropertyId.set(k.property_id, k)
+  }
+
+  const openMovementsByKeyId = new Map<string, any>()
+  for (const m of movementsResult.data ?? []) {
+    openMovementsByKeyId.set(m.key_id, m)
+  }
+
+  const rows: AgencyProperty[] = ((propertiesResult.data ?? []) as unknown as PropertyQueryRow[]).map((property) => {
+    const key = keysByPropertyId.get(property.id)
+    const openMov = key ? openMovementsByKeyId.get(key.id) : null
+
+    return {
+      id: property.id,
+      titulo: property.titulo,
+      tipo: property.tipo,
+      finalidade: property.finalidade,
+      status: property.status,
+      featured: property.featured === true,
+      precoVenda: amount(property.preco_venda),
+      precoLocacao: amount(property.preco_locacao),
+      cidade: property.cidade,
+      estado: property.estado,
+      bairro: property.bairro,
+      createdAt: property.created_at,
+      keyInfo: key
+        ? {
+            codigo: key.codigo,
+            status: key.status as KeyStatus,
+            responsibleName: openMov?.nome_responsavel ?? null,
+            isLate: openMov ? isKeyLate(openMov.previsao_retorno) : false,
+          }
+        : null,
+    }
+  })
 
   return <PropertiesClient properties={rows} canEdit={license.active} />
 }

@@ -11,7 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Plus, Home, Building, Search, Star } from 'lucide-react'
+import { Plus, Home, Building, Search, Star, KeyRound } from 'lucide-react'
+import { KeyStatusBadge } from '@/components/keys/key-status-badge'
+import type { KeyStatus } from '@/lib/keys/types'
 
 export interface AgencyProperty {
   id: string
@@ -26,6 +28,12 @@ export interface AgencyProperty {
   estado: string
   bairro: string
   createdAt: string
+  keyInfo?: {
+    codigo: string
+    status: KeyStatus
+    responsibleName?: string | null
+    isLate?: boolean
+  } | null
 }
 
 const statusLabels: Record<string, string> = {
@@ -96,24 +104,32 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [keyFilter, setKeyFilter] = useState('')
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
     return properties.filter((property) => {
       if (typeFilter && property.tipo !== typeFilter) return false
       if (statusFilter && property.status !== statusFilter) return false
+      if (keyFilter) {
+        if (keyFilter === 'sem_chave' && property.keyInfo) return false
+        if (keyFilter === 'disponivel' && property.keyInfo?.status !== 'disponivel') return false
+        if (keyFilter === 'fora' && (property.keyInfo?.status === 'disponivel' || !property.keyInfo)) return false
+        if (keyFilter === 'atrasada' && !property.keyInfo?.isLate) return false
+      }
       if (!term) return true
-      return [property.titulo, property.bairro, property.cidade, property.estado]
+      return [property.titulo, property.bairro, property.cidade, property.estado, property.keyInfo?.codigo || '']
         .some((value) => value.toLowerCase().includes(term))
     })
-  }, [properties, search, statusFilter, typeFilter])
+  }, [properties, search, statusFilter, typeFilter, keyFilter])
 
-  const filtersActive = Boolean(search.trim() || typeFilter || statusFilter)
+  const filtersActive = Boolean(search.trim() || typeFilter || statusFilter || keyFilter)
 
   function clearFilters() {
     setSearch('')
     setTypeFilter('')
     setStatusFilter('')
+    setKeyFilter('')
   }
 
   return (
@@ -174,6 +190,18 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
             <option value="reservado">Reservado</option>
             <option value="vendido">Vendido</option>
             <option value="alugado">Alugado</option>
+          </select>
+          <select
+            value={keyFilter}
+            onChange={(event) => setKeyFilter(event.target.value)}
+            aria-label="Filtrar por chave"
+            className="h-10 sm:h-9 w-full rounded-md border border-input bg-input px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring col-span-2 sm:col-span-1"
+          >
+            <option value="">Todas as chaves</option>
+            <option value="disponivel">No Claviculário</option>
+            <option value="fora">Chave em Uso / Fora</option>
+            <option value="atrasada">Devolução em Atraso</option>
+            <option value="sem_chave">Sem Chave Cadastrada</option>
           </select>
         </div>
         {filtersActive && (
@@ -237,6 +265,24 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
                 </div>
               </div>
 
+              <div className="flex items-center justify-between border-t border-border/60 pt-2.5 text-xs">
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <KeyRound className="h-3.5 w-3.5" />
+                  Chave:
+                </span>
+                {property.keyInfo ? (
+                  <KeyStatusBadge
+                    status={property.keyInfo.status}
+                    codigo={property.keyInfo.codigo}
+                    isLate={property.keyInfo.isLate}
+                    responsibleName={property.keyInfo.responsibleName}
+                    compact
+                  />
+                ) : (
+                  <span className="text-muted-foreground italic">Não cadastrada</span>
+                )}
+              </div>
+
               {canEdit && (
                 <div className="border-t border-border/60 pt-2.5">
                   <Button variant="outline" size="sm" asChild className="h-9 w-full justify-center">
@@ -294,6 +340,9 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
               <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Status
               </TableHead>
+              <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Chave / Claviculário
+              </TableHead>
               <TableHead className="text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Ações
               </TableHead>
@@ -341,6 +390,18 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
                       {statusLabels[property.status] || property.status}
                     </span>
                   </TableCell>
+                  <TableCell>
+                    {property.keyInfo ? (
+                      <KeyStatusBadge
+                        status={property.keyInfo.status}
+                        codigo={property.keyInfo.codigo}
+                        isLate={property.keyInfo.isLate}
+                        responsibleName={property.keyInfo.responsibleName}
+                      />
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     {canEdit ? (
                       <Button variant="ghost" size="sm" asChild className="h-8">
@@ -352,7 +413,7 @@ export function PropertiesClient({ properties, canEdit }: { properties: AgencyPr
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center">
+                <TableCell colSpan={7} className="py-12 text-center">
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
                     <Home className="h-6 w-6" />
                   </div>
