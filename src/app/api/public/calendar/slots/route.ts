@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireActiveLicense } from '@/lib/licensing/local-state'
 import { publicSlotQuerySchema } from '@/lib/calendar/validation'
-import { calculateAvailableSlots } from '@/lib/calendar/slot-calculator'
+import { calculateAvailableSlots, getNextOperatingDays } from '@/lib/calendar/slot-calculator'
 import { getFreshAccessToken, fetchFreeBusyCalendar } from '@/lib/calendar/google-calendar'
 
 export async function GET(request: Request) {
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       .eq('tenant_id', tenantId)
       .maybeSingle()
 
-    if (settingsError || !settings || !settings.enabled || !settings.google_refresh_token) {
+    if (settingsError || !settings || !settings.enabled) {
       return NextResponse.json(
         {
           enabled: false,
@@ -95,102 +95,152 @@ export async function GET(request: Request) {
       )
     }
 
-    // 4. Coleta intervalos ocupados do Google Calendar (FreeBusy)
-    const busyIntervals: Array<{ start: string; end: string }> = []
+    const visitDuration = settings.visit_duration_minutes ?? 45
+    const bufferMinutes = settings.buffer_minutes ?? 15
+    let slots: Array<{ time: string; startsAt: string; endsAt: string; formatted: string }> = []
+    let n8nHandled = false
 
+    // 4. Tentativa de consulta síncrona via n8n (rede interna Docker)
+    const n8nSlotsUrl = process.env.PEPIUS_N8N_CALENDAR_SLOTS_URL || 'http://n8n:5678/webhook/pepius-slots'
     try {
-      const accessToken = await getFreshAccessToken(tenantId)
-      if (accessToken) {
-        const timeMin = `${parsed.data.date}T00:00:00-03:00`
-        const timeMax = `${parsed.data.date}T23:59:59-03:00`
-        const googleBusy = await fetchFreeBusyCalendar(
-          accessToken,
-          settings.google_calendar_id || 'primary',
-          timeMin,
-          timeMax,
-        )
-        busyIntervals.push(...googleBusy)
-      }
-    } catch (gErr) {
-      console.warn('Não foi possível sincronizar FreeBusy do Google, usando agenda local:', gErr)
-    }
+      const url = new URL(n8nSlotsUrl)
+      url.searchParams.set('date', parsed.data.date)
+      url.searchParams.set('duration', String(visitDuration))
+      url.searchParams.set('buffer', String(bufferMinutes))
+      url.searchParams.set('propertyId', parsed.data.propertyId)
 
-    // 5. Coleta visitas já reservadas na base local (leads) para a mesma data
-    const startOfDay = `${parsed.data.date}T00:00:00-03:00`
-    const endOfDay = `${parsed.data.date}T23:59:59-03:00`
-    const { data: bookedLeads } = await admin
-      .from('leads')
-      .select('visit_starts_at, visit_ends_at')
-      .eq('tenant_id', tenantId)
-      .gte('visit_starts_at', startOfDay)
-      .lte('visit_starts_at', endOfDay)
-      .not('visit_starts_at', 'is', null)
+      const n8nRes = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(2000),
+      })
 
-    if (bookedLeads && bookedLeads.length > 0) {
-      for (const lead of bookedLeads) {
-        if (lead.visit_starts_at && lead.visit_ends_at) {
-          busyIntervals.push({
-            start: lead.visit_starts_at,
-            end: lead.visit_ends_at,
+      if (n8nRes.ok) {
+        const n8nData = await n8nRes.json()
+        if (Array.isArray(n8nData.slots) && n8nData.slots.length > 0) {
+          slots = (n8nData.slots as string[]).map((time) => {
+            const [h, m] = time.split(':').map(Number)
+            const totalStart = h * 60 + m
+            const totalEnd = totalStart + visitDuration
+            const endH = String(Math.floor(totalEnd / 60)).padStart(2, '0')
+            const endM = String(totalEnd % 60).padStart(2, '0')
+            return {
+              time,
+              startsAt: `${parsed.data.date}T${time}:00-03:00`,
+              endsAt: `${parsed.data.date}T${endH}:${endM}:00-03:00`,
+              formatted: `${time} às ${endH}:${endM}`,
+            }
           })
+          n8nHandled = true
         }
       }
+    } catch {
+      // Fallback para motor local
     }
 
-    // 6. Determina o dia da semana para extrair o expediente configurado
-    const [year, month, day] = parsed.data.date.split('-').map(Number)
-    const dayOfWeekIndex = new Date(year, month - 1, day, 12, 0, 0).getDay()
-    const dayKeys = [
-      'sunday',
-      'monday',
-      'tuesday',
-      'wednesday',
-      'thursday',
-      'friday',
-      'saturday',
-    ] as const
-    const dayKey = dayKeys[dayOfWeekIndex]
+    // 5. Motor local de contingência (caso n8n não responda ou retorne vazio)
+    if (!n8nHandled) {
+      const busyIntervals: Array<{ start: string; end: string }> = []
 
-    const operatingHours = settings.operating_hours as Record<
-      string,
-      { enabled: boolean; start: string; end: string }
-    > | null
-    const daySchedule = operatingHours?.[dayKey] ?? {
-      enabled: false,
-      start: '09:00',
-      end: '18:00',
-    }
-
-    const visitDuration = settings.visit_duration_minutes ?? 45
-
-    const availableTimes = calculateAvailableSlots({
-      date: parsed.data.date,
-      daySchedule,
-      busyIntervals,
-      visitDurationMinutes: visitDuration,
-      bufferMinutes: settings.buffer_minutes ?? 15,
-      minNoticeHours: settings.min_notice_hours ?? 2,
-      currentTime: new Date(),
-    })
-
-    const slots = availableTimes.map((time) => {
-      const [h, m] = time.split(':').map(Number)
-      const totalStart = h * 60 + m
-      const totalEnd = totalStart + visitDuration
-      const endH = String(Math.floor(totalEnd / 60)).padStart(2, '0')
-      const endM = String(totalEnd % 60).padStart(2, '0')
-      return {
-        time,
-        startsAt: `${parsed.data.date}T${time}:00-03:00`,
-        endsAt: `${parsed.data.date}T${endH}:${endM}:00-03:00`,
-        formatted: `${time} às ${endH}:${endM}`,
+      // Coleta do Google se token nativo estiver configurado
+      try {
+        const accessToken = await getFreshAccessToken(tenantId)
+        if (accessToken) {
+          const timeMin = `${parsed.data.date}T00:00:00-03:00`
+          const timeMax = `${parsed.data.date}T23:59:59-03:00`
+          const googleBusy = await fetchFreeBusyCalendar(
+            accessToken,
+            settings.google_calendar_id || 'primary',
+            timeMin,
+            timeMax,
+          )
+          busyIntervals.push(...googleBusy)
+        }
+      } catch (gErr) {
+        console.warn('Não foi possível sincronizar FreeBusy do Google, usando agenda local:', gErr)
       }
-    })
+
+      // Coleta reservas locais (leads) para a data
+      const startOfDay = `${parsed.data.date}T00:00:00-03:00`
+      const endOfDay = `${parsed.data.date}T23:59:59-03:00`
+      const { data: bookedLeads } = await admin
+        .from('leads')
+        .select('visit_starts_at, visit_ends_at')
+        .eq('tenant_id', tenantId)
+        .gte('visit_starts_at', startOfDay)
+        .lte('visit_starts_at', endOfDay)
+        .not('visit_starts_at', 'is', null)
+
+      if (bookedLeads && bookedLeads.length > 0) {
+        for (const lead of bookedLeads) {
+          if (lead.visit_starts_at && lead.visit_ends_at) {
+            busyIntervals.push({
+              start: lead.visit_starts_at,
+              end: lead.visit_ends_at,
+            })
+          }
+        }
+      }
+
+      // Determina dia da semana
+      const [year, month, day] = parsed.data.date.split('-').map(Number)
+      const dayOfWeekIndex = new Date(year, month - 1, day, 12, 0, 0).getDay()
+      const dayKeys = [
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+      ] as const
+      const dayKey = dayKeys[dayOfWeekIndex]
+
+      const operatingHours = settings.operating_hours as Record<
+        string,
+        { enabled: boolean; start: string; end: string }
+      > | null
+
+      const daySchedule = operatingHours?.[dayKey] ?? {
+        enabled: dayOfWeekIndex >= 1 && dayOfWeekIndex <= 5, // seg a sex ativado por padrão
+        start: '08:00',
+        end: '17:00',
+      }
+
+      const availableTimes = calculateAvailableSlots({
+        date: parsed.data.date,
+        daySchedule,
+        busyIntervals,
+        visitDurationMinutes: visitDuration,
+        bufferMinutes,
+        minNoticeHours: settings.min_notice_hours ?? 2,
+        currentTime: new Date(),
+        windowStart: '08:00',
+        windowEnd: '17:00',
+      })
+
+      slots = availableTimes.map((time) => {
+        const [h, m] = time.split(':').map(Number)
+        const totalStart = h * 60 + m
+        const totalEnd = totalStart + visitDuration
+        const endH = String(Math.floor(totalEnd / 60)).padStart(2, '0')
+        const endM = String(totalEnd % 60).padStart(2, '0')
+        return {
+          time,
+          startsAt: `${parsed.data.date}T${time}:00-03:00`,
+          endsAt: `${parsed.data.date}T${endH}:${endM}:00-03:00`,
+          formatted: `${time} às ${endH}:${endM}`,
+        }
+      })
+    }
+
+    const availableDays = getNextOperatingDays(settings.operating_hours, new Date(), 3)
 
     return NextResponse.json(
       {
         enabled: true,
         visitDurationMinutes: visitDuration,
+        availableDays,
         slots,
       },
       { headers: { 'Cache-Control': 'no-store' } },

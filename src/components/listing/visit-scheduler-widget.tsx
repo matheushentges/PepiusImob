@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ContactForm } from '@/components/listing/contact-form'
+import { getNextOperatingDays, type BusinessDayItem } from '@/lib/calendar/slot-calculator'
 
 interface SlotItem {
   time: string
@@ -46,10 +47,8 @@ export function VisitSchedulerWidget({
   const [isCalendarEnabled, setIsCalendarEnabled] = useState<boolean | null>(null)
   const [visitDuration, setVisitDuration] = useState<number>(45)
 
-  // Geração das próximas 14 datas
-  const [availableDays, setAvailableDays] = useState<
-    Array<{ dateStr: string; dayOfWeek: string; dayOfMonth: number; monthName: string }>
-  >([])
+  // Geração dos próximos 3 dias de atendimento (incluindo sábado se configurado)
+  const [availableDays, setAvailableDays] = useState<BusinessDayItem[]>([])
   const [selectedDate, setSelectedDate] = useState<string>('')
   const [slots, setSlots] = useState<SlotItem[]>([])
   const [selectedSlot, setSelectedSlot] = useState<SlotItem | null>(null)
@@ -77,33 +76,9 @@ export function VisitSchedulerWidget({
 
   const dateScrollId = useId()
 
-  // Inicializa lista de dias a partir de amanhã ou hoje
+  // Inicializa lista dos próximos 3 dias de atendimento a partir de amanhã
   useEffect(() => {
-    const days: Array<{
-      dateStr: string
-      dayOfWeek: string
-      dayOfMonth: number
-      monthName: string
-    }> = []
-
-    const now = new Date()
-    // Começa a partir de amanhã para garantir antecedência amigável, até 14 dias
-    for (let i = 1; i <= 14; i++) {
-      const d = new Date(now)
-      d.setDate(d.getDate() + i)
-
-      const year = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      const dateStr = `${year}-${month}-${day}`
-
-      const dayOfWeek = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase()
-      const dayOfMonth = d.getDate()
-      const monthName = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')
-
-      days.push({ dateStr, dayOfWeek, dayOfMonth, monthName })
-    }
-
+    const days = getNextOperatingDays(null, new Date(), 3)
     setAvailableDays(days)
     if (days[0]) {
       setSelectedDate(days[0].dateStr)
@@ -139,6 +114,9 @@ export function VisitSchedulerWidget({
         } else {
           setIsCalendarEnabled(true)
           setVisitDuration(data.visitDurationMinutes || 45)
+          if (Array.isArray(data.availableDays) && data.availableDays.length > 0) {
+            setAvailableDays(data.availableDays)
+          }
           setSlots(data.slots || [])
         }
       } catch (err) {
@@ -550,20 +528,19 @@ export function VisitSchedulerWidget({
               /* PASSO 1: Seleção de Data e Horário */
               <div className="space-y-4">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-semibold text-text-primary">
-                      1. Selecione o dia
+                      1. Escolha o dia
                     </span>
-                    <span className="text-[11px] text-text-tertiary">
-                      {visitDuration} min de visita
+                    <span className="text-[11px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                      Próximos 3 dias úteis
                     </span>
                   </div>
 
-                  {/* Carrossel horizontal de datas */}
+                  {/* Grade de 3 Dias Úteis */}
                   <div
                     id={dateScrollId}
-                    className="flex gap-2 overflow-x-auto pb-2 pt-1 scrollbar-thin focus:outline-none"
-                    tabIndex={0}
+                    className="grid grid-cols-3 gap-2"
                     role="region"
                     aria-label="Seleção de dias para visita"
                   >
@@ -574,19 +551,31 @@ export function VisitSchedulerWidget({
                           key={d.dateStr}
                           type="button"
                           onClick={() => setSelectedDate(d.dateStr)}
-                          className={`flex min-w-[58px] flex-col items-center justify-center rounded-lg border py-2 px-1 text-center transition-all ${
+                          className={`relative flex flex-col items-center justify-center rounded-xl border py-2.5 px-1 text-center transition-all cursor-pointer ${
                             isSelected
-                              ? 'border-accent bg-accent text-accent-contrast shadow-xs'
-                              : 'border-border-subtle bg-surface-raised text-text-secondary hover:border-border-default hover:text-text-primary'
+                              ? 'border-accent bg-accent text-accent-contrast shadow-sm ring-2 ring-accent/25'
+                              : 'border-border-subtle bg-surface-raised text-text-secondary hover:border-accent/40 hover:bg-surface-raised/80 hover:text-text-primary'
                           }`}
                         >
-                          <span className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? 'text-accent-contrast/90' : 'text-text-tertiary'}`}>
-                            {d.dayOfWeek}
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${
+                              isSelected
+                                ? 'text-accent-contrast/90'
+                                : d.isTomorrow
+                                  ? 'text-accent font-extrabold'
+                                  : 'text-text-tertiary'
+                            }`}
+                          >
+                            {d.label}
                           </span>
-                          <span className="text-base font-bold tabular-nums leading-tight">
+                          <span className="text-lg font-bold tabular-nums leading-tight">
                             {d.dayOfMonth}
                           </span>
-                          <span className={`text-[10px] ${isSelected ? 'text-accent-contrast/80' : 'text-text-tertiary'}`}>
+                          <span
+                            className={`text-[10px] capitalize ${
+                              isSelected ? 'text-accent-contrast/80' : 'text-text-tertiary'
+                            }`}
+                          >
                             {d.monthName}
                           </span>
                         </button>
@@ -602,7 +591,7 @@ export function VisitSchedulerWidget({
                       2. Escolha o horário
                     </span>
                     <span className="text-[11px] text-text-tertiary">
-                      Horário de Brasília
+                      08:00 às 17:00 ({visitDuration} min)
                     </span>
                   </div>
 

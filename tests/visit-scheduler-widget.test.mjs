@@ -13,4 +13,7 @@ test('VisitSchedulerWidget component exists and includes required tabs and sched
   assert.ok(content.includes('/api/public/calendar/slots'), 'Must call slots API')
   assert.ok(content.includes('/api/public/calendar/book'), 'Must call book API')
   assert.ok(content.includes('googleEventLink'), 'Must support Google Calendar event link on confirmation')
+  assert.ok(content.includes('getNextOperatingDays'), 'Must use getNextOperatingDays helper')
+  assert.ok(content.includes('Próximos 3 dias'), 'Must display 3 days label')
+  assert.ok(content.includes('08:00 às 17:00'), 'Must display 08:00 to 17:00 window label')
 })

@@ -52,6 +52,7 @@ services:
       - PEPIUS_N8N_WEBHOOK_URL=http://n8n:5678/webhook/pepius-lead
       - PEPIUS_N8N_LEAD_WEBHOOK_URL=http://n8n:5678/webhook/pepius-lead
       - PEPIUS_N8N_VISIT_WEBHOOK_URL=http://n8n:5678/webhook/pepius-visit
+      - PEPIUS_N8N_CALENDAR_SLOTS_URL=http://n8n:5678/webhook/pepius-slots
     volumes:
       - pepius-license-data:/app/.local/license-state
     expose:
