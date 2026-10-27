@@ -125,3 +125,8 @@ CREATE POLICY "key_movements_tenant_delete" ON public.key_movements
     tenant_id = public.current_user_tenant_id()
     AND public.current_user_role() = 'imobiliaria_owner'
   );
+
+-- ---------------------------------------------------------------------
+-- 7. tenants: Permitir que imobiliaria_owner atualize 'nome' e 'site_config'
+-- ---------------------------------------------------------------------
+GRANT UPDATE (nome, site_config) ON public.tenants TO authenticated;

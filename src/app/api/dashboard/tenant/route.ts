@@ -3,6 +3,7 @@ import { getAgencyContext } from '@/lib/auth/agency'
 import { requireActiveLicense } from '@/lib/licensing/local-state'
 import { bodyErrorResponse, readJsonBody } from '@/lib/security/request-body'
 import { tenantBrandingSchema } from '@/lib/tenant/validation'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET() {
   const result = await getAgencyContext()
@@ -43,7 +44,8 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: firstIssue }, { status: 400 })
   }
 
-  const { data, error } = await result.context.supabase
+  const admin = createAdminClient()
+  const { data, error } = await admin
     .from('tenants')
     .update({
       nome: parsed.data.nome,
@@ -54,7 +56,11 @@ export async function PUT(request: Request) {
     .single()
 
   if (error || !data) {
-    console.error('Agency site settings update failed', { code: error?.code })
+    console.error('Agency site settings update failed', {
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+    })
     return NextResponse.json({ error: 'Não foi possível salvar as configurações' }, { status: 503 })
   }
   return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } })
