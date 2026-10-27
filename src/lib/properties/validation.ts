@@ -34,6 +34,12 @@ export const propertyInputSchema = z.object({
   quartos: optionalCount,
   banheiros: optionalCount,
   vagas_garagem: optionalCount,
+  proprietario_id: z
+    .string()
+    .uuid('ID de proprietário inválido')
+    .optional()
+    .nullable()
+    .transform((val) => val || null),
 }).strict().superRefine((property, context) => {
   if (property.finalidade === 'venda' && property.preco_venda === undefined) {
     context.addIssue({ code: 'custom', path: ['preco_venda'], message: 'Informe o preço de venda' })

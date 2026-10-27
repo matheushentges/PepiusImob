@@ -29,6 +29,12 @@ export const checkoutKeySchema = z
       .optional()
       .nullable()
       .transform((val) => val || null),
+    client_id: z
+      .string()
+      .uuid('ID de cliente inválido')
+      .optional()
+      .nullable()
+      .transform((val) => val || null),
     nome_responsavel: z
       .string()
       .trim()

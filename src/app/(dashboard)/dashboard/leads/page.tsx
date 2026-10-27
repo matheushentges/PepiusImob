@@ -10,6 +10,7 @@ type PropertyRelation = { titulo: string } | Array<{ titulo: string }> | null
 type LeadQueryRow = {
   id: string
   property_id: string | null
+  client_id: string | null
   nome: string
   email: string | null
   telefone: string | null
@@ -41,7 +42,7 @@ export default async function LeadsPage() {
     : { data: null }
   const { data: leads, error } = await supabase
     .from('leads')
-    .select('id, property_id, nome, email, telefone, mensagem, horario_preferido, status, created_at, visit_starts_at, visit_ends_at, google_event_id, google_event_link, properties(titulo)')
+    .select('id, property_id, client_id, nome, email, telefone, mensagem, horario_preferido, status, created_at, visit_starts_at, visit_ends_at, google_event_id, google_event_link, properties(titulo)')
     .eq('tenant_id', profile?.tenant_id ?? '00000000-0000-0000-0000-000000000000')
     .order('created_at', { ascending: false })
 
@@ -52,6 +53,7 @@ export default async function LeadsPage() {
   const rows: AgencyLead[] = ((leads ?? []) as unknown as LeadQueryRow[]).map((lead) => ({
     id: lead.id,
     propertyId: lead.property_id,
+    clientId: lead.client_id,
     propertyTitle: propertyTitle(lead.properties),
     nome: lead.nome,
     email: lead.email,

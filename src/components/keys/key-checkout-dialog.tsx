@@ -35,6 +35,8 @@ export function KeyCheckoutDialog({
 }: KeyCheckoutDialogProps) {
   const [tipoResponsavel, setTipoResponsavel] = useState<KeyHolderType>('consultor')
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [clientList, setClientList] = useState<Array<{ id: string; nome: string; telefone: string; documento: string }>>([])
+  const [selectedClientId, setSelectedClientId] = useState('')
   const [selectedConsultorId, setSelectedConsultorId] = useState('')
   const [nomeResponsavel, setNomeResponsavel] = useState('')
   const [telefoneResponsavel, setTelefoneResponsavel] = useState('')
@@ -45,14 +47,18 @@ export function KeyCheckoutDialog({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Carrega membros da equipe quando o modal abre
+  // Carrega membros da equipe e lista de clientes quando o modal abre
   useEffect(() => {
     if (!isOpen) return
-    async function loadTeam() {
+    async function loadData() {
       try {
-        const res = await fetch('/api/dashboard/team')
-        if (res.ok) {
-          const data = await res.json()
+        const [teamRes, clientsRes] = await Promise.all([
+          fetch('/api/dashboard/team'),
+          fetch('/api/dashboard/clients'),
+        ])
+
+        if (teamRes.ok) {
+          const data = await teamRes.json()
           setTeamMembers(data.members || [])
           if (data.members?.length > 0) {
             setSelectedConsultorId((prev) => {
@@ -64,11 +70,23 @@ export function KeyCheckoutDialog({
             })
           }
         }
+
+        if (clientsRes.ok) {
+          const cData = await clientsRes.json()
+          setClientList(
+            (cData.clients || []).map((c: any) => ({
+              id: c.id,
+              nome: c.nome,
+              telefone: c.telefone || '',
+              documento: c.documento || '',
+            }))
+          )
+        }
       } catch (err) {
-        console.error('Falha ao carregar equipe', err)
+        console.error('Falha ao carregar dados para saída de chave', err)
       }
     }
-    loadTeam()
+    loadData()
   }, [isOpen])
 
   // Fecha no Escape
@@ -108,6 +126,16 @@ export function KeyCheckoutDialog({
     }
   }
 
+  function handleClientPick(id: string) {
+    setSelectedClientId(id)
+    const found = clientList.find((c) => c.id === id)
+    if (found) {
+      setNomeResponsavel(found.nome)
+      if (found.telefone) setTelefoneResponsavel(found.telefone)
+      if (found.documento) setDocumentoResponsavel(found.documento)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -129,6 +157,7 @@ export function KeyCheckoutDialog({
         property_id: propertyId,
         tipo_responsavel: tipoResponsavel,
         consultor_id: tipoResponsavel === 'consultor' ? selectedConsultorId || null : null,
+        client_id: tipoResponsavel === 'cliente' ? selectedClientId || null : null,
         nome_responsavel: finalNome.trim(),
         telefone_responsavel: telefoneResponsavel.trim() || null,
         documento_responsavel: documentoResponsavel.trim() || null,
@@ -285,6 +314,28 @@ export function KeyCheckoutDialog({
             </div>
           ) : (
             <div className="space-y-3">
+              {tipoResponsavel === 'cliente' && clientList.length > 0 && (
+                <div className="space-y-1.5 rounded-lg border border-accent/30 bg-accent/5 p-2.5">
+                  <Label htmlFor="cliente-select" className="text-xs font-semibold text-accent flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" />
+                    <span>Selecionar Cliente Cadastrado (Preenche automaticamente)</span>
+                  </Label>
+                  <select
+                    id="cliente-select"
+                    value={selectedClientId}
+                    onChange={(e) => handleClientPick(e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1.5 text-xs text-foreground shadow-2xs transition-all hover:border-border-strong focus-visible:outline-none focus-visible:border-accent"
+                  >
+                    <option value="">Digitar manualmente ou selecionar cliente...</option>
+                    {clientList.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nome} {c.telefone ? `(${c.telefone})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <Label htmlFor="nome-resp" className="text-xs">
                   {tipoResponsavel === 'cliente'

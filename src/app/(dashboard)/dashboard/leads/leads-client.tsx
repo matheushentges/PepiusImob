@@ -10,11 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Users, Phone, Mail, Clock, X, Loader2, Search, CalendarDays, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
+import { Users, Phone, Mail, Clock, X, Loader2, Search, CalendarDays, ExternalLink, UserCheck, UserPlus } from 'lucide-react'
 
 export interface AgencyLead {
   id: string
   propertyId: string | null
+  clientId?: string | null
   propertyTitle: string
   nome: string
   email: string | null
@@ -145,6 +147,32 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
       setError(cause instanceof Error ? cause.message : 'Não foi possível atualizar o contato')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const [converting, setConverting] = useState(false)
+
+  async function convertLeadToClient() {
+    if (!selected) return
+    setConverting(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const response = await fetch(`/api/dashboard/leads/${selected.id}/convert`, {
+        method: 'POST',
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Não foi possível converter o lead em cliente')
+      }
+      const updated = { ...selected, clientId: data.clientId, status: 'convertido' }
+      setRows((current) => current.map((lead) => (lead.id === selected.id ? updated : lead)))
+      setSelected(updated)
+      setSuccess(`Lead promovido com sucesso a Cliente: ${data.clientName}!`)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Erro ao converter lead')
+    } finally {
+      setConverting(false)
     }
   }
 
@@ -546,6 +574,51 @@ export function LeadsClient({ leads, canEdit }: { leads: AgencyLead[]; canEdit: 
                   </dd>
                 </div>
               </dl>
+
+              {/* Vínculo com Módulo de Clientes */}
+              <div className="rounded-xl border border-border bg-secondary/30 p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">Relacionamento no CRM</span>
+                  {selected.clientId && (
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                      Cliente Ativo
+                    </span>
+                  )}
+                </div>
+
+                {selected.clientId ? (
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-muted-foreground">Cadastro formal vinculado</span>
+                    <Link
+                      href={`/dashboard/clientes/${selected.clientId}`}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground hover:bg-accent/90 shadow-2xs"
+                    >
+                      <UserCheck className="h-3.5 w-3.5" />
+                      <span>Abrir Perfil 360º</span>
+                      <ExternalLink className="h-3 w-3 ml-0.5" />
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs text-muted-foreground">
+                      Este contato ainda é apenas um lead. Promova-o a cliente para registrar dados civis, documentos, endereço e preferências de compra/locação.
+                    </p>
+                    {canEdit && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={convertLeadToClient}
+                        disabled={converting}
+                        className="w-full justify-center text-xs border-accent/40 text-accent hover:bg-accent/10 cursor-pointer"
+                      >
+                        {converting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <UserPlus className="mr-1.5 h-3.5 w-3.5" />}
+                        Promover a Cliente Formal
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-2 border-t border-border pt-4">
                 <label htmlFor="lead-status" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

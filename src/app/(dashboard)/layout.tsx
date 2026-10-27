@@ -15,6 +15,7 @@ const baseNavItems = [
   { href: '/dashboard/imoveis', label: 'Catálogo de Imóveis', ownerOnly: false },
   { href: '/dashboard/chaves', label: 'Controle de Chaves', ownerOnly: false },
   { href: '/dashboard/leads', label: 'Contatos de Clientes', ownerOnly: false },
+  { href: '/dashboard/clientes', label: 'Gestão de Clientes', ownerOnly: false },
   { href: '/dashboard/equipe', label: 'Equipe e Acessos', ownerOnly: true },
   { href: '/dashboard/configuracoes', label: 'Personalização do Site', ownerOnly: false },
   { href: '/dashboard/licenca', label: 'Licença do Sistema', ownerOnly: false },
