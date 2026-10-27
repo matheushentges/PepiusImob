@@ -10,7 +10,6 @@ import {
   Home,
   KeyRound,
   Info,
-  Phone,
   ShieldCheck,
   Search,
   MessageCircle,
@@ -107,12 +106,6 @@ export function PublicHeader({ siteConfig }: PublicHeaderProps) {
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Sobre
-          </Link>
-          <Link
-            href="/#contato"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Contato
           </Link>
         </nav>
 
@@ -213,14 +206,6 @@ export function PublicHeader({ siteConfig }: PublicHeaderProps) {
               <span>Sobre a Imobiliária</span>
             </Link>
 
-            <Link
-              href="/#contato"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
-            >
-              <Phone className="h-4 w-4 text-accent" />
-              <span>Fale Conosco</span>
-            </Link>
 
             {cleanWhatsapp && (
               <a

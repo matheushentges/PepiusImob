@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import {
   KeyRound,
-  ShieldCheck,
   Mail,
   MapPin,
   Phone,
@@ -97,12 +96,6 @@ export function PublicFooter({ siteConfig }: PublicFooterProps) {
                 'Soluções completas e atendimento de confiança para compra, venda e locação de imóveis.'}
             </p>
 
-            <div className="pt-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/80 px-2.5 py-1 text-[11px] font-medium text-muted-foreground border border-border/60">
-                <ShieldCheck className="h-3 w-3 text-emerald-500" />
-                Instalação Privada On-Premise
-              </span>
-            </div>
           </div>
 
           {/* Coluna 2: Catálogo & Busca */}
