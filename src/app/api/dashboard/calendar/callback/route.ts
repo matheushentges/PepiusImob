@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAgencyContext } from '@/lib/auth/agency'
 
 function verifyOAuthState(stateStr: string, secret: string): { ok: boolean; tenantId?: string } {
   try {
@@ -36,10 +37,19 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${redirectBase}&status=error&message=${encodeURIComponent(error || 'Acesso negado')}`)
   }
 
-  const pepper = process.env.LEAD_RATE_LIMIT_PEPPER || 'calendar-state-secret'
+  const agencyResult = await getAgencyContext()
+  if (!agencyResult.context || agencyResult.context.role !== 'imobiliaria_owner') {
+    return NextResponse.redirect(`${redirectBase}&status=error&message=${encodeURIComponent('Acesso negado. Apenas o responsável pode autenticar a agenda.')}`)
+  }
+
+  const pepper = process.env.LEAD_RATE_LIMIT_PEPPER
+  if (!pepper) {
+    return NextResponse.redirect(`${redirectBase}&status=error&message=${encodeURIComponent('Segredo do servidor LEAD_RATE_LIMIT_PEPPER não configurado.')}`)
+  }
+
   const stateCheck = verifyOAuthState(state, pepper)
-  if (!stateCheck.ok || !stateCheck.tenantId) {
-    return NextResponse.redirect(`${redirectBase}&status=error&message=${encodeURIComponent('Sessão expirada. Tente novamente.')}`)
+  if (!stateCheck.ok || !stateCheck.tenantId || stateCheck.tenantId !== agencyResult.context.tenantId) {
+    return NextResponse.redirect(`${redirectBase}&status=error&message=${encodeURIComponent('Sessão expirada ou tenant incompatível. Tente novamente.')}`)
   }
 
   const tenantId = stateCheck.tenantId

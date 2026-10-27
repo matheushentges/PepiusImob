@@ -23,7 +23,8 @@ export function buildEventPayload(input: EventDetailsInput) {
       `✉️ E-mail: ${input.clientEmail}`,
       ``,
       `🏠 Imóvel: ${input.propertyTitle} (Código #${input.propertyCode})`,
-      `📍 Endereço: ${input.propertyAddress}`,
+      `📍 Localização / Bairro: ${input.propertyAddress}`,
+      `ℹ️ O endereço completo e instruções de acesso serão informados pelo corretor responsável antes da visita.`,
       input.leadId ? `🔗 Lead ID: ${input.leadId}` : null,
     ].filter(Boolean).join('\n'),
     start: {

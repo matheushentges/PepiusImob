@@ -107,6 +107,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 export async function DELETE(request: Request, { params }: RouteContext) {
   const result = await getAgencyContext(request)
   if (!result.context) return result.response
+
+  if (result.context.role !== 'imobiliaria_owner') {
+    return NextResponse.json(
+      { error: 'Apenas administradores podem excluir imóveis do catálogo' },
+      { status: 403 },
+    )
+  }
+
   if (!(await requireActiveLicense('properties'))) {
     return NextResponse.json({ error: 'A licença não permite alterações neste momento' }, { status: 423 })
   }

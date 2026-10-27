@@ -277,6 +277,13 @@ export async function DELETE(
   const result = await getAgencyContext(request)
   if (!result.context) return result.response
 
+  if (result.context.role !== 'imobiliaria_owner') {
+    return NextResponse.json(
+      { error: 'Apenas administradores podem excluir clientes' },
+      { status: 403 },
+    )
+  }
+
   if (!(await requireActiveLicense('properties'))) {
     return NextResponse.json({ error: 'A licença não permite alterações neste momento' }, { status: 423 })
   }

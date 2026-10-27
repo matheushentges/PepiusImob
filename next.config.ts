@@ -1,9 +1,23 @@
 
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV !== "production";
+
+const connectOrigins = [
+  "'self'",
+  "https://viacep.com.br",
+  "https://*.supabase.co",
+  "https://*.sslip.io",
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_APP_URL,
+  isDev ? "http://localhost:* http://127.0.0.1:* ws: wss:" : "",
+]
+  .filter(Boolean)
+  .join(" ");
+
 const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data: https:",
   "font-src 'self' data:",
@@ -11,7 +25,7 @@ const cspHeader = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*",
+  `connect-src ${connectOrigins}`,
 ].join("; ");
 
 const nextConfig: NextConfig = {

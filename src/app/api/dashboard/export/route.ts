@@ -18,21 +18,42 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient()
   const tenantId = result.context.tenantId
-  const [tenantResult, propertiesResult, leadsResult] = await Promise.all([
+  const [
+    tenantResult,
+    propertiesResult,
+    leadsResult,
+    clientsResult,
+    clientNotesResult,
+    propertyKeysResult,
+    keyMovementsResult,
+  ] = await Promise.all([
     admin.from('tenants').select('id, nome').eq('id', tenantId).maybeSingle(),
     admin.from('properties')
-      .select('id, titulo, descricao, tipo, finalidade, status, featured, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, created_at, updated_at')
+      .select('id, titulo, descricao, tipo, finalidade, status, featured, preco_venda, preco_locacao, endereco, cidade, estado, cep, bairro, area_total, area_construida, quartos, banheiros, vagas_garagem, proprietario_id, created_at, updated_at')
       .eq('tenant_id', tenantId).order('created_at', { ascending: false }),
     admin.from('leads')
-      .select('id, property_id, nome, email, telefone, mensagem, horario_preferido, status, created_at')
+      .select('id, property_id, client_id, nome, email, telefone, mensagem, horario_preferido, status, visit_starts_at, visit_ends_at, created_at')
+      .eq('tenant_id', tenantId).order('created_at', { ascending: false }),
+    admin.from('clients')
+      .select('id, tipo_pessoa, papeis, status, nome, nome_fantasia, documento, rg_ie, data_nascimento, profissao, estado_civil, regime_bens, conjuge_nome, conjuge_cpf, email, email_secundario, telefone, telefone_secundario, cep, logradouro, numero, complemento, bairro, cidade, estado, dados_bancarios, perfil_interesse, corretor_id, observacoes, created_at, updated_at')
+      .eq('tenant_id', tenantId).order('created_at', { ascending: false }),
+    admin.from('client_notes')
+      .select('id, client_id, autor_id, conteudo, created_at')
+      .eq('tenant_id', tenantId).order('created_at', { ascending: true }),
+    admin.from('property_keys')
+      .select('id, property_id, codigo, status, localizacao, created_at, updated_at')
+      .eq('tenant_id', tenantId).order('created_at', { ascending: false }),
+    admin.from('key_movements')
+      .select('id, key_id, tipo_responsavel, nome_responsavel, telefone_responsavel, documento_responsavel, consultor_id, client_id, motivo, data_saida, previsao_retorno, data_devolucao, observacoes, created_at')
       .eq('tenant_id', tenantId).order('created_at', { ascending: false }),
   ])
 
-  if (tenantResult.error || !tenantResult.data || propertiesResult.error || leadsResult.error) {
+  if (tenantResult.error || !tenantResult.data || propertiesResult.error || leadsResult.error || clientsResult.error) {
     console.error('Agency export query failed', {
       tenantCode: tenantResult.error?.code,
       propertiesCode: propertiesResult.error?.code,
       leadsCode: leadsResult.error?.code,
+      clientsCode: clientsResult.error?.code,
     })
     return NextResponse.json({ error: 'Não foi possível exportar os dados' }, { status: 503 })
   }
@@ -61,11 +82,15 @@ export async function GET(request: Request) {
   })))
 
   const exportData = {
-    format: 'pepius-imob-export-v1',
+    format: 'pepius-imob-export-v2',
     exported_at: new Date().toISOString(),
     agency: tenantResult.data,
     properties: propertiesResult.data,
     leads: leadsResult.data,
+    clients: clientsResult.data ?? [],
+    clientNotes: clientNotesResult.data ?? [],
+    propertyKeys: propertyKeysResult.data ?? [],
+    keyMovements: keyMovementsResult.data ?? [],
     images,
   }
 

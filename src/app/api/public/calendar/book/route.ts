@@ -75,10 +75,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Telefone inválido' }, { status: 400 })
     }
 
-    // Busca dados do imóvel
+    // Busca dados do imóvel (omitindo endereço exato/CEP para sigilo público)
     const { data: property, error: propertyError } = await admin
       .from('properties')
-      .select('id, codigo, titulo, endereco, bairro, cidade, estado')
+      .select('id, codigo, titulo, bairro, cidade, estado')
       .eq('id', parsed.data.propertyId)
       .eq('tenant_id', tenantId)
       .eq('status', 'disponivel')
@@ -203,7 +203,6 @@ export async function POST(request: Request) {
     if (accessToken) {
       try {
         const propertyAddress = [
-          property.endereco,
           property.bairro,
           `${property.cidade} - ${property.estado}`,
         ]

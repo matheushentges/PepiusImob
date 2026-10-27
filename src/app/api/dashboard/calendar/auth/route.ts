@@ -14,6 +14,13 @@ export async function GET(request: Request) {
   const result = await getAgencyContext()
   if (!result.context) return result.response
 
+  if (result.context.role !== 'imobiliaria_owner') {
+    return NextResponse.json(
+      { error: 'Apenas o responsável da imobiliária pode conectar a conta Google' },
+      { status: 403 },
+    )
+  }
+
   const tenantId = result.context.tenantId
   const admin = createAdminClient()
   const { data: settings } = await admin
@@ -30,7 +37,13 @@ export async function GET(request: Request) {
     )
   }
 
-  const pepper = process.env.LEAD_RATE_LIMIT_PEPPER || 'calendar-state-secret'
+  const pepper = process.env.LEAD_RATE_LIMIT_PEPPER
+  if (!pepper) {
+    return NextResponse.json(
+      { error: 'Configuração de segurança LEAD_RATE_LIMIT_PEPPER ausente no servidor.' },
+      { status: 500 },
+    )
+  }
   const state = createOAuthState(tenantId, pepper)
 
   const urlObj = new URL(request.url)
