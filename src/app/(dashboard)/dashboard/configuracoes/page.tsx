@@ -142,7 +142,7 @@ export default function ConfiguracoesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-12">
+    <div className="mx-auto max-w-4xl w-full min-w-0 space-y-6 pb-12">
       {/* Cabeçalho da Página */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
