@@ -21,6 +21,7 @@ import { ColorPresets } from '@/components/dashboard/branding/color-presets'
 import { BrandAssetUploader } from '@/components/dashboard/branding/brand-asset-uploader'
 import { FeaturedPropertiesManager } from '@/components/dashboard/branding/featured-properties-manager'
 import { CalendarSettingsTab } from '@/components/dashboard/branding/calendar-settings-tab'
+import { AboutSectionPreview } from '@/components/dashboard/branding/about-section-preview'
 import type { SiteConfigInput } from '@/lib/tenant/validation'
 
 type TabKey = 'marca' | 'cores' | 'contato' | 'vitrine' | 'agenda'
@@ -34,6 +35,9 @@ const defaultSiteConfig: SiteConfigInput = {
   accent_color: '#E07A5F',
   hero_title: 'Encontre seu próximo imóvel',
   hero_subtitle: 'Explore imóveis para venda e locação e encontre um lugar que combina com seus planos.',
+  about_tag: 'Atendimento próximo',
+  about_title: 'Uma escolha importante merece atenção de verdade.',
+  about_text: 'Consulte os detalhes de cada imóvel e fale com a equipe da imobiliária para tirar dúvidas ou agendar uma visita.',
   whatsapp: '',
   telefone: '',
   email_contato: '',
@@ -83,6 +87,9 @@ export default function ConfiguracoesPage() {
           accent_color: typeof saved.accent_color === 'string' ? saved.accent_color : defaultSiteConfig.accent_color,
           hero_title: typeof saved.hero_title === 'string' ? saved.hero_title : defaultSiteConfig.hero_title,
           hero_subtitle: typeof saved.hero_subtitle === 'string' ? saved.hero_subtitle : defaultSiteConfig.hero_subtitle,
+          about_tag: typeof saved.about_tag === 'string' ? saved.about_tag : defaultSiteConfig.about_tag,
+          about_title: typeof saved.about_title === 'string' ? saved.about_title : defaultSiteConfig.about_title,
+          about_text: typeof saved.about_text === 'string' ? saved.about_text : defaultSiteConfig.about_text,
           whatsapp: typeof saved.whatsapp === 'string' ? saved.whatsapp : defaultSiteConfig.whatsapp,
           telefone: typeof saved.telefone === 'string' ? saved.telefone : defaultSiteConfig.telefone,
           email_contato: typeof saved.email_contato === 'string' ? saved.email_contato : defaultSiteConfig.email_contato,
@@ -214,7 +221,7 @@ export default function ConfiguracoesPage() {
           }`}
         >
           <Sparkles className="h-4 w-4" />
-          <span>Home & Destaques</span>
+          <span>Página Inicial & Vitrine</span>
         </button>
 
         <button
@@ -524,21 +531,30 @@ export default function ConfiguracoesPage() {
           </div>
         )}
 
-        {/* Conteúdo da Aba 4: Home & Destaques */}
+        {/* Conteúdo da Aba 4: Página Inicial & Vitrine */}
         {activeTab === 'vitrine' && (
           <div className="space-y-6 rounded-xl border border-border bg-card p-5 sm:p-7 shadow-xs">
             <div>
               <h2 className="text-base font-semibold text-foreground">Apresentação da Vitrine & Destaques</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Customize os textos do Hero e selecione quais imóveis têm destaque na página inicial.
+                Customize os textos do Hero, a seção Sobre da imobiliária e selecione os imóveis de destaque na página inicial.
               </p>
             </div>
 
+            {/* Bloco 1: Topo / Hero */}
             <div className="space-y-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border/60 pb-1.5">
+                1. Topo da Página Inicial (Hero)
+              </h3>
               <div className="space-y-2">
-                <Label htmlFor="hero_title" className="text-xs font-semibold">
-                  Título de Destaque da Home (Hero)
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="hero_title" className="text-xs font-semibold">
+                    Título de Destaque da Home (Hero)
+                  </Label>
+                  <span className="text-[11px] text-muted-foreground">
+                    {siteConfig.hero_title.length}/120
+                  </span>
+                </div>
                 <Input
                   id="hero_title"
                   disabled={!canEdit}
@@ -550,9 +566,14 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hero_subtitle" className="text-xs font-semibold">
-                  Descrição / Subtítulo da Home
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="hero_subtitle" className="text-xs font-semibold">
+                    Descrição / Subtítulo da Home
+                  </Label>
+                  <span className="text-[11px] text-muted-foreground">
+                    {siteConfig.hero_subtitle.length}/350
+                  </span>
+                </div>
                 <textarea
                   id="hero_subtitle"
                   disabled={!canEdit}
@@ -566,7 +587,104 @@ export default function ConfiguracoesPage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-border/70">
+            {/* Bloco 2: Seção Sobre a Imobiliária */}
+            <div className="pt-4 border-t border-border/70 space-y-4">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border/60 pb-1.5">
+                  2. Seção Sobre a Imobiliária
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Apresente a história, diferenciais e valores da sua equipe para gerar credibilidade imediata aos clientes.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="about_tag" className="text-xs font-semibold">
+                      Tag / Badge Superior
+                    </Label>
+                    <span className="text-[11px] text-muted-foreground">
+                      {(siteConfig.about_tag ?? '').length}/60
+                    </span>
+                  </div>
+                  <Input
+                    id="about_tag"
+                    disabled={!canEdit}
+                    maxLength={60}
+                    value={siteConfig.about_tag ?? ''}
+                    onChange={(e) => setSiteConfig({ ...siteConfig, about_tag: e.target.value })}
+                    placeholder="Ex: Atendimento próximo ou Desde 2010"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Pequeno selo de destaque acima do título da seção.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="about_title" className="text-xs font-semibold">
+                      Título Principal da Seção
+                    </Label>
+                    <span className="text-[11px] text-muted-foreground">
+                      {(siteConfig.about_title ?? '').length}/120
+                    </span>
+                  </div>
+                  <Input
+                    id="about_title"
+                    disabled={!canEdit}
+                    maxLength={120}
+                    value={siteConfig.about_title ?? ''}
+                    onChange={(e) => setSiteConfig({ ...siteConfig, about_title: e.target.value })}
+                    placeholder="Ex: Uma escolha importante merece atenção de verdade."
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Frase de impacto que resume a missão da imobiliária.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="about_text" className="text-xs font-semibold">
+                    Texto Descritivo / História da Imobiliária
+                  </Label>
+                  <span className="text-[11px] text-muted-foreground">
+                    {(siteConfig.about_text ?? '').length}/600
+                  </span>
+                </div>
+                <textarea
+                  id="about_text"
+                  disabled={!canEdit}
+                  maxLength={600}
+                  rows={4}
+                  value={siteConfig.about_text ?? ''}
+                  onChange={(e) => setSiteConfig({ ...siteConfig, about_text: e.target.value })}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs leading-relaxed disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Ex: Consulte os detalhes de cada imóvel e fale com a equipe da imobiliária para tirar dúvidas ou agendar uma visita..."
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Quebras de linha digitadas aqui serão respeitadas na vitrine pública.
+                </p>
+              </div>
+
+              {/* Pré-visualização ao Vivo */}
+              <div className="pt-2">
+                <AboutSectionPreview
+                  tag={siteConfig.about_tag}
+                  title={siteConfig.about_title}
+                  text={siteConfig.about_text}
+                  primaryColor={siteConfig.primary_color}
+                  accentColor={siteConfig.accent_color}
+                />
+              </div>
+            </div>
+
+            {/* Bloco 3: Imóveis em Destaque */}
+            <div className="pt-4 border-t border-border/70 space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border/60 pb-1.5">
+                3. Curadoria de Imóveis em Destaque
+              </h3>
               <FeaturedPropertiesManager disabled={!canEdit} />
             </div>
           </div>

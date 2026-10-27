@@ -35,6 +35,9 @@ export type PublicSiteConfig = {
   accentColor: string
   heroTitle: string
   heroSubtitle: string
+  aboutTag: string
+  aboutTitle: string
+  aboutText: string
   whatsapp: string
   telefone: string
   emailContato: string
@@ -54,6 +57,9 @@ const DEFAULT_SITE_CONFIG: Omit<PublicSiteConfig, 'agencyName'> = {
   faviconUrl: null,
   heroTitle: 'Encontre seu próximo imóvel',
   heroSubtitle: 'Explore imóveis para venda e locação e encontre um lugar que combina com seus planos.',
+  aboutTag: 'Atendimento próximo',
+  aboutTitle: 'Uma escolha importante merece atenção de verdade.',
+  aboutText: 'Consulte os detalhes de cada imóvel e fale com a equipe da imobiliária para tirar dúvidas ou agendar uma visita.',
   primaryColor: '#334155',
   accentColor: '#E07A5F',
   whatsapp: '',
@@ -131,6 +137,9 @@ export async function getPublicSiteConfig(): Promise<PublicSiteConfig> {
     accentColor: safeColor(stored.accent_color, DEFAULT_SITE_CONFIG.accentColor),
     heroTitle: safeText(stored.hero_title, DEFAULT_SITE_CONFIG.heroTitle, 120),
     heroSubtitle: safeText(stored.hero_subtitle, DEFAULT_SITE_CONFIG.heroSubtitle, 350),
+    aboutTag: safeText(stored.about_tag, DEFAULT_SITE_CONFIG.aboutTag, 60),
+    aboutTitle: safeText(stored.about_title, DEFAULT_SITE_CONFIG.aboutTitle, 120),
+    aboutText: safeText(stored.about_text, DEFAULT_SITE_CONFIG.aboutText, 600),
     whatsapp: safeText(stored.whatsapp, '', 30),
     telefone: safeText(stored.telefone, '', 30),
     emailContato: safeText(stored.email_contato, '', 120),

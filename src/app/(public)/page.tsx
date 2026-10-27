@@ -198,12 +198,14 @@ export default async function HomePage() {
 
         <section id="sobre" className="border-t border-border py-16 md:py-24">
           <div className="container mx-auto px-4 text-center md:px-6">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">Atendimento próximo</p>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
+              {siteConfig.aboutTag}
+            </p>
             <h2 className="mx-auto mt-3 max-w-2xl font-serif text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Uma escolha importante merece atenção de verdade.
+              {siteConfig.aboutTitle}
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-              Consulte os detalhes de cada imóvel e fale com a equipe da imobiliária para tirar dúvidas ou agendar uma visita.
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground whitespace-pre-line">
+              {siteConfig.aboutText}
             </p>
             <Link
               href="/imoveis"

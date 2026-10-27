@@ -14,6 +14,9 @@ test('tenant branding schema accepts valid complete payload', () => {
       accent_color: '#D4AF37',
       hero_title: 'Encontre seu imóvel dos sonhos',
       hero_subtitle: 'Casas, coberturas e apartamentos nas melhores regiões',
+      about_tag: 'Atendimento Consultivo',
+      about_title: 'Mais de 15 anos transformando sonhos em endereços',
+      about_text: 'Fundada com o compromisso de oferecer assessoria transparente e personalizada na compra e locação.',
       whatsapp: '5511999998888',
       telefone: '(11) 3456-7890',
       email_contato: 'contato@moradanobre.com.br',
@@ -33,6 +36,9 @@ test('tenant branding schema accepts valid complete payload', () => {
     assert.equal(result.data.nome, 'Imobiliária Morada Nobre')
     assert.equal(result.data.site_config.creci, 'CRECI 12.345-J')
     assert.equal(result.data.site_config.primary_color, '#1B3B36')
+    assert.equal(result.data.site_config.about_tag, 'Atendimento Consultivo')
+    assert.equal(result.data.site_config.about_title, 'Mais de 15 anos transformando sonhos em endereços')
+    assert.equal(result.data.site_config.about_text, 'Fundada com o compromisso de oferecer assessoria transparente e personalizada na compra e locação.')
     assert.equal(result.data.site_config.whatsapp, '5511999998888')
   }
 })
@@ -70,4 +76,13 @@ test('tenant branding schema rejects invalid colors or overlong fields', () => {
 
   const result = tenantBrandingSchema.safeParse(invalidPayload)
   assert.equal(result.success, false)
+
+  const overlongAbout = {
+    nome: 'Imobiliária Teste',
+    site_config: {
+      about_text: 'A'.repeat(601),
+    },
+  }
+  const overlongResult = tenantBrandingSchema.safeParse(overlongAbout)
+  assert.equal(overlongResult.success, false)
 })
