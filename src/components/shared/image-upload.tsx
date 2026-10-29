@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
-import { Upload, X, Loader2, Star } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Upload, X, Loader2, Star, Eye, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLicenseEditable } from '@/components/licensing/license-mode-provider'
 
 interface UploadedImage {
@@ -29,10 +29,21 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [images, setImages] = useState<UploadedImage[]>(existingImages)
   const [uploading, setUploading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const editable = useLicenseEditable()
+
+  // Sincroniza quando existingImages for carregado de forma assíncrona
+  useEffect(() => {
+    if (existingImages) {
+      queueMicrotask(() => {
+        setImages(existingImages)
+      })
+    }
+  }, [existingImages])
 
   const updateImages = useCallback((newImages: UploadedImage[]) => {
     setImages(newImages)
@@ -141,6 +152,9 @@ export function ImageUpload({
     if (!editable) return
     const image = images[index]
     setError(null)
+    const deleteKey = image.id || String(index)
+    setDeletingId(deleteKey)
+
     if (image.id && propertyId) {
       try {
         const response = await fetch(`/api/dashboard/properties/upload-image?id=${image.id}`, {
@@ -148,10 +162,12 @@ export function ImageUpload({
         })
         if (!response.ok) {
           setError('Não foi possível remover a imagem. Tente novamente.')
+          setDeletingId(null)
           return
         }
       } catch {
         setError('Não foi possível remover a imagem. Tente novamente.')
+        setDeletingId(null)
         return
       }
     }
@@ -161,6 +177,7 @@ export function ImageUpload({
     }
     const newImages = images.filter((_, i) => i !== index)
     updateImages(newImages)
+    setDeletingId(null)
   }
 
   async function setAsCover(index: number) {
@@ -238,61 +255,179 @@ export function ImageUpload({
         </div>
       )}
 
-      {/* Grid de Previews */}
+      {/* Grid de Previews / Galeria do Imóvel */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {images.map((image, index) => (
-            <div
-              key={image.id || image.url}
-              className={`group relative aspect-square overflow-hidden rounded-lg border ${
-                image.is_cover ? 'border-accent ring-1 ring-accent' : 'border-border'
-              } bg-secondary`}
-            >
-              <img
-                src={image.url}
-                alt={`Imagem ${index + 1}`}
-                className="h-full w-full object-cover"
-              />
-
-              {/* Badge Cover */}
-              {image.is_cover && (
-                <div className="absolute left-1.5 top-1.5 z-10 flex items-center gap-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-medium text-accent-foreground shadow-xs">
-                  <Star className="h-2.5 w-2.5" />
-                  Capa
-                </div>
-              )}
-
-              {/* Overlay com ações — sempre visível em mobile (sem hover), hover em desktop */}
-              <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/40 sm:bg-black/50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                {!image.is_cover && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setAsCover(index)
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-xs font-medium text-foreground hover:bg-white shadow-xs cursor-pointer"
-                    title="Definir como capa"
-                    aria-label="Definir como capa"
-                  >
-                    <Star className="h-3.5 w-3.5" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    removeImage(index)
-                  }}
-                  className="flex h-8 w-8 items-center justify-center rounded-md bg-red-600/90 text-white hover:bg-red-600 shadow-xs cursor-pointer"
-                  title="Remover imagem"
-                  aria-label="Remover imagem"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                Galeria de Fotos do Imóvel ({images.length})
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Passe o cursor sobre a foto para definir como capa, visualizar em tela cheia ou excluir.
+              </p>
             </div>
-          ))}
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {images.length} de {maxImages} fotos
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {images.map((image, index) => {
+              const isDeleting = deletingId === (image.id || String(index))
+              return (
+                <div
+                  key={image.id || image.url}
+                  className={`group relative aspect-square overflow-hidden rounded-lg border shadow-2xs transition-all ${
+                    image.is_cover ? 'border-accent ring-2 ring-accent shadow-sm' : 'border-border hover:border-accent/40'
+                  } bg-secondary`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image.url}
+                    alt={`Foto ${index + 1}`}
+                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                  />
+
+                  {/* Badge Capa */}
+                  {image.is_cover && (
+                    <div className="absolute left-1.5 top-1.5 z-10 flex items-center gap-1 rounded bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground shadow-xs">
+                      <Star className="h-3 w-3 fill-current" />
+                      Capa
+                    </div>
+                  )}
+
+                  {/* Overlay com ações */}
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center gap-1.5 bg-black/60 transition-opacity ${
+                      isDeleting ? 'opacity-100' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
+                    }`}
+                  >
+                    {isDeleting ? (
+                      <div className="flex flex-col items-center gap-1 text-white">
+                        <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                        <span className="text-[10px] font-medium">Excluindo...</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Botão Visualizar em tela cheia / zoom */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setPreviewIndex(index)
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-xs font-medium text-foreground hover:bg-white shadow-xs transition-colors cursor-pointer"
+                          title="Visualizar em tela cheia"
+                          aria-label="Visualizar em tela cheia"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+
+                        {/* Botão Definir como Capa */}
+                        {!image.is_cover && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setAsCover(index)
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-400 text-black hover:bg-amber-300 shadow-xs transition-colors cursor-pointer"
+                            title="Definir como capa principal"
+                            aria-label="Definir como capa principal"
+                          >
+                            <Star className="h-4 w-4" />
+                          </button>
+                        )}
+
+                        {/* Botão Remover/Excluir Imagem */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (window.confirm('Deseja realmente excluir esta imagem do imóvel?')) {
+                              removeImage(index)
+                            }
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-md bg-red-600/90 text-white hover:bg-red-600 shadow-xs transition-colors cursor-pointer"
+                          title="Excluir imagem"
+                          aria-label="Excluir imagem"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de visualização ampliada no Painel */}
+      {previewIndex !== null && images[previewIndex] && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-md select-none animate-in fade-in duration-200"
+          onClick={() => setPreviewIndex(null)}
+        >
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-3">
+            <span className="text-xs text-white/70">
+              {previewIndex + 1} de {images.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPreviewIndex(null)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition cursor-pointer"
+              aria-label="Fechar visualização"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPreviewIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : images.length - 1))
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition cursor-pointer"
+                aria-label="Foto anterior"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPreviewIndex((prev) => (prev !== null && prev < images.length - 1 ? prev + 1 : 0))
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition cursor-pointer"
+                aria-label="Próxima foto"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
+
+          <div
+            className="relative max-h-[85vh] max-w-[90vw] overflow-hidden rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={images[previewIndex].url}
+              alt={`Foto ${previewIndex + 1}`}
+              className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg"
+            />
+            {images[previewIndex].is_cover && (
+              <span className="absolute bottom-3 left-3 rounded bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground shadow-md">
+                Capa Principal
+              </span>
+            )}
+          </div>
         </div>
       )}
 
