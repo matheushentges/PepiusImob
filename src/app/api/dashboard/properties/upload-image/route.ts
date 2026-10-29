@@ -14,13 +14,44 @@ const updateSchema = z.object({
   ordem: z.number().int().min(0).max(1000).optional(),
 }).strict().refine((value) => value.is_cover !== undefined || value.ordem !== undefined)
 
-function validImageSignature(bytes: Uint8Array, mime: string): boolean {
-  if (mime === 'image/jpeg') return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
-  if (mime === 'image/png') return Buffer.from(bytes.slice(0, 8)).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
-  if (mime === 'image/webp') {
-    return Buffer.from(bytes.slice(0, 4)).toString() === 'RIFF' && Buffer.from(bytes.slice(8, 12)).toString() === 'WEBP'
+function detectImageFormat(bytes: Uint8Array, mime?: string | null): 'jpeg' | 'png' | 'webp' | null {
+  // 1. Inspeciona os Magic Bytes diretamente no buffer binário
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  ) {
+    return 'png'
   }
-  return false
+
+  // JPEG: FF D8 FF
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return 'jpeg'
+  }
+
+  // WebP: RIFF .... WEBP
+  if (
+    bytes.length >= 12 &&
+    Buffer.from(bytes.slice(0, 4)).toString() === 'RIFF' &&
+    Buffer.from(bytes.slice(8, 12)).toString() === 'WEBP'
+  ) {
+    return 'webp'
+  }
+
+  // 2. Fallback de MIME type normalizado
+  const cleanMime = (mime || '').toLowerCase().trim()
+  if (cleanMime === 'image/jpeg' || cleanMime === 'image/jpg' || cleanMime === 'image/pjpeg') return 'jpeg'
+  if (cleanMime === 'image/png' || cleanMime === 'image/x-png' || cleanMime === 'image/apng') return 'png'
+  if (cleanMime === 'image/webp') return 'webp'
+
+  return null
 }
 
 export async function POST(request: Request) {
@@ -29,7 +60,7 @@ export async function POST(request: Request) {
   if (!(await requireActiveLicense('properties'))) {
     return NextResponse.json({ error: 'A licença não permite alterações neste momento' }, { status: 423 })
   }
-  const body = await readBoundedBody(request, 6 * 1024 * 1024)
+  const body = await readBoundedBody(request, 20 * 1024 * 1024)
   if (!body.ok) return bodyErrorResponse(body.reason)
   const contentType = request.headers.get('content-type')
   if (!contentType?.toLowerCase().startsWith('multipart/form-data;')) {
@@ -46,25 +77,39 @@ export async function POST(request: Request) {
   if (!(file instanceof File) || typeof propertyId !== 'string' || !imageIdSchema.safeParse(propertyId).success) {
     return NextResponse.json({ error: 'Arquivo ou imóvel inválido' }, { status: 400 })
   }
-  if (file.size < 1 || file.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ error: 'A imagem deve ter no máximo 5 MB' }, { status: 413 })
+  if (file.size < 1 || file.size > 15 * 1024 * 1024) {
+    return NextResponse.json({ error: 'A imagem deve ter no máximo 15 MB' }, { status: 413 })
   }
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (!validImageSignature(bytes, file.type)) {
+  const detectedFormat = detectImageFormat(bytes, file.type)
+  if (!detectedFormat) {
     return NextResponse.json({ error: 'Envie uma imagem JPEG, PNG ou WebP válida' }, { status: 400 })
   }
 
-  // Re-encoding drops EXIF/GPS metadata and caps the stored dimensions.
+  // Re-encoding drops EXIF/GPS metadata and caps stored dimensions.
+  // Converte PNG para WebP de alta fidelidade para evitar estouro de 5MB do Storage e acelerar a vitrine.
   let storedImage: Buffer
+  let storedContentType = 'image/webp'
+  let extension = 'webp'
+
   try {
     const pipeline = sharp(Buffer.from(bytes))
       .rotate()
       .resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true })
-    storedImage = file.type === 'image/png'
-      ? await pipeline.png({ compressionLevel: 9 }).toBuffer()
-      : file.type === 'image/webp'
-        ? await pipeline.webp({ quality: 82 }).toBuffer()
-        : await pipeline.jpeg({ quality: 82, mozjpeg: true }).toBuffer()
+
+    if (detectedFormat === 'png') {
+      storedImage = await pipeline.webp({ quality: 85, effort: 4 }).toBuffer()
+      storedContentType = 'image/webp'
+      extension = 'webp'
+    } else if (detectedFormat === 'webp') {
+      storedImage = await pipeline.webp({ quality: 82 }).toBuffer()
+      storedContentType = 'image/webp'
+      extension = 'webp'
+    } else {
+      storedImage = await pipeline.jpeg({ quality: 82, mozjpeg: true }).toBuffer()
+      storedContentType = 'image/jpeg'
+      extension = 'jpg'
+    }
   } catch {
     return NextResponse.json({ error: 'Não foi possível processar a imagem' }, { status: 400 })
   }
@@ -77,19 +122,18 @@ export async function POST(request: Request) {
     .maybeSingle()
   if (!property) return NextResponse.json({ error: 'Imóvel não encontrado' }, { status: 404 })
 
-  const extension = file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/png' ? 'png' : 'webp'
   const objectPath = `${result.context.tenantId}/${propertyId}/${randomUUID()}.${extension}`
   const { error: uploadError } = await result.context.supabase.storage
     .from('property-images')
-    .upload(objectPath, new Blob([new Uint8Array(storedImage).buffer as ArrayBuffer], { type: file.type }), {
-      contentType: file.type,
-      cacheControl: '300',
+    .upload(objectPath, new Blob([new Uint8Array(storedImage).buffer as ArrayBuffer], { type: storedContentType }), {
+      contentType: storedContentType,
+      cacheControl: '3600',
       upsert: false,
     })
 
   if (uploadError) {
-    console.error('Property image upload failed', { code: uploadError.name })
-    return NextResponse.json({ error: 'Não foi possível enviar a imagem' }, { status: 503 })
+    console.error('Property image upload failed', { message: uploadError.message, name: uploadError.name })
+    return NextResponse.json({ error: `Não foi possível salvar a imagem no storage: ${uploadError.message}` }, { status: 503 })
   }
 
   const { data: image, error: insertError } = await result.context.supabase

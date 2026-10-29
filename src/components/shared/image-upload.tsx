@@ -25,7 +25,7 @@ export function ImageUpload({
   existingImages = [],
   onImagesChange,
   maxImages = 20,
-  maxSizeMB = 5,
+  maxSizeMB = 15,
 }: ImageUploadProps) {
   const [images, setImages] = useState<UploadedImage[]>(existingImages)
   const [uploading, setUploading] = useState(false)
@@ -89,7 +89,11 @@ export function ImageUpload({
           })
 
           if (!response.ok) {
+            const errData = await response.json().catch(() => null)
             failures += 1
+            if (errData?.error) {
+              setError(errData.error)
+            }
             continue
           }
 
@@ -130,9 +134,19 @@ export function ImageUpload({
     setDragActive(false)
     setError(null)
 
-    const files = Array.from(e.dataTransfer.files).filter((f) =>
-      ['image/jpeg', 'image/png', 'image/webp'].includes(f.type)
-    )
+    const isImageFile = (f: File) => {
+      const mime = (f.type || '').toLowerCase()
+      const name = (f.name || '').toLowerCase()
+      return (
+        ['image/jpeg', 'image/png', 'image/webp', 'image/x-png', 'image/pjpeg', 'image/jpg'].includes(mime) ||
+        name.endsWith('.png') ||
+        name.endsWith('.jpg') ||
+        name.endsWith('.jpeg') ||
+        name.endsWith('.webp')
+      )
+    }
+
+    const files = Array.from(e.dataTransfer.files).filter(isImageFile)
 
     if (files.length === 0) {
       setError('Apenas imagens JPEG, PNG e WebP são permitidas')
@@ -230,7 +244,7 @@ export function ImageUpload({
           ref={inputRef}
           type="file"
           multiple
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,image/x-png,image/pjpeg,.png,.jpg,.jpeg,.webp"
           onChange={handleFileSelect}
           disabled={!editable}
           className="hidden"
