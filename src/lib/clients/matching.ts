@@ -56,7 +56,7 @@ export function calculatePropertyMatch(
   maxPossible += 25
   const selectedTypes = profile.tipos_imovel || []
   if (selectedTypes.length > 0) {
-    if (selectedTypes.includes(property.tipo as any)) {
+    if (selectedTypes.some((t) => t === property.tipo)) {
       score += 25
       reasons.push(`Tipo compatível (${property.tipo})`)
     }
@@ -153,4 +153,39 @@ export function calculatePropertyMatch(
     matchScore: finalScore,
     matchReasons: reasons,
   }
+}
+
+/**
+ * Gera a URL do WhatsApp para acionar um cliente sobre um imóvel compatível via Radar Reverso.
+ */
+export function buildReverseRadarWhatsAppUrl({
+  clientName,
+  clientPhone,
+  matchScore,
+  propertyTitle,
+  propertyNeighborhood,
+  propertyPriceFormatted,
+  propertyUrl,
+}: {
+  clientName: string
+  clientPhone: string
+  matchScore: number
+  propertyTitle: string
+  propertyNeighborhood?: string | null
+  propertyPriceFormatted?: string | null
+  propertyUrl?: string | null
+}): string | null {
+  const digits = (clientPhone || '').replace(/\D/g, '')
+  if (!digits || digits.length < 10) return null
+  const cleanPhone = digits.length === 10 || digits.length === 11 ? `55${digits}` : digits
+  const firstName = clientName.trim().split(' ')[0] || clientName
+
+  let msg = `Olá, ${firstName}! Tudo bem? Localizamos uma novidade que combina ${matchScore}% com o perfil que você procura:\n\n`
+  msg += `*${propertyTitle}*`
+  if (propertyNeighborhood) msg += `\n📍 Bairro: ${propertyNeighborhood}`
+  if (propertyPriceFormatted) msg += `\n💰 ${propertyPriceFormatted}`
+  if (propertyUrl) msg += `\n\nConfira todos os detalhes e fotos aqui: ${propertyUrl}`
+  msg += '\n\nSe quiser agendar uma visita presencial, é só me responder por aqui!'
+
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
 }

@@ -143,7 +143,8 @@ export default function NovoImovelPage() {
         return
       }
 
-      router.push('/dashboard/imoveis')
+      // Redireciona para a página do imóvel recém-criado com o Radar Reverso ativo para ação imediata
+      router.push(`/dashboard/imoveis/${createdProperty.id}?radar=true`)
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro desconhecido')

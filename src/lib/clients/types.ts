@@ -93,3 +93,15 @@ export interface PropertyMatchResult {
   matchScore: number // 0 a 100
   matchReasons: string[]
 }
+
+export interface ReverseClientMatchResult {
+  clientId: string
+  nome: string
+  telefone: string
+  email?: string | null
+  papeis: ClientRole[]
+  corretorNome?: string | null
+  matchScore: number
+  matchReasons: string[]
+  whatsappUrl?: string | null
+}

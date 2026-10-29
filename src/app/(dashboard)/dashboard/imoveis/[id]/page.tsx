@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,6 +11,7 @@ import { ImageUpload } from '@/components/shared/image-upload'
 import { useLicenseEditable } from '@/components/licensing/license-mode-provider'
 import { formatCep, fetchAddressByCep } from '@/lib/cep/viacep'
 import { PropertyKeyPanel } from '@/components/keys/property-key-panel'
+import { PropertyRadarPanel } from '@/components/properties/property-radar-panel'
 
 interface Property {
   id: string
@@ -49,7 +50,9 @@ const selectClassName =
 export default function EditarImovelPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const id = params?.id as string
+  const isRadarInitial = searchParams?.get('radar') === 'true'
 
   const [property, setProperty] = useState<Property | null>(null)
   const [existingImages, setExistingImages] = useState<ExistingImage[]>([])
@@ -258,6 +261,14 @@ export default function EditarImovelPage() {
           </div>
         </div>
       </div>
+      {/* Radar Reverso de Oportunidades (Compradores e Locatários Compatíveis) */}
+      <PropertyRadarPanel
+        propertyId={id}
+        propertyTitle={property.titulo}
+        canEdit={editable}
+        initialAutoOpen={isRadarInitial}
+      />
+
       {/* Painel de Controle de Chaves e Claviculário */}
       <PropertyKeyPanel propertyId={id} propertyTitle={property.titulo} canEdit={editable} />
 
