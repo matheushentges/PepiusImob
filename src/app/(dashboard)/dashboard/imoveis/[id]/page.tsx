@@ -512,7 +512,7 @@ export default function EditarImovelPage() {
               existingImages={existingImages}
               onImagesChange={setExistingImages}
               maxImages={20}
-              maxSizeMB={5}
+              maxSizeMB={15}
             />
           </section>
 

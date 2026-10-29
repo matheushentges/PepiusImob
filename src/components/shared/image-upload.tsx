@@ -65,8 +65,11 @@ export function ImageUpload({
     if (!editable) return
     const validFiles = files.filter((f) => f.size <= maxSizeMB * 1024 * 1024)
     if (validFiles.length < files.length) {
-      setError(`Algumas imagens excedem o limite de ${maxSizeMB}MB`)
+      const oversized = files.find((f) => f.size > maxSizeMB * 1024 * 1024)
+      const sizeFormatted = oversized ? `${(oversized.size / (1024 * 1024)).toFixed(1)} MB` : ''
+      setError(`O arquivo selecionado ${sizeFormatted ? `(${sizeFormatted})` : ''} excede o limite máximo de ${maxSizeMB} MB.`)
     }
+    if (validFiles.length === 0) return
 
     const remainingSlots = maxImages - images.length
     const filesToProcess = validFiles.slice(0, remainingSlots)
@@ -77,6 +80,8 @@ export function ImageUpload({
       setError(null)
       const newImages: UploadedImage[] = []
       let failures = 0
+      let lastErrorMessage: string | null = null
+
       try {
         for (const file of filesToProcess) {
           const formData = new FormData()
@@ -92,7 +97,7 @@ export function ImageUpload({
             const errData = await response.json().catch(() => null)
             failures += 1
             if (errData?.error) {
-              setError(errData.error)
+              lastErrorMessage = errData.error
             }
             continue
           }
@@ -107,7 +112,7 @@ export function ImageUpload({
         }
         if (newImages.length > 0) updateImages([...images, ...newImages])
         if (failures > 0) {
-          setError(`${failures} ${failures === 1 ? 'imagem não foi enviada' : 'imagens não foram enviadas'}. Tente novamente.`)
+          setError(lastErrorMessage || `${failures} ${failures === 1 ? 'imagem não foi enviada' : 'imagens não foram enviadas'}. Tente novamente.`)
         }
       } catch (err) {
         if (newImages.length > 0) updateImages([...images, ...newImages])
@@ -264,8 +269,16 @@ export function ImageUpload({
 
       {/* Mensagem de erro */}
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
+        <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="ml-2 text-red-600 hover:text-red-900 cursor-pointer"
+            aria-label="Fechar aviso"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 

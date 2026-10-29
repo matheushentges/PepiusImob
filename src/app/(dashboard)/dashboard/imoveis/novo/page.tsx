@@ -533,7 +533,7 @@ export default function NovoImovelPage() {
               existingImages={pendingImages}
               onImagesChange={setPendingImages}
               maxImages={20}
-              maxSizeMB={5}
+              maxSizeMB={15}
             />
           </section>
 
