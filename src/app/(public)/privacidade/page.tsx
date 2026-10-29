@@ -7,12 +7,20 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteConfig = await getPublicSiteConfig()
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   return {
     title: `Política de Privacidade e LGPD | ${siteConfig.agencyName}`,
     description: `Conheça como a ${siteConfig.agencyName} trata e protege seus dados pessoais em total conformidade com a LGPD (Lei 13.709/2018).`,
+    alternates: {
+      canonical: `${baseUrl}/privacidade`,
+    },
     openGraph: {
       title: `Política de Privacidade | ${siteConfig.agencyName}`,
       description: `Transparência e segurança no tratamento de dados na ${siteConfig.agencyName}.`,
+      url: `${baseUrl}/privacidade`,
+      siteName: siteConfig.agencyName,
+      locale: 'pt_BR',
+      type: 'website',
     },
   }
 }

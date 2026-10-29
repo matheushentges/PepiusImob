@@ -5,6 +5,8 @@ import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 import { PublicHeader } from '@/components/shared/public-header'
 import { PublicFooter } from '@/components/shared/public-footer'
 import { CookieConsentBanner } from '@/components/shared/cookie-consent-banner'
+import { AgencyJsonLd } from '@/components/shared/json-ld'
+import { WhatsAppFab } from '@/components/shared/whatsapp-fab'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +21,7 @@ export default async function PublicLayout({
   }
 
   const siteConfig = await getPublicSiteConfig()
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   return (
     <div
@@ -28,9 +31,11 @@ export default async function PublicLayout({
         '--accent': siteConfig.accentColor,
       } as CSSProperties}
     >
+      <AgencyJsonLd siteConfig={siteConfig} baseUrl={baseUrl} />
       <PublicHeader siteConfig={siteConfig} />
       <div className="flex-1">{children}</div>
       <PublicFooter siteConfig={siteConfig} />
+      <WhatsAppFab siteConfig={siteConfig} />
       <CookieConsentBanner />
     </div>
   )

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { MapPin, ChevronLeft, Share2, Copy, Check } from 'lucide-react'
+import { MapPin, ChevronLeft, Share2, Copy, Check, MessageCircle } from 'lucide-react'
 import type { Listing } from '@/lib/listings-data'
 import { formatPrice, listingPurposeLabel } from '@/lib/listings-data'
 import { ImageCarousel } from '@/components/listing/image-carousel'
@@ -25,6 +25,9 @@ export function ListingDetailClient({
 }: ListingDetailClientProps) {
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  const digits = (agencyPhone || '').replace(/\D/g, '')
+  const cleanPhone = digits.length >= 10 ? (digits.length === 10 || digits.length === 11 ? `55${digits}` : digits) : null
 
   const priceSummary = listing.offers
     .map((offer) => formatPrice(offer.price, offer.type))
@@ -59,7 +62,7 @@ export function ListingDetailClient({
   }
 
   return (
-    <main className="container mx-auto px-4 py-8 lg:px-8">
+    <main className="container mx-auto px-4 py-8 pb-24 lg:pb-8 lg:px-8">
       <div className="mb-4">
         <Link
           href="/imoveis"
@@ -175,7 +178,7 @@ export function ListingDetailClient({
           </div>
 
           {/* Right column — sticky sidebar */}
-          <aside className="lg:sticky lg:top-24 lg:self-start space-y-6">
+          <aside id="agendamento" className="lg:sticky lg:top-24 lg:self-start space-y-6">
             <VisitSchedulerWidget
               listingId={listing.id}
               listingTitle={listing.title}
@@ -214,6 +217,46 @@ export function ListingDetailClient({
             </div>
           </aside>
         </div>
+
+        {/* Sticky Mobile Conversion Bar */}
+        <aside
+          aria-label="Ações rápidas de contato do imóvel"
+          className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between border-t border-border bg-card/95 px-4 py-3 shadow-lg backdrop-blur-md lg:hidden"
+        >
+          <div className="min-w-0 pr-2">
+            <p className="text-[10px] uppercase font-semibold text-text-tertiary">Valor</p>
+            <p className="text-base font-bold text-accent truncate tabular-nums">
+              {formatPrice(listing.offers[0]?.price || 0, listing.offers[0]?.type || 'venda')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {cleanPhone && (
+              <a
+                href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent(
+                  `Olá! Acessei o site da ${agencyName} e gostaria de informações sobre o imóvel: ${listing.title} (Cód: #${listing.id}).`,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-emerald-600/30 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400"
+                aria-label="Falar no WhatsApp"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>WhatsApp</span>
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('agendamento')
+                if (el) el.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 cursor-pointer"
+            >
+              Agendar Visita
+            </button>
+          </div>
+        </aside>
+
         <GalleryDialog
         key={galleryOpen ? 'open' : 'closed'}
         images={images}

@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Building2, KeyRound, MapPin, Search } from 'lucide-react'
+import { Building2, KeyRound, MapPin, Search, BedDouble, Bath, Maximize, Car } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { formatPrice, listingPurposeLabel } from '@/lib/listings-data'
 import type { Metadata } from 'next'
@@ -13,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const license = await getLocalLicenseAccess()
   if (!license.active || !license.features.includes('public-listing')) return {}
   const siteConfig = await getPublicSiteConfig()
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const title = siteConfig.heroTitle
     ? `${siteConfig.agencyName} | ${siteConfig.heroTitle}`
     : `${siteConfig.agencyName} | Imóveis para Venda e Locação`
@@ -20,12 +21,21 @@ export async function generateMetadata(): Promise<Metadata> {
     siteConfig.heroSubtitle ||
     `Encontre os melhores imóveis para compra, venda e locação com a equipe da ${siteConfig.agencyName}.`
 
+  const ogImages = siteConfig.logoUrl ? [{ url: siteConfig.logoUrl }] : []
+
   return {
     title,
     description,
+    alternates: {
+      canonical: baseUrl,
+    },
     openGraph: {
       title,
       description,
+      url: baseUrl,
+      siteName: siteConfig.agencyName,
+      images: ogImages,
+      locale: 'pt_BR',
       type: 'website',
     },
   }
@@ -173,6 +183,32 @@ export default async function HomePage() {
                             <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
                             <span className="truncate">{listing.neighborhood}, {listing.city}</span>
                           </p>
+                          <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-border/70 pt-2.5 text-xs text-muted-foreground">
+                            {listing.bedrooms > 0 && (
+                              <span className="flex items-center gap-1">
+                                <BedDouble className="h-3.5 w-3.5" aria-hidden="true" />
+                                {listing.bedrooms} {listing.bedrooms === 1 ? 'quarto' : 'quartos'}
+                              </span>
+                            )}
+                            {listing.bathrooms > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Bath className="h-3.5 w-3.5" aria-hidden="true" />
+                                {listing.bathrooms} {listing.bathrooms === 1 ? 'banheiro' : 'banheiros'}
+                              </span>
+                            )}
+                            {listing.area > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Maximize className="h-3.5 w-3.5" aria-hidden="true" />
+                                {listing.area} m²
+                              </span>
+                            )}
+                            {listing.parking > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Car className="h-3.5 w-3.5" aria-hidden="true" />
+                                {listing.parking} {listing.parking === 1 ? 'vaga' : 'vagas'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </article>
                     </Link>

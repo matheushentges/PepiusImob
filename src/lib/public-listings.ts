@@ -62,8 +62,8 @@ const DEFAULT_SITE_CONFIG: Omit<PublicSiteConfig, 'agencyName'> = {
   aboutText: 'Consulte os detalhes de cada imóvel e fale com a equipe da imobiliária para tirar dúvidas ou agendar uma visita.',
   primaryColor: '#334155',
   accentColor: '#E07A5F',
-  whatsapp: '',
-  telefone: '',
+  whatsapp: '(11) 98765-4321',
+  telefone: '(11) 3456-7890',
   emailContato: '',
   enderecoCompleto: '',
   redesSociais: {
@@ -140,8 +140,8 @@ export async function getPublicSiteConfig(): Promise<PublicSiteConfig> {
     aboutTag: safeText(stored.about_tag, DEFAULT_SITE_CONFIG.aboutTag, 60),
     aboutTitle: safeText(stored.about_title, DEFAULT_SITE_CONFIG.aboutTitle, 120),
     aboutText: safeText(stored.about_text, DEFAULT_SITE_CONFIG.aboutText, 600),
-    whatsapp: safeText(stored.whatsapp, '', 30),
-    telefone: safeText(stored.telefone, '', 30),
+    whatsapp: safeText(stored.whatsapp, DEFAULT_SITE_CONFIG.whatsapp, 30),
+    telefone: safeText(stored.telefone, DEFAULT_SITE_CONFIG.telefone, 30),
     emailContato: safeText(stored.email_contato, '', 120),
     enderecoCompleto: safeText(stored.endereco_completo, '', 250),
     redesSociais: {

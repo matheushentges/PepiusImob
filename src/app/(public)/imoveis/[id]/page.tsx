@@ -5,6 +5,7 @@ import { getListingImages, formatPrice, listingPurposeLabel } from '@/lib/listin
 import { getPublicListing, getPublicSiteConfig } from '@/lib/public-listings'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 import { ListingDetailClient } from './listing-detail-client'
+import { ListingJsonLd, BreadcrumbsJsonLd } from '@/components/shared/json-ld'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -17,23 +18,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const listing = await getPublicListing(id)
   if (!listing) return {}
   const siteConfig = await getPublicSiteConfig()
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   const priceSummary = listing.offers
     .map((offer) => formatPrice(offer.price, offer.type))
     .join(' ou ')
 
   const images = getListingImages(listing)
-  const coverImage = images[0] || '/placeholder-property.svg'
+  const rawCoverImage = images[0] || '/placeholder-property.svg'
+  const coverImage = rawCoverImage.startsWith('http') ? rawCoverImage : `${baseUrl}${rawCoverImage}`
   const title = `${listing.title} | ${siteConfig.agencyName}`
   const description = `${listing.category} para ${listingPurposeLabel(listing).toLowerCase()} em ${listing.neighborhood}, ${listing.city}. ${listing.area}m² por ${priceSummary}.`
 
   return {
     title,
     description,
+    alternates: {
+      canonical: `${baseUrl}/imoveis/${listing.id}`,
+    },
     openGraph: {
       title,
       description,
-      url: `/imoveis/${listing.id}`,
+      url: `${baseUrl}/imoveis/${listing.id}`,
       siteName: siteConfig.agencyName,
       images: [
         {
@@ -67,9 +73,19 @@ export default async function ListingDetailPage({ params }: Props) {
     Promise.resolve(getListingImages(listing)),
     getPublicSiteConfig(),
   ])
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   return (
     <div style={{ '--primary': siteConfig.primaryColor, '--accent': siteConfig.accentColor } as CSSProperties}>
+      <ListingJsonLd listing={listing} images={images} siteConfig={siteConfig} baseUrl={baseUrl} />
+      <BreadcrumbsJsonLd
+        baseUrl={baseUrl}
+        items={[
+          { name: 'Início', url: '/' },
+          { name: 'Imóveis', url: '/imoveis' },
+          { name: listing.title, url: `/imoveis/${listing.id}` },
+        ]}
+      />
       <ListingDetailClient
         listing={listing}
         images={images}

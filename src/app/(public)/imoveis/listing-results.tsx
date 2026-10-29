@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { BedDouble, Bath, Maximize, Car, MapPin, Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   formatPrice,
@@ -29,6 +30,20 @@ const CATEGORY_OPTIONS = [
   { value: 'terreno', label: 'Terreno' },
 ] as const
 
+const BEDROOM_OPTIONS = [
+  { value: 0, label: 'Quartos' },
+  { value: 1, label: '1+ quarto' },
+  { value: 2, label: '2+ quartos' },
+  { value: 3, label: '3+ quartos' },
+  { value: 4, label: '4+ quartos' },
+] as const
+
+const PARKING_OPTIONS = [
+  { value: 0, label: 'Vagas' },
+  { value: 1, label: '1+ vaga' },
+  { value: 2, label: '2+ vagas' },
+] as const
+
 const DEFAULT_PAGE_SIZE = 12
 
 export function ListingResults({
@@ -44,6 +59,8 @@ export function ListingResults({
 }) {
   const [typeFilter, setTypeFilter] = useState(initialType)
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [minBedrooms, setMinBedrooms] = useState<number>(0)
+  const [minParking, setMinParking] = useState<number>(0)
   const [searchQuery, setSearchQuery] = useState(initialSearch)
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
@@ -56,6 +73,8 @@ export function ListingResults({
     return listings.filter((listing) => {
       if (typeFilter && !listing.offers.some((offer) => offer.type === typeFilter)) return false
       if (categoryFilter && listing.category !== categoryFilter) return false
+      if (minBedrooms > 0 && listing.bedrooms < minBedrooms) return false
+      if (minParking > 0 && listing.parking < minParking) return false
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         const matchesSearch =
@@ -72,7 +91,7 @@ export function ListingResults({
       if (!listingMatchesPrice(listing, safeMin, safeMax)) return false
       return true
     })
-  }, [listings, typeFilter, categoryFilter, searchQuery, minPrice, maxPrice])
+  }, [listings, typeFilter, categoryFilter, minBedrooms, minParking, searchQuery, minPrice, maxPrice])
 
   const pagination = useMemo(() => {
     return paginateItems(filteredListings, currentPage, pageSize)
@@ -87,8 +106,15 @@ export function ListingResults({
     endIndex,
   } = pagination
 
-
-  const activeFilterCount = [typeFilter, categoryFilter, searchQuery, minPrice, maxPrice].filter(Boolean).length
+  const activeFilterCount = [
+    typeFilter,
+    categoryFilter,
+    minBedrooms > 0 ? String(minBedrooms) : '',
+    minParking > 0 ? String(minParking) : '',
+    searchQuery,
+    minPrice,
+    maxPrice,
+  ].filter(Boolean).length
 
   function handlePageChange(newPage: number) {
     if (newPage < 1 || newPage > totalPages) return
@@ -102,10 +128,21 @@ export function ListingResults({
   function handleFilterReset() {
     setTypeFilter('')
     setCategoryFilter('')
+    setMinBedrooms(0)
+    setMinParking(0)
     setSearchQuery('')
     setMinPrice('')
     setMaxPrice('')
     setCurrentPage(1)
+  }
+
+  let pageHeading = 'Catálogo de Imóveis'
+  if (typeFilter === 'venda') pageHeading = 'Imóveis à Venda'
+  else if (typeFilter === 'aluguel') pageHeading = 'Imóveis para Locação'
+  if (searchQuery) pageHeading += ` — "${searchQuery}"`
+  if (categoryFilter) {
+    const catLabel = CATEGORY_OPTIONS.find((c) => c.value === categoryFilter)?.label
+    if (catLabel) pageHeading += ` (${catLabel})`
   }
 
   return (
@@ -117,10 +154,10 @@ export function ListingResults({
       {/* Page header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
-          {siteConfig.heroTitle}
+          {pageHeading}
         </h1>
         <p className="mt-3 text-text-secondary max-w-prose mx-auto">
-          {siteConfig.heroSubtitle}
+          {siteConfig.heroSubtitle || `Explore os imóveis disponíveis na ${siteConfig.agencyName}.`}
         </p>
       </div>
 
@@ -186,10 +223,10 @@ export function ListingResults({
           </div>
         </div>
 
-        {/* Second row: category + price range */}
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
+        {/* Second row: category + bedrooms + parking + price range */}
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           {/* Category select */}
-          <div className="space-y-1.5 sm:w-48">
+          <div className="space-y-1.5 sm:w-44">
             <label htmlFor="category-filter" className="text-xs font-medium text-text-secondary">
               Categoria
             </label>
@@ -210,11 +247,55 @@ export function ListingResults({
             </select>
           </div>
 
+          {/* Bedrooms select */}
+          <div className="space-y-1.5 sm:w-32">
+            <label htmlFor="bedrooms-filter" className="text-xs font-medium text-text-secondary">
+              Quartos
+            </label>
+            <select
+              id="bedrooms-filter"
+              value={minBedrooms}
+              onChange={(e) => {
+                setMinBedrooms(Number(e.target.value))
+                setCurrentPage(1)
+              }}
+              className="flex h-10 w-full rounded-lg border border-border-default bg-card px-3 text-sm text-text-primary shadow-2xs transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            >
+              {BEDROOM_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Parking select */}
+          <div className="space-y-1.5 sm:w-28">
+            <label htmlFor="parking-filter" className="text-xs font-medium text-text-secondary">
+              Vagas
+            </label>
+            <select
+              id="parking-filter"
+              value={minParking}
+              onChange={(e) => {
+                setMinParking(Number(e.target.value))
+                setCurrentPage(1)
+              }}
+              className="flex h-10 w-full rounded-lg border border-border-default bg-card px-3 text-sm text-text-primary shadow-2xs transition-all hover:border-border-strong focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            >
+              {PARKING_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Price range */}
-          <div className="flex flex-1 items-end gap-2">
+          <div className="flex flex-1 items-end gap-2 min-w-[200px]">
             <div className="space-y-1.5 flex-1">
               <label htmlFor="min-price" className="text-xs font-medium text-text-secondary">
-                Preço mínimo
+                Preço mín.
               </label>
               <input
                 id="min-price"
@@ -232,7 +313,7 @@ export function ListingResults({
             <span className="mb-3 text-text-tertiary">–</span>
             <div className="space-y-1.5 flex-1">
               <label htmlFor="max-price" className="text-xs font-medium text-text-secondary">
-                Preço máximo
+                Preço máx.
               </label>
               <input
                 id="max-price"
@@ -302,6 +383,7 @@ export function ListingResults({
       {/* Listings grid */}
       {paginatedListings.length > 0 ? (
         <div className="space-y-10">
+          <h2 className="sr-only">Resultados dos imóveis encontrados</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {paginatedListings.map((listing) => (
               <Link
@@ -312,12 +394,13 @@ export function ListingResults({
                 <article>
                   {/* Image */}
                   <div className="relative aspect-[4/3] overflow-hidden bg-surface-overlay">
-                    <img
+                    <Image
                       src={listing.image}
                       alt={listing.title}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      unoptimized
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     <span className="absolute left-3 top-3 rounded bg-surface-base/90 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-text-primary backdrop-blur-sm">
                       {listingPurposeLabel(listing)}
@@ -349,9 +432,9 @@ export function ListingResults({
                           </p>
                         ))}
                       </div>
-                      <h2 className="mt-1 text-sm font-semibold text-text-primary leading-snug line-clamp-2">
+                      <h3 className="mt-1 text-sm font-semibold text-text-primary leading-snug line-clamp-2">
                         {listing.title}
-                      </h2>
+                      </h3>
                       <div className="mt-1 flex items-center gap-1 text-xs text-text-tertiary">
                         <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
                         <span className="truncate">{listing.neighborhood}, {listing.city}</span>
