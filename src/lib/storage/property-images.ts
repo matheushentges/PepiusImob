@@ -18,6 +18,11 @@ export function getPropertyImagePath(value: string): string | null {
 }
 
 export async function getSignedPropertyImageUrl(value: string, expiresIn = 300): Promise<string | null> {
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    if (!value.includes('/storage/v1/object/')) {
+      return value
+    }
+  }
   const path = getPropertyImagePath(value)
   if (!path) return null
   const admin = createAdminClient()

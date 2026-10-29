@@ -3,7 +3,43 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getLocalLicenseAccess } from '@/lib/licensing/local-state'
 import { ClientsClient } from './clients-client'
-import type { Client, ClientOverviewStats } from '@/lib/clients/types'
+import type { Client, ClientOverviewStats, ClientRole } from '@/lib/clients/types'
+
+interface RawClientRow {
+  id: string
+  tenant_id: string
+  tipo_pessoa: 'pf' | 'pj'
+  papeis?: ClientRole[] | null
+  status: 'ativo' | 'inativo' | 'potencial'
+  nome: string
+  nome_fantasia?: string | null
+  documento?: string | null
+  rg_ie?: string | null
+  data_nascimento?: string | null
+  profissao?: string | null
+  estado_civil?: string | null
+  regime_bens?: string | null
+  conjuge_nome?: string | null
+  conjuge_cpf?: string | null
+  email?: string | null
+  email_secundario?: string | null
+  telefone?: string | null
+  telefone_secundario?: string | null
+  cep?: string | null
+  logradouro?: string | null
+  numero?: string | null
+  complemento?: string | null
+  bairro?: string | null
+  cidade?: string | null
+  estado?: string | null
+  dados_bancarios?: Client['dados_bancarios']
+  perfil_interesse?: Client['perfil_interesse']
+  corretor_id?: string | null
+  profiles?: { nome: string | null } | null
+  observacoes?: string | null
+  created_at: string
+  updated_at: string
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -84,7 +120,7 @@ export default async function ClientesPage() {
     console.error('Clients page query failed', { code: clientsError.code })
   }
 
-  const clients: Client[] = (rawClients || []).map((row: any) => ({
+  const clients: Client[] = ((rawClients || []) as unknown as RawClientRow[]).map((row) => ({
     id: row.id,
     tenant_id: row.tenant_id,
     tipo_pessoa: row.tipo_pessoa,
@@ -102,7 +138,7 @@ export default async function ClientesPage() {
     conjuge_cpf: row.conjuge_cpf,
     email: row.email,
     email_secundario: row.email_secundario,
-    telefone: row.telefone,
+    telefone: row.telefone || '',
     telefone_secundario: row.telefone_secundario,
     cep: row.cep,
     logradouro: row.logradouro,

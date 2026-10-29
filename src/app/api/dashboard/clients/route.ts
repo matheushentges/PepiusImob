@@ -3,7 +3,43 @@ import { getAgencyContext } from '@/lib/auth/agency'
 import { canReadLicensedFeature, requireActiveLicense } from '@/lib/licensing/local-state'
 import { bodyErrorResponse, readJsonBody } from '@/lib/security/request-body'
 import { clientInputSchema, sanitizeDocument } from '@/lib/clients/validation'
-import type { Client, ClientOverviewStats } from '@/lib/clients/types'
+import type { Client, ClientOverviewStats, ClientRole } from '@/lib/clients/types'
+
+interface RawClientRow {
+  id: string
+  tenant_id: string
+  tipo_pessoa: 'pf' | 'pj'
+  papeis?: ClientRole[] | null
+  status: 'ativo' | 'inativo' | 'potencial'
+  nome: string
+  nome_fantasia?: string | null
+  documento?: string | null
+  rg_ie?: string | null
+  data_nascimento?: string | null
+  profissao?: string | null
+  estado_civil?: 'solteiro' | 'casado' | 'separado' | 'divorciado' | 'viuvo' | 'uniao_estavel' | null
+  regime_bens?: string | null
+  conjuge_nome?: string | null
+  conjuge_cpf?: string | null
+  email?: string | null
+  email_secundario?: string | null
+  telefone?: string | null
+  telefone_secundario?: string | null
+  cep?: string | null
+  logradouro?: string | null
+  numero?: string | null
+  complemento?: string | null
+  bairro?: string | null
+  cidade?: string | null
+  estado?: string | null
+  dados_bancarios?: Client['dados_bancarios']
+  perfil_interesse?: Client['perfil_interesse']
+  corretor_id?: string | null
+  profiles?: { nome: string | null } | null
+  observacoes?: string | null
+  created_at: string
+  updated_at: string
+}
 
 export async function GET(request: Request) {
   const result = await getAgencyContext()
@@ -77,7 +113,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não foi possível carregar os clientes' }, { status: 503 })
   }
 
-  const clients: Client[] = (rawClients || []).map((row: any) => ({
+  const clients: Client[] = ((rawClients || []) as unknown as RawClientRow[]).map((row) => ({
     id: row.id,
     tenant_id: row.tenant_id,
     tipo_pessoa: row.tipo_pessoa,
@@ -95,7 +131,7 @@ export async function GET(request: Request) {
     conjuge_cpf: row.conjuge_cpf,
     email: row.email,
     email_secundario: row.email_secundario,
-    telefone: row.telefone,
+    telefone: row.telefone || '',
     telefone_secundario: row.telefone_secundario,
     cep: row.cep,
     logradouro: row.logradouro,
@@ -115,7 +151,7 @@ export async function GET(request: Request) {
 
   // 2. Filtros em memória (busca textual e papel)
   const filtered = clients.filter((c) => {
-    if (role && role !== 'todos' && !c.papeis.includes(role as any)) {
+    if (role && role !== 'todos' && !c.papeis.includes(role as ClientRole)) {
       return false
     }
 

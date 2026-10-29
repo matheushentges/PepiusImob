@@ -74,7 +74,7 @@ export function KeyCheckoutDialog({
         if (clientsRes.ok) {
           const cData = await clientsRes.json()
           setClientList(
-            (cData.clients || []).map((c: any) => ({
+            (cData.clients || []).map((c: { id: string; nome: string; telefone?: string | null; documento?: string | null }) => ({
               id: c.id,
               nome: c.nome,
               telefone: c.telefone || '',

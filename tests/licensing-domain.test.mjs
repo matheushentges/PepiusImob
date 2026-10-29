@@ -62,10 +62,11 @@ test('a lease cannot be changed after signing or extend beyond seven days', () =
 })
 
 test('suspended leases are verifiable but never grant active access', () => {
+  const simulatedNow = Date.parse('2026-10-24T00:00:00Z')
   const suspended = signLease(makeLease({ status: 'suspended' }), privateKey)
-  assert.equal(verifyLeaseSignature(suspended, { [keyId]: publicKey }, 'install-123'), true)
-  assert.equal(verifyLease(suspended, { [keyId]: publicKey }, 'install-123'), false)
-  assert.equal(verifyLease(suspended, { 'unknown-key': publicKey }, 'install-123'), false)
+  assert.equal(verifyLeaseSignature(suspended, { [keyId]: publicKey }, 'install-123', simulatedNow), true)
+  assert.equal(verifyLease(suspended, { [keyId]: publicKey }, 'install-123', simulatedNow), false)
+  assert.equal(verifyLease(suspended, { 'unknown-key': publicKey }, 'install-123', simulatedNow), false)
 })
 
 test('a delinquent account suspends at the 15-day calendar boundary', () => {

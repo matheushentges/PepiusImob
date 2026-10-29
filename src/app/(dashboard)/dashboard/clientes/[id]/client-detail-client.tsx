@@ -5,12 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
-  User,
-  Building,
   Phone,
   Mail,
   MapPin,
-  Calendar,
   Compass,
   Home,
   FileText,
@@ -21,25 +18,40 @@ import {
   ExternalLink,
   Edit,
   Trash2,
-  CheckCircle2,
-  Plus,
   Loader2,
   Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ClientRoleBadge, ClientStatusBadge, ClientTypeBadge } from '@/components/clients/client-role-badge'
 import { ClientWhatsAppButton } from '@/components/clients/client-whatsapp-button'
 import { ClientDialog } from '@/components/clients/client-dialog'
 import { formatDocument, formatPhoneBR } from '@/lib/clients/validation'
 import type { Client, ClientNote, PropertyMatchResult } from '@/lib/clients/types'
 
+interface OwnedPropertyItem {
+  id: string
+  titulo: string
+  tipo: string
+  status: string
+  bairro: string
+  cidade: string
+  preco_venda?: number | null
+  preco_locacao?: number | null
+  property_images?: Array<{ url: string; is_cover?: boolean | null }> | null
+}
+
+interface AssociatedLeadItem {
+  id: string
+  mensagem?: string | null
+  created_at: string
+}
+
 interface ClientDetailClientProps {
   initialClient: Client
-  ownedProperties: any[]
+  ownedProperties: OwnedPropertyItem[]
   initialNotes: ClientNote[]
   radarMatches: PropertyMatchResult[]
-  associatedLeads: any[]
+  associatedLeads: AssociatedLeadItem[]
   teamMembers: Array<{ id: string; nome: string }>
   canEdit: boolean
 }
@@ -92,8 +104,8 @@ export function ClientDetailClient({
 
       setNotes((prev) => [data.note, ...prev])
       setNewNoteContent('')
-    } catch (err: any) {
-      setNoteError(err.message || 'Erro inesperado')
+    } catch (err: unknown) {
+      setNoteError(err instanceof Error ? err.message : 'Erro inesperado')
     } finally {
       setSavingNote(false)
     }
@@ -467,12 +479,13 @@ export function ClientDetailClient({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {ownedProperties.map((prop) => {
-                  const cover = prop.property_images?.find((i: any) => i.is_cover)?.url || prop.property_images?.[0]?.url
+                  const cover = prop.property_images?.find((i) => i.is_cover)?.url || prop.property_images?.[0]?.url
 
                   return (
                     <div key={prop.id} className="rounded-xl border border-border bg-card overflow-hidden shadow-2xs hover:shadow-xs transition-shadow">
                       <div className="h-36 w-full bg-secondary relative overflow-hidden">
                         {cover ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
                           <img src={cover} alt={prop.titulo} className="h-full w-full object-cover" />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">
@@ -597,6 +610,7 @@ export function ClientDetailClient({
                       <div key={m.propertyId} className="flex flex-col sm:flex-row gap-4 rounded-xl border border-border bg-card p-4 shadow-2xs hover:border-accent/50 transition-colors">
                         <div className="h-32 sm:w-36 shrink-0 rounded-lg bg-secondary overflow-hidden relative">
                           {m.coverUrl ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
                             <img src={m.coverUrl} alt={m.titulo} className="h-full w-full object-cover" />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
@@ -725,7 +739,7 @@ export function ClientDetailClient({
                         <span>{new Date(lead.created_at).toLocaleString('pt-BR')}</span>
                       </div>
                       {lead.mensagem && (
-                        <p className="text-xs text-foreground italic">"{lead.mensagem}"</p>
+                        <p className="text-xs text-foreground italic">&ldquo;{lead.mensagem}&rdquo;</p>
                       )}
                     </div>
                   ))}

@@ -6,6 +6,32 @@ import { clientInputSchema, sanitizeDocument } from '@/lib/clients/validation'
 import { calculatePropertyMatch, type PropertyMatchCandidate } from '@/lib/clients/matching'
 import type { Client, ClientNote, PropertyMatchResult } from '@/lib/clients/types'
 
+interface RawNoteRow {
+  id: string
+  tenant_id: string
+  client_id: string
+  autor_id: string | null
+  profiles?: { nome: string | null } | null
+  conteudo: string
+  created_at: string
+}
+
+interface RawPropertyMatchRow {
+  id: string
+  titulo: string
+  tipo: string
+  finalidade: 'venda' | 'locacao' | 'ambos'
+  status: string
+  preco_venda: number | null
+  preco_locacao: number | null
+  bairro: string
+  cidade: string
+  area_total: number | null
+  quartos: number | null
+  vagas_garagem: number | null
+  property_images?: Array<{ url: string; is_cover?: boolean | null }> | null
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -114,7 +140,7 @@ export async function GET(
     .eq('client_id', id)
     .order('created_at', { ascending: false })
 
-  const notes: ClientNote[] = (rawNotes || []).map((n: any) => ({
+  const notes: ClientNote[] = ((rawNotes || []) as unknown as RawNoteRow[]).map((n) => ({
     id: n.id,
     tenant_id: n.tenant_id,
     client_id: n.client_id,
@@ -125,7 +151,7 @@ export async function GET(
   }))
 
   // 4. Se for comprador ou locatário, calcula os matches do Radar de Imóveis
-  let radarMatches: PropertyMatchResult[] = []
+  const radarMatches: PropertyMatchResult[] = []
   const isBuyerOrTenant = client.papeis.includes('comprador') || client.papeis.includes('locatario')
 
   if (isBuyerOrTenant) {
@@ -150,8 +176,8 @@ export async function GET(
       .eq('status', 'disponivel')
 
     if (availableProperties) {
-      for (const prop of availableProperties as any[]) {
-        const cover = prop.property_images?.find((img: any) => img.is_cover)?.url || prop.property_images?.[0]?.url || null
+      for (const prop of (availableProperties as unknown as RawPropertyMatchRow[])) {
+        const cover = prop.property_images?.find((img) => img.is_cover)?.url || prop.property_images?.[0]?.url || null
         const candidate: PropertyMatchCandidate = {
           id: prop.id,
           titulo: prop.titulo,
@@ -220,7 +246,7 @@ export async function PATCH(
     )
   }
 
-  const updateData: Record<string, any> = {
+  const updateData: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   }
 

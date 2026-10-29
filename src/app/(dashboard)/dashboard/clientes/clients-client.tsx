@@ -13,11 +13,6 @@ import {
   Eye,
   Edit,
   Trash2,
-  Building,
-  Phone,
-  Mail,
-  MapPin,
-  Compass,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -359,7 +354,6 @@ export function ClientsClient({
               ) : (
                 filteredClients.map((c) => {
                   const initial = (c.nome || 'C').charAt(0).toUpperCase()
-                  const isBuyerOrTenant = c.papeis.includes('comprador') || c.papeis.includes('locatario')
 
                   return (
                     <TableRow key={c.id} className="hover:bg-secondary/20 transition-colors">

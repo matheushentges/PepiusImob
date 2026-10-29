@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X, Loader2, Search, Check, Building, User, Wallet, Compass, FileText } from 'lucide-react'
+import { X, Loader2, Search, Check, Building, User, Wallet, Compass } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -100,105 +100,107 @@ export function ClientDialog({
   useEffect(() => {
     if (!isOpen) return
 
-    if (client) {
-      setTipoPessoa(client.tipo_pessoa || 'pf')
-      setPapeis(client.papeis || ['comprador'])
-      setStatus(client.status || 'ativo')
-      setNome(client.nome || '')
-      setNomeFantasia(client.nome_fantasia || '')
-      setDocumento(client.documento ? formatDocument(client.documento) : '')
-      setRgIe(client.rg_ie || '')
-      setDataNascimento(client.data_nascimento || '')
-      setProfissao(client.profissao || '')
-      setEstadoCivil(client.estado_civil || 'solteiro')
-      setRegimeBens(client.regime_bens || '')
-      setConjugeNome(client.conjuge_nome || '')
-      setConjugeCpf(client.conjuge_cpf ? formatDocument(client.conjuge_cpf) : '')
-      setTelefone(client.telefone ? formatPhoneBR(client.telefone) : '')
-      setTelefoneSecundario(client.telefone_secundario ? formatPhoneBR(client.telefone_secundario) : '')
-      setEmail(client.email || '')
-      setEmailSecundario(client.email_secundario || '')
-      setCep(client.cep ? formatCep(client.cep) : '')
-      setLogradouro(client.logradouro || '')
-      setNumero(client.numero || '')
-      setComplemento(client.complemento || '')
-      setBairro(client.bairro || '')
-      setCidade(client.cidade || '')
-      setEstado(client.estado || '')
-      setCorretorId(client.corretor_id || '')
-      setObservacoes(client.observacoes || '')
+    queueMicrotask(() => {
+      if (client) {
+        setTipoPessoa(client.tipo_pessoa || 'pf')
+        setPapeis(client.papeis || ['comprador'])
+        setStatus(client.status || 'ativo')
+        setNome(client.nome || '')
+        setNomeFantasia(client.nome_fantasia || '')
+        setDocumento(client.documento ? formatDocument(client.documento) : '')
+        setRgIe(client.rg_ie || '')
+        setDataNascimento(client.data_nascimento || '')
+        setProfissao(client.profissao || '')
+        setEstadoCivil(client.estado_civil || 'solteiro')
+        setRegimeBens(client.regime_bens || '')
+        setConjugeNome(client.conjuge_nome || '')
+        setConjugeCpf(client.conjuge_cpf ? formatDocument(client.conjuge_cpf) : '')
+        setTelefone(client.telefone ? formatPhoneBR(client.telefone) : '')
+        setTelefoneSecundario(client.telefone_secundario ? formatPhoneBR(client.telefone_secundario) : '')
+        setEmail(client.email || '')
+        setEmailSecundario(client.email_secundario || '')
+        setCep(client.cep ? formatCep(client.cep) : '')
+        setLogradouro(client.logradouro || '')
+        setNumero(client.numero || '')
+        setComplemento(client.complemento || '')
+        setBairro(client.bairro || '')
+        setCidade(client.cidade || '')
+        setEstado(client.estado || '')
+        setCorretorId(client.corretor_id || '')
+        setObservacoes(client.observacoes || '')
 
-      const bank = client.dados_bancarios || {}
-      setBanco(bank.banco || '')
-      setAgencia(bank.agencia || '')
-      setConta(bank.conta || '')
-      setTipoConta(bank.tipo_conta || 'corrente')
-      setTipoChavePix(bank.tipo_chave_pix || 'cpf')
-      setChavePix(bank.chave_pix || '')
-      setTitularPix(bank.titular || '')
+        const bank = client.dados_bancarios || {}
+        setBanco(bank.banco || '')
+        setAgencia(bank.agencia || '')
+        setConta(bank.conta || '')
+        setTipoConta(bank.tipo_conta || 'corrente')
+        setTipoChavePix(bank.tipo_chave_pix || 'cpf')
+        setChavePix(bank.chave_pix || '')
+        setTitularPix(bank.titular || '')
 
-      const prof = client.perfil_interesse || {}
-      setInteresseTipos(prof.tipos_imovel || ['apartamento', 'casa'])
-      setInteresseFinalidade(prof.finalidade || 'ambos')
-      setValorMinimo(prof.valor_minimo ? String(prof.valor_minimo) : '')
-      setValorMaximo(prof.valor_maximo ? String(prof.valor_maximo) : '')
-      setQuartosMinimo(prof.quartos_minimo ? String(prof.quartos_minimo) : '')
-      setVagasMinimo(prof.vagas_minimo ? String(prof.vagas_minimo) : '')
-      setBairrosInteresse((prof.bairros_interesse || []).join(', '))
-    } else if (initialLead) {
-      setNome(initialLead.nome || '')
-      setEmail(initialLead.email || '')
-      setTelefone(initialLead.telefone ? formatPhoneBR(initialLead.telefone) : '')
-      setObservacoes(initialLead.mensagem ? `Origem Lead: ${initialLead.mensagem}` : '')
-      setPapeis([initialLead.finalidade === 'locacao' ? 'locatario' : 'comprador'])
-      setTipoPessoa('pf')
-      setStatus('ativo')
-    } else {
-      // Reset para novo cliente
-      setTipoPessoa('pf')
-      setPapeis(['comprador'])
-      setStatus('ativo')
-      setNome('')
-      setNomeFantasia('')
-      setDocumento('')
-      setRgIe('')
-      setDataNascimento('')
-      setProfissao('')
-      setEstadoCivil('solteiro')
-      setRegimeBens('')
-      setConjugeNome('')
-      setConjugeCpf('')
-      setTelefone('')
-      setTelefoneSecundario('')
-      setEmail('')
-      setEmailSecundario('')
-      setCep('')
-      setLogradouro('')
-      setNumero('')
-      setComplemento('')
-      setBairro('')
-      setCidade('')
-      setEstado('')
-      setCorretorId('')
-      setObservacoes('')
-      setBanco('')
-      setAgencia('')
-      setConta('')
-      setTipoConta('corrente')
-      setTipoChavePix('cpf')
-      setChavePix('')
-      setTitularPix('')
-      setInteresseTipos(['apartamento', 'casa'])
-      setInteresseFinalidade('ambos')
-      setValorMinimo('')
-      setValorMaximo('')
-      setQuartosMinimo('')
-      setVagasMinimo('')
-      setBairrosInteresse('')
-    }
+        const prof = client.perfil_interesse || {}
+        setInteresseTipos(prof.tipos_imovel || ['apartamento', 'casa'])
+        setInteresseFinalidade(prof.finalidade || 'ambos')
+        setValorMinimo(prof.valor_minimo ? String(prof.valor_minimo) : '')
+        setValorMaximo(prof.valor_maximo ? String(prof.valor_maximo) : '')
+        setQuartosMinimo(prof.quartos_minimo ? String(prof.quartos_minimo) : '')
+        setVagasMinimo(prof.vagas_minimo ? String(prof.vagas_minimo) : '')
+        setBairrosInteresse((prof.bairros_interesse || []).join(', '))
+      } else if (initialLead) {
+        setNome(initialLead.nome || '')
+        setEmail(initialLead.email || '')
+        setTelefone(initialLead.telefone ? formatPhoneBR(initialLead.telefone) : '')
+        setObservacoes(initialLead.mensagem ? `Origem Lead: ${initialLead.mensagem}` : '')
+        setPapeis([initialLead.finalidade === 'locacao' ? 'locatario' : 'comprador'])
+        setTipoPessoa('pf')
+        setStatus('ativo')
+      } else {
+        // Reset para novo cliente
+        setTipoPessoa('pf')
+        setPapeis(['comprador'])
+        setStatus('ativo')
+        setNome('')
+        setNomeFantasia('')
+        setDocumento('')
+        setRgIe('')
+        setDataNascimento('')
+        setProfissao('')
+        setEstadoCivil('solteiro')
+        setRegimeBens('')
+        setConjugeNome('')
+        setConjugeCpf('')
+        setTelefone('')
+        setTelefoneSecundario('')
+        setEmail('')
+        setEmailSecundario('')
+        setCep('')
+        setLogradouro('')
+        setNumero('')
+        setComplemento('')
+        setBairro('')
+        setCidade('')
+        setEstado('')
+        setCorretorId('')
+        setObservacoes('')
+        setBanco('')
+        setAgencia('')
+        setConta('')
+        setTipoConta('corrente')
+        setTipoChavePix('cpf')
+        setChavePix('')
+        setTitularPix('')
+        setInteresseTipos(['apartamento', 'casa'])
+        setInteresseFinalidade('ambos')
+        setValorMinimo('')
+        setValorMaximo('')
+        setQuartosMinimo('')
+        setVagasMinimo('')
+        setBairrosInteresse('')
+      }
 
-    setActiveTab('identificacao')
-    setError(null)
+      setActiveTab('identificacao')
+      setError(null)
+    })
   }, [isOpen, client, initialLead])
 
   // Busca endereço por CEP
@@ -327,8 +329,8 @@ export function ClientDialog({
 
       onSuccess(data.client)
       onClose()
-    } catch (err: any) {
-      setError(err.message || 'Erro inesperado')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro inesperado')
     } finally {
       setLoading(false)
     }
@@ -830,7 +832,7 @@ export function ClientDialog({
                         <select
                           id="finalidade"
                           value={interesseFinalidade}
-                          onChange={(e) => setInteresseFinalidade(e.target.value as any)}
+                          onChange={(e) => setInteresseFinalidade(e.target.value as 'venda' | 'locacao' | 'ambos')}
                           className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                           <option value="ambos">Qualquer uma (Venda ou Locação)</option>
@@ -972,7 +974,7 @@ export function ClientDialog({
                       <select
                         id="tipoChavePix"
                         value={tipoChavePix}
-                        onChange={(e) => setTipoChavePix(e.target.value as any)}
+                        onChange={(e) => setTipoChavePix(e.target.value as 'cpf' | 'cnpj' | 'email' | 'telefone' | 'aleatoria')}
                         className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       >
                         <option value="cpf">CPF</option>

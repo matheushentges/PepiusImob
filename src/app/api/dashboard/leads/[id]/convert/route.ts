@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getAgencyContext } from '@/lib/auth/agency'
 import { requireActiveLicense } from '@/lib/licensing/local-state'
-import { sanitizeDocument } from '@/lib/clients/validation'
 
 export async function POST(
   request: Request,
@@ -54,7 +53,13 @@ export async function POST(
     })
   }
 
-  const prop = lead.properties as any
+  const prop = lead.properties as {
+    id?: string
+    titulo?: string | null
+    tipo?: string | null
+    finalidade?: string | null
+    bairro?: string | null
+  } | null
   const finalidade = prop?.finalidade === 'locacao' ? 'locatario' : 'comprador'
 
   // 2. Insere o novo cliente

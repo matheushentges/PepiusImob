@@ -67,15 +67,25 @@ export async function POST(
     return NextResponse.json({ error: 'Não foi possível salvar a anotação' }, { status: 500 })
   }
 
+  const noteWithProfile = note as unknown as {
+    id: string
+    tenant_id: string
+    client_id: string
+    autor_id: string | null
+    conteudo: string
+    created_at: string
+    profiles?: { id: string; nome: string | null } | null
+  }
+
   return NextResponse.json({
     note: {
-      id: note.id,
-      tenant_id: note.tenant_id,
-      client_id: note.client_id,
-      autor_id: note.autor_id,
-      autor_nome: (note as any).profiles?.nome || 'Você',
-      conteudo: note.conteudo,
-      created_at: note.created_at,
+      id: noteWithProfile.id,
+      tenant_id: noteWithProfile.tenant_id,
+      client_id: noteWithProfile.client_id,
+      autor_id: noteWithProfile.autor_id,
+      autor_nome: noteWithProfile.profiles?.nome || 'Você',
+      conteudo: noteWithProfile.conteudo,
+      created_at: noteWithProfile.created_at,
     },
   }, { status: 201 })
 }

@@ -6,14 +6,35 @@ import { calculatePropertyMatch, type PropertyMatchCandidate } from '@/lib/clien
 import { ClientDetailClient } from './client-detail-client'
 import type { Client, ClientNote, PropertyMatchResult } from '@/lib/clients/types'
 
+interface RawNoteRow {
+  id: string
+  tenant_id: string
+  client_id: string
+  autor_id: string | null
+  profiles?: { nome: string | null } | null
+  conteudo: string
+  created_at: string
+}
+
+interface RawPropertyMatchRow {
+  id: string
+  titulo: string
+  tipo: string
+  finalidade: 'venda' | 'locacao' | 'ambos'
+  status: string
+  preco_venda: number | null
+  preco_locacao: number | null
+  bairro: string
+  cidade: string
+  area_total: number | null
+  quartos: number | null
+  vagas_garagem: number | null
+  property_images?: Array<{ url: string; is_cover?: boolean | null }> | null
+}
+
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}): Promise<Metadata> {
-  const { id } = await params
+export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Perfil do Cliente | Painel Gerencial Pepius Imob`,
     description: `Visão 360º de cliente, histórico e radar de imóveis.`,
@@ -144,7 +165,7 @@ export default async function ClientDetailPage({
     .eq('client_id', id)
     .order('created_at', { ascending: false })
 
-  const notes: ClientNote[] = (rawNotes || []).map((n: any) => ({
+  const notes: ClientNote[] = ((rawNotes || []) as unknown as RawNoteRow[]).map((n) => ({
     id: n.id,
     tenant_id: n.tenant_id,
     client_id: n.client_id,
@@ -155,7 +176,7 @@ export default async function ClientDetailPage({
   }))
 
   // 4. Radar de Imóveis (se comprador ou locatário)
-  let radarMatches: PropertyMatchResult[] = []
+  const radarMatches: PropertyMatchResult[] = []
   const isBuyerOrTenant = client.papeis.includes('comprador') || client.papeis.includes('locatario')
 
   if (isBuyerOrTenant) {
@@ -180,8 +201,8 @@ export default async function ClientDetailPage({
       .eq('status', 'disponivel')
 
     if (availableProperties) {
-      for (const prop of availableProperties as any[]) {
-        const cover = prop.property_images?.find((img: any) => img.is_cover)?.url || prop.property_images?.[0]?.url || null
+      for (const prop of (availableProperties as unknown as RawPropertyMatchRow[])) {
+        const cover = prop.property_images?.find((img) => img.is_cover)?.url || prop.property_images?.[0]?.url || null
         const candidate: PropertyMatchCandidate = {
           id: prop.id,
           titulo: prop.titulo,

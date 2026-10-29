@@ -29,18 +29,18 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored === 'true') {
-        setCollapsed(true)
+        queueMicrotask(() => {
+          setCollapsed(true)
+        })
       }
     } catch {
       // Ignora erro de acesso ao localStorage (modo anônimo/restrito)
     }
-    setMounted(true)
   }, [])
 
   function toggleCollapse() {
